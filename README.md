@@ -5,6 +5,11 @@
 </div>
 
 ---
+## Documentation
+
+Docs are here: [https://tinyolly.github.io/tinyolly/](https://tinyolly.github.io/tinyolly/)  
+
+    
 
 ## What is TinyOlly?
 
