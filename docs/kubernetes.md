@@ -48,7 +48,31 @@ git clone https://github.com/tinyolly/tinyolly
 
     Now you can access the TinyOlly UI at: [http://localhost:5002](http://localhost:5002)
 
-5.  **Clean Up:**
+5.  **Send Telemetry from Host Apps:**
+
+    To send telemetry from applications running on your host machine (outside Kubernetes), use `kubectl port-forward` to expose the OTel Collector ports:
+
+    Open a **new terminal window** and run:
+
+    ```bash
+    kubectl port-forward service/otel-collector 4317:4317 4318:4318
+    ```
+
+    Keep this terminal open. Now point your application's OpenTelemetry exporter to:  
+    - **gRPC**: `http://localhost:4317`  
+    - **HTTP**: `http://localhost:4318`  
+
+    **Example environment variables:**
+    ```bash
+    export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318
+    ```
+
+    **For apps running inside the Kubernetes cluster:**  
+    Use the Kubernetes service name:  
+    - **gRPC**: `http://otel-collector:4317`  
+    - **HTTP**: `http://otel-collector:4318`  
+
+6.  **Clean Up:**
 
     Use the cleanup script to remove all TinyOlly resources:
 

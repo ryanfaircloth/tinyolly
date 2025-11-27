@@ -101,9 +101,20 @@ docker compose down
 
 After deploying TinyOlly core (step 1 above), instrument your application to send telemetry:
 
-**Point your OpenTelemetry exporter to:**  
+**For apps running in Docker containers:**  
+Point your OpenTelemetry exporter to:  
 - **gRPC**: `http://otel-collector:4317`  
 - **HTTP**: `http://otel-collector:4318`  
+
+**For apps running on your host machine (outside Docker):**  
+Docker Desktop automatically exposes container ports to `localhost`. Point your OpenTelemetry exporter to:  
+- **gRPC**: `http://localhost:4317`  
+- **HTTP**: `http://localhost:4318`  
+
+**Example environment variables:**
+```bash
+export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318
+```
 
 The Otel Collector will forward everything to TinyOlly's OTLP receiver, which process telemetry and stores it in Redis in OTEL format for the backend and UI to access.
 
