@@ -7,9 +7,9 @@
 
 ## What is TinyOlly?
 
-TinyOlly is located here: [https://github.com/tinyolly](https://github.com/tinyolly)  
+TinyOlly is located here: [https://github.com/tinyolly/tinyolly](https://github.com/tinyolly/tinyolly)  
 ```bash
-git clone https://github.com/tinyolly
+git clone https://github.com/tinyolly/tinyolly
 ```
 
 ## What is TinyOlly?
