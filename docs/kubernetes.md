@@ -158,5 +158,41 @@ To deploy TinyOlly without the bundled OTel Collector (e.g., if you have an exis
     ./cleanup.sh
     ```
 
+### Use TinyOlly with Any OpenTelemetry Collector
+
+Swap out the included Otel Collector for any distro of Otel Collector.
+
+**Point your OpenTelemetry exporters to tinyolly-otlp-receiver:4343:**
+i.e.  
+```yaml
+exporters:
+  debug:
+    verbosity: detailed
+  
+  otlp:
+    endpoint: "tinyolly-otlp-receiver:4343"
+    tls:
+      insecure: true
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [debug, otlp, spanmetrics]
+    
+    metrics:
+      receivers: [otlp,spanmetrics]
+      processors: [batch]
+      exporters: [debug, otlp]
+    
+    logs:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [debug, otlp]
+```
+
+The Otel Collector will forward everything to TinyOlly's OTLP receiver, which process telemetry and stores it in Redis in OTEL format for the backend and UI to access.
+
 ---
 

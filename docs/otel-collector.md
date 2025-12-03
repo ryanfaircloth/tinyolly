@@ -46,3 +46,24 @@ After modifying `k8s/otel-collector-config.yaml`: rebuild/restart using:
 kubectl apply -f k8s/otel-collector-config.yaml
 kubectl rollout restart deployment/otel-collector
 ```
+
+## Using Your Own Collector
+
+You can use your own OpenTelemetry Collector instance instead of the one bundled with TinyOlly. This is useful if you have an existing collector setup or want to test specific collector configurations.
+
+To do this, deploy the **Core-Only** version of TinyOlly (see [Docker Deployment](docker.md#5-tinyolly-core-only-deployment-use-your-own-docker-opentelemetry-collector) or [Kubernetes Deployment](kubernetes.md#4-tinyolly-core-only-deployment-use-your-own-kubernetes-opentelemetry-collector)).
+
+Then, configure your collector's OTLP exporter to send data to the TinyOlly Receiver:
+
+- **Endpoint**: `tinyolly-otlp-receiver:4343`
+- **Protocol**: gRPC
+- **TLS**: Insecure (or configured as needed)
+
+Example Exporter Configuration:
+```yaml
+exporters:
+  otlp:
+    endpoint: "tinyolly-otlp-receiver:4343"
+    tls:
+      insecure: true
+```
