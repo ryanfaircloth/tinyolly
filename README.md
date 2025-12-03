@@ -1,7 +1,7 @@
 <div align="center">
   <img src="docs/images/tinyollytitle.png" alt="TinyOlly" width="500">
   
-  **BYOL (Bring Your Own Laptop) Observability Platform for OpenTelemetry**
+  **The World's First Desktop Observability Platform**
 </div>
 
 ---
@@ -15,8 +15,7 @@ Docs are here: [https://tinyolly.github.io/tinyolly/](https://tinyolly.github.io
 
 Why send telemetry to a cloud observabilty platform while coding? Why not have one on your desktop?  
 
-TinyOlly is a **lightweight OpenTelemetry-native observability platform** built from scratch to visualize and correlate logs, metrics, and traces. No 3rd party observability tools - just Python (FastAPI), Redis, and JavaScript with a **comprehensive REST API**.
-
+TinyOlly is a **lightweight OpenTelemetry-native observability platform** built from scratch to visualize and correlate logs, metrics, and traces. No 3rd party observability tools - just Python (FastAPI), Redis, OpenAPI, and JavaScript.  
 - TinyOlly is the world's first desktop development tool to observe and perfect your app's telemetry
 - Send telemetry to the locally deployed Otel collector and TinyOlly will visualize it in your browser
 - Swap the included Otel collector for your own or any distro for Otel Collector testing- or also relay to a cloud observability platform
