@@ -74,7 +74,7 @@ cd docker
 This starts:
 - **OTel Collector**: Listening on `localhost:4317` (gRPC) and `localhost:4318` (HTTP)
 - **TinyOlly UI**: `http://localhost:5005`
-- **TinyOlly OTLP Receiver and its Redis storage**: OTLP observability back end and storage
+- **TinyOlly OTLP Receiver**: Listening on `localhost:4343` (gRPC)
 - Rebuilds images if code changes are detected.
 
 **Open the UI:** `http://localhost:5005` (empty until you send data)
@@ -187,12 +187,12 @@ After deploying TinyOlly core (step 1 above), instrument your application to sen
     ./k8s/01-build-images.sh
     ```
 
-3.  **Apply Manifests:**
-
-    Apply the Kubernetes manifests to deploy the services:
+3.  **Deploy TinyOlly:**
+    
+    Run the deployment script to apply the Kubernetes manifests:
 
     ```bash
-    kubectl apply -f k8s/
+    ./k8s/02-deploy-tinyolly.sh
     ```
 
 4.  **Access the UI:**
@@ -214,7 +214,7 @@ After deploying TinyOlly core (step 1 above), instrument your application to sen
     Use the cleanup script to remove all TinyOlly resources:
 
     ```bash
-    ./k8s/01-cleanup.sh
+    ./k8s/03-cleanup.sh
     ```
 
     Shut down Minikube:

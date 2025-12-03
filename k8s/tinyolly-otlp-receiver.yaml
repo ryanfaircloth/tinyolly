@@ -17,15 +17,16 @@ spec:
       containers:
       - name: tinyolly-otlp-receiver
         image: tinyolly-otlp-receiver:latest
-        imagePullPolicy: Never
+        imagePullPolicy: IfNotPresent
         ports:
-        - containerPort: 4317
-          name: grpc
+        - containerPort: 4343
         env:
         - name: REDIS_HOST
-          value: "redis"
-        - name: MAX_METRIC_CARDINALITY
-          value: "1000"
+          value: "tinyolly-redis"
+        - name: REDIS_PORT
+          value: "6579"
+        - name: PORT
+          value: "4343"
         - name: REDIS_TTL
           value: "1800"
 ---
@@ -38,6 +39,6 @@ spec:
     app: tinyolly-otlp-receiver
   ports:
     - protocol: TCP
-      port: 4317
-      targetPort: 4317
+      port: 4343
+      targetPort: 4343
       name: grpc

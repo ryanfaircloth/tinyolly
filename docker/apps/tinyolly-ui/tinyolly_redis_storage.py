@@ -16,7 +16,7 @@ from async_lru import alru_cache
 
 # Default configuration
 REDIS_HOST = os.getenv('REDIS_HOST', 'localhost')
-REDIS_PORT = int(os.getenv('REDIS_PORT_NUMBER', os.getenv('REDIS_PORT_OVERRIDE', '6379')))
+REDIS_PORT = int(os.getenv('REDIS_PORT_NUMBER', os.getenv('REDIS_PORT_OVERRIDE', '6579')))
 TTL_SECONDS = int(os.getenv('REDIS_TTL', 1800))  # 30 minutes default
 MAX_METRIC_CARDINALITY = int(os.getenv('MAX_METRIC_CARDINALITY', 1000))
 
