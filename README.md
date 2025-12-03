@@ -17,10 +17,11 @@ Why send telemetry to a cloud observabilty platform while coding? Why not have o
 
 TinyOlly is a **lightweight OpenTelemetry-native observability platform** built from scratch to visualize and correlate logs, metrics, and traces. No 3rd party observability tools - just Python (FastAPI), Redis, and JavaScript with a **comprehensive REST API**.
 
-- Think of TinyOlly as a development tool to observe and perfect your app's telemetry
-- Send whatever you want to the locally deployed Otel collector and TinyOlly will visualize it
+- TinyOlly is the world's first desktop development tool to observe and perfect your app's telemetry
+- Send telemetry to the locally deployed Otel collector and TinyOlly will visualize it in your browser
+- Swap the included Otel collector for your own or any distro for Otel Collector testing- or also relay to a cloud observability platform
 - Includes a **REST API** with OpenAPI docs for programmatic access to all telemetry
-- TinyOlly is *not* designed to compete with production observability platforms - there are no alerts, custom dashboards, or advanced query languages
+- TinyOlly is *not* designed to compete with production observability platforms - it is a desktop tool for dev/test
 
 **Platform Support:**  
 TinyOlly was built and tested Docker Desktop and Minikube Kubernetes on Apple Silicon Mac but may work on other platforms
@@ -72,9 +73,10 @@ cd docker
 ```
 
 This starts:
-- **OTel Collector**: Listening on `localhost:4317` (gRPC) and `localhost:4318` (HTTP)
+- **TinyOlly OTLP Receiver**: Listening on `localhost:4343` (gRPC)
 - **TinyOlly UI**: `http://localhost:5005`
-- **TinyOlly OTLP Receiver and its Redis storage**: OTLP observability back end and storage
+- **TinyOlly Redis**: `localhost:6579` (Moved port to avoid conflict with default Redis)
+- **OTel Contrib Collector**: Listening on `localhost:4317` (gRPC) and `localhost:4318` (HTTP) (You can swap this for any distro of Otel Collector)
 - Rebuilds images if code changes are detected.
 
 **Open the UI:** `http://localhost:5005` (empty until you send data)
@@ -164,6 +166,54 @@ After deploying TinyOlly core (step 1 above), instrument your application to sen
 
  The Otel Collector will forward everything to TinyOlly's OTLP receiver, which process telemetry and stores it in Redis in OTEL format for the backend and UI to access.
 
+### 5. TinyOlly **Core-Only** Deployment: Use Your Own Docker OpenTelemetry Collector
+
+If you already have an OpenTelemetry Collector or want to send telemetry directly to the TinyOlly Receiver, you can deploy the core components without the bundled OTel Collector.
+
+```bash
+cd docker-core-only
+docker compose -f docker-compose-tinyolly-core.yml up -d
+```
+
+This starts:
+- **TinyOlly OTLP Receiver**: Listening on `localhost:4343` (gRPC)
+- **TinyOlly UI**: `http://localhost:5005`
+- **TinyOlly Redis**: `localhost:6579`
+
+Swap out the included Otel Collector for any distro of Otel Collector.
+
+**Point your OpenTelemetry exporters to tinyolly-otlp-receiver:4343:**
+i.e.  
+```yaml
+exporters:
+  debug:
+    verbosity: detailed
+  
+  otlp:
+    endpoint: "tinyolly-otlp-receiver:4343"
+    tls:
+      insecure: true
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [debug, otlp, spanmetrics]
+    
+    metrics:
+      receivers: [otlp,spanmetrics]
+      processors: [batch]
+      exporters: [debug, otlp]
+    
+    logs:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [debug, otlp]
+```
+
+The Otel Collector will forward everything to TinyOlly's OTLP receiver, which process telemetry and stores it in Redis in OTEL format for the backend and UI to access.
+
 ## Kubernetes Deployment
 
 ### Prerequisites
@@ -187,12 +237,12 @@ After deploying TinyOlly core (step 1 above), instrument your application to sen
     ./k8s/01-build-images.sh
     ```
 
-3.  **Apply Manifests:**
-
-    Apply the Kubernetes manifests to deploy the services:
+3.  **Deploy TinyOlly:**
+    
+    Run the deployment script to apply the Kubernetes manifests:
 
     ```bash
-    kubectl apply -f k8s/
+    ./k8s/02-deploy-tinyolly.sh
     ```
 
 4.  **Access the UI:**
@@ -214,7 +264,7 @@ After deploying TinyOlly core (step 1 above), instrument your application to sen
     Use the cleanup script to remove all TinyOlly resources:
 
     ```bash
-    ./k8s/01-cleanup.sh
+    ./k8s/03-cleanup.sh
     ```
 
     Shut down Minikube:
@@ -271,6 +321,29 @@ cd k8s-otel-demo
 ```
 
 This removes the OpenTelemetry Demo but leaves TinyOlly running.
+
+### 4. TinyOlly **Core-Only** Deployment: Use Your Own Kubernetes OpenTelemetry Collector
+
+To deploy TinyOlly without the bundled OTel Collector (e.g., if you have an existing collector daemonset):
+
+1.  **Build Images:**
+    ```bash
+    ./k8s/01-build-images.sh
+    ```
+
+2.  **Deploy Core:**
+    ```bash
+    cd k8s-core-only
+    ./deploy.sh
+    ```
+
+3.  **Access UI:**
+    Run `minikube tunnel` and access `http://localhost:5002`.
+
+4.  **Cleanup:**
+    ```bash
+    ./cleanup.sh
+    ```
 
 ---
 

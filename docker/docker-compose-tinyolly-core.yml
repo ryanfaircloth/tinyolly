@@ -1,20 +1,22 @@
 services:
-  redis:
+  tinyolly-redis:
     image: redis:7-alpine
     container_name: tinyolly-redis
     ports:
-      - "6379:6379"
-    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
+      - "6579:6579"
+    command: redis-server --port 6579 --maxmemory 256mb --maxmemory-policy allkeys-lru
 
   tinyolly-otlp-receiver:
     build:
       context: ./apps/tinyolly-otlp-receiver
       dockerfile: ../../dockerfiles/Dockerfile.tinyolly-otlp-receiver
     container_name: tinyolly-otlp-receiver
-    depends_on:
-      - redis
+    ports:
+      - "4343:4343"
     environment:
-      - REDIS_HOST=redis
+      - REDIS_HOST=tinyolly-redis
+      - REDIS_PORT=6579
+      - PORT=4343
 
   otel-collector:
     image: otel/opentelemetry-collector-contrib:latest
@@ -28,17 +30,20 @@ services:
     depends_on:
       - tinyolly-otlp-receiver
 
-  tinyolly:
+  tinyolly-ui:
     build:
       context: ./apps/tinyolly-ui
       dockerfile: ../../dockerfiles/Dockerfile.tinyolly-ui
-    container_name: tinyolly
+    image: tinyolly-ui:latest
+    container_name: tinyolly-ui
     ports:
       - "5005:5002"  # Changed to 5005 to avoid conflict with K8s (which uses 5002)
     depends_on:
-      - redis
+      - tinyolly-redis
     environment:
-      - REDIS_HOST=redis
+      - REDIS_HOST=tinyolly-redis
+      - REDIS_PORT=6579
+      - DEPLOYMENT_ENV=docker
 
 networks:
   default:

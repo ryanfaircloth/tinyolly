@@ -117,3 +117,51 @@ export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318
 ```
 
 The Otel Collector will forward everything to TinyOlly's OTLP receiver, which process telemetry and stores it in Redis in OTEL format for the backend and UI to access.
+
+## 5. TinyOlly **Core-Only** Deployment: Use Your Own Docker OpenTelemetry Collector
+
+If you already have an OpenTelemetry Collector or want to send telemetry directly to the TinyOlly Receiver, you can deploy the core components without the bundled OTel Collector.
+
+```bash
+cd docker-core-only
+docker compose -f docker-compose-tinyolly-core.yml up -d
+```
+
+This starts:
+- **TinyOlly OTLP Receiver**: Listening on `localhost:4343` (gRPC)
+- **TinyOlly UI**: `http://localhost:5005`
+- **TinyOlly Redis**: `localhost:6579`
+
+Swap out the included Otel Collector for any distro of Otel Collector.
+
+**Point your OpenTelemetry exporters to tinyolly-otlp-receiver:4343:**
+i.e.  
+```yaml
+exporters:
+  debug:
+    verbosity: detailed
+  
+  otlp:
+    endpoint: "tinyolly-otlp-receiver:4343"
+    tls:
+      insecure: true
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [debug, otlp, spanmetrics]
+    
+    metrics:
+      receivers: [otlp,spanmetrics]
+      processors: [batch]
+      exporters: [debug, otlp]
+    
+    logs:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [debug, otlp]
+```
+
+The Otel Collector will forward everything to TinyOlly's OTLP receiver, which process telemetry and stores it in Redis in OTEL format for the backend and UI to access.

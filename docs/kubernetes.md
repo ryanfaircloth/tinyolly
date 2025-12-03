@@ -135,5 +135,28 @@ cd k8s-otel-demo
 
 This removes the OpenTelemetry Demo but leaves TinyOlly running.
 
+## 4. TinyOlly **Core-Only** Deployment: Use Your Own Kubernetes OpenTelemetry Collector
+
+To deploy TinyOlly without the bundled OTel Collector (e.g., if you have an existing collector daemonset):
+
+1.  **Build Images:**
+    ```bash
+    ./k8s/01-build-images.sh
+    ```
+
+2.  **Deploy Core:**
+    ```bash
+    cd k8s-core-only
+    ./deploy.sh
+    ```
+
+3.  **Access UI:**
+    Run `minikube tunnel` and access `http://localhost:5002`.
+
+4.  **Cleanup:**
+    ```bash
+    ./cleanup.sh
+    ```
+
 ---
 

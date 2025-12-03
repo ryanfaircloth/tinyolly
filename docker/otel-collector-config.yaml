@@ -29,7 +29,7 @@ exporters:
     verbosity: detailed
   
   otlp:
-    endpoint: tinyolly-otlp-receiver:4317
+    endpoint: "tinyolly-otlp-receiver:4343"
     tls:
       insecure: true
 
