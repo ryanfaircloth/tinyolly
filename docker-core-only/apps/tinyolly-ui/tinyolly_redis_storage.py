@@ -29,7 +29,28 @@ zstd_compressor = zstd.ZstdCompressor(level=3)
 zstd_decompressor = zstd.ZstdDecompressor()
 
 class Storage:
+    """Async Redis storage layer for OpenTelemetry data.
+
+    Handles storage and retrieval of traces, spans, logs, and metrics using Redis
+    as the backend. Implements compression (ZSTD), serialization (msgpack), and
+    TTL-based automatic cleanup.
+
+    Attributes:
+        host (str): Redis server hostname
+        port (int): Redis server port
+        ttl (int): Time-to-live in seconds for stored data
+        max_cardinality (int): Maximum unique metric series allowed
+    """
+
     def __init__(self, host=REDIS_HOST, port=REDIS_PORT, ttl=TTL_SECONDS, max_cardinality=MAX_METRIC_CARDINALITY):
+        """Initialize Storage with Redis connection parameters.
+
+        Args:
+            host (str): Redis hostname. Defaults to REDIS_HOST env var.
+            port (int): Redis port. Defaults to REDIS_PORT env var.
+            ttl (int): Data TTL in seconds. Defaults to 1800 (30 minutes).
+            max_cardinality (int): Max unique metrics. Defaults to 1000.
+        """
         self.host = host
         self.port = port
         self.ttl = ttl

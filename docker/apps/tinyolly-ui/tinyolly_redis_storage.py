@@ -29,7 +29,28 @@ zstd_compressor = zstd.ZstdCompressor(level=3)
 zstd_decompressor = zstd.ZstdDecompressor()
 
 class Storage:
+    """Async Redis storage layer for OpenTelemetry data.
+
+    Handles storage and retrieval of traces, spans, logs, and metrics using Redis
+    as the backend. Implements compression (ZSTD), serialization (msgpack), and
+    TTL-based automatic cleanup.
+
+    Attributes:
+        host (str): Redis server hostname
+        port (int): Redis server port
+        ttl (int): Time-to-live in seconds for stored data
+        max_cardinality (int): Maximum unique metric series allowed
+    """
+
     def __init__(self, host=REDIS_HOST, port=REDIS_PORT, ttl=TTL_SECONDS, max_cardinality=MAX_METRIC_CARDINALITY):
+        """Initialize Storage with Redis connection parameters.
+
+        Args:
+            host (str): Redis hostname. Defaults to REDIS_HOST env var.
+            port (int): Redis port. Defaults to REDIS_PORT env var.
+            ttl (int): Data TTL in seconds. Defaults to 1800 (30 minutes).
+            max_cardinality (int): Max unique metrics. Defaults to 1000.
+        """
         self.host = host
         self.port = port
         self.ttl = ttl
@@ -37,7 +58,17 @@ class Storage:
         self._client = None
     
     async def get_client(self):
-        """Get or create async Redis client"""
+        """Get or create async Redis client with connection pooling.
+
+        Creates a new Redis client on first call, then reuses the same client
+        for subsequent calls. Configured for binary data handling.
+
+        Returns:
+            aioredis.Redis: Async Redis client instance
+
+        Note:
+            Client has 5s timeout and automatic retry on timeout enabled.
+        """
         if self._client is None:
             self._client = await aioredis.from_url(
                 f"redis://{self.host}:{self.port}",
@@ -51,6 +82,11 @@ class Storage:
         return self._client
 
     async def is_connected(self):
+        """Check if Redis connection is healthy.
+
+        Returns:
+            bool: True if Redis responds to PING, False otherwise
+        """
         try:
             client = await self.get_client()
             await client.ping()
@@ -59,10 +95,23 @@ class Storage:
             return False
 
     def _compress_for_storage(self, data):
-        """Serialize with msgpack and compress with ZSTD if needed"""
+        """Serialize and conditionally compress data for Redis storage.
+
+        Uses msgpack for serialization and ZSTD compression for payloads > 512 bytes.
+        Adds 'ZSTD:' prefix to compressed data for format detection.
+
+        Args:
+            data (dict): Python dictionary to store
+
+        Returns:
+            bytes: Serialized (and possibly compressed) binary data
+
+        Note:
+            Compression threshold is 512 bytes to balance CPU vs storage.
+        """
         # Serialize
         packed = msgpack.packb(data)
-        
+
         # Compress if larger than 512 bytes
         if len(packed) > 512:
             compressed = zstd_compressor.compress(packed)
@@ -70,7 +119,22 @@ class Storage:
         return packed
 
     def _decompress_if_needed(self, data):
-        """Decompress ZSTD data and unpack msgpack"""
+        """Deserialize and decompress data from Redis storage.
+
+        Handles multiple formats for backward compatibility:
+        - ZSTD-compressed msgpack (current format)
+        - ZLIB-compressed msgpack (legacy format)
+        - Plain msgpack (small payloads)
+
+        Args:
+            data (bytes): Binary data from Redis
+
+        Returns:
+            dict: Deserialized Python dictionary, or {} on error
+
+        Raises:
+            No exceptions - returns empty dict on deserialization errors
+        """
         if not data:
             return {}
             
@@ -94,7 +158,17 @@ class Storage:
             return {}
     
     def _normalize_datapoint(self, dp):
-        """Normalize datapoint to ensure all numeric values are proper types"""
+        """Normalize metric datapoint to ensure consistent numeric types.
+
+        Converts all numeric values to proper Python types (int/float) and handles
+        histogram and summary data structures according to OTLP spec.
+
+        Args:
+            dp (dict): Raw datapoint from OTLP format
+
+        Returns:
+            dict: Normalized datapoint with consistent types
+        """
         normalized = {
             'timestamp': dp['timestamp'],
             'value': float(dp['value']) if dp['value'] is not None else None,
@@ -130,7 +204,18 @@ class Storage:
         return normalized
 
     def parse_otlp_traces(self, otlp_data):
-        """Parse OTLP trace format and extract spans with full context"""
+        """Parse OTLP trace format and extract spans with full context.
+
+        Processes OTLP resourceSpans structure, extracts resource attributes,
+        converts base64 trace/span IDs to hex format, and enriches spans with
+        service information.
+
+        Args:
+            otlp_data (dict): OTLP-formatted trace data with resourceSpans
+
+        Returns:
+            list[dict]: List of enriched span records with trace context
+        """
         spans = []
         
         resource_spans_list = otlp_data.get('resourceSpans', [])
@@ -194,7 +279,21 @@ class Storage:
         await self.store_spans([span])
 
     async def store_spans(self, spans):
-        """Store multiple spans efficiently"""
+        """Store multiple spans efficiently using Redis pipeline.
+
+        Batch stores spans with automatic compression, TTL, and indexing.
+        Creates both span-level and trace-level indexes for fast lookups.
+
+        Args:
+            spans (list[dict]): List of span records to store
+
+        Returns:
+            None
+
+        Note:
+            Uses Redis pipeline for atomic batch operations.
+            Automatically sets TTL on all keys.
+        """
         if not spans:
             return
 
