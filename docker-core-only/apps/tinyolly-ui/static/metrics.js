@@ -4,6 +4,7 @@
 import { loadChartJs, renderActionButton, copyToClipboard, downloadJson, renderEmptyState, getColorForIndex, createModal, closeModal } from './utils.js';
 
 // State management
+const MAX_METRICS_IN_MEMORY = 1000; // Prevent unbounded memory growth
 let allMetrics = [];
 let activeResourceFilters = {}; // {key: value}
 let expandedMetric = null;
@@ -26,8 +27,12 @@ export async function renderMetrics(metricsData) {
         return;
     }
 
-    // Store metrics globally
+    // Store metrics globally with memory limit
     allMetrics = metricsData;
+    if (allMetrics.length > MAX_METRICS_IN_MEMORY) {
+        // Keep only the most recent metrics to prevent memory issues
+        allMetrics = allMetrics.slice(-MAX_METRICS_IN_MEMORY);
+    }
 
     // Extract all unique resource keys
     extractResourceKeys();

@@ -15,10 +15,18 @@ from pydantic import BaseModel, Field
 import json
 import os
 import time
+import logging
 from typing import Optional, Dict, Any, List, Literal
 from tinyolly_redis_storage import Storage
 import uvloop
 import asyncio
+
+# Configure logging
+logging.basicConfig(
+    level=os.getenv("LOG_LEVEL", "INFO"),
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
+logger = logging.getLogger(__name__)
 
 # Install uvloop policy for faster event loop
 asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
@@ -289,9 +297,14 @@ compatibility with OTLP exporters and OpenTelemetry SDKs.
 )
 
 # Add CORS middleware
+# Default to localhost only for security, can be customized via environment variable
+# Example: CORS_ORIGINS="http://localhost:*,http://127.0.0.1:*,https://example.com"
+CORS_ORIGINS = os.getenv("CORS_ORIGINS", "http://localhost:*,http://127.0.0.1:*")
+allowed_origins = [origin.strip() for origin in CORS_ORIGINS.split(",") if origin.strip()]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -357,9 +370,11 @@ async def ingest_traces(request: Request):
         data = await request.json()
         if not data:
             raise HTTPException(status_code=400, detail='Invalid JSON')
-    except Exception:
-        raise HTTPException(status_code=400, detail='Invalid JSON')
-    
+    except json.JSONDecodeError as e:
+        raise HTTPException(status_code=400, detail=f'Invalid JSON: {str(e)}')
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=f'Invalid request body: {str(e)}')
+
     spans_to_store = []
     
     if 'resourceSpans' in data:
@@ -417,9 +432,11 @@ async def ingest_logs(request: Request):
         data = await request.json()
         if not data:
             raise HTTPException(status_code=400, detail='Invalid JSON')
-    except Exception:
-        raise HTTPException(status_code=400, detail='Invalid JSON')
-    
+    except json.JSONDecodeError as e:
+        raise HTTPException(status_code=400, detail=f'Invalid JSON: {str(e)}')
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=f'Invalid request body: {str(e)}')
+
     # Handle array or single log
     logs = data if isinstance(data, list) else [data]
     
@@ -475,9 +492,11 @@ async def ingest_metrics(request: Request):
         data = await request.json()
         if not data:
             raise HTTPException(status_code=400, detail='Invalid JSON')
-    except Exception:
-        raise HTTPException(status_code=400, detail='Invalid JSON')
-    
+    except json.JSONDecodeError as e:
+        raise HTTPException(status_code=400, detail=f'Invalid JSON: {str(e)}')
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=f'Invalid request body: {str(e)}')
+
     # Check if this is OTLP format
     if isinstance(data, dict) and 'resourceMetrics' in data:
         # OTLP format - store directly
@@ -675,9 +694,17 @@ async def stream_logs():
                 
                 # Wait before next check
                 await asyncio.sleep(2)
-                
+
+            except asyncio.CancelledError:
+                # Client disconnected, stop streaming
+                break
+            except (json.JSONDecodeError, TypeError) as e:
+                logger.error(f"Error serializing log data: {e}")
+                await asyncio.sleep(2)
             except Exception as e:
-                print(f"Error in log stream: {e}")
+                # Catch-all for storage errors or unexpected issues
+                # Keep connection alive but log the error
+                logger.error(f"Error in log stream: {e}", exc_info=True)
                 await asyncio.sleep(5)
     
     return StreamingResponse(
@@ -1041,7 +1068,7 @@ async def health():
 
 if __name__ == '__main__':
     import uvicorn
-    print("Starting TinyOlly UI...")
-    print("✓ HTTP mode: http://localhost:5002")
+    logger.info("Starting TinyOlly UI...")
+    logger.info("✓ HTTP mode: http://localhost:5002")
     # uvloop is already installed via policy at top of file
     uvicorn.run(app, host='0.0.0.0', port=5002)

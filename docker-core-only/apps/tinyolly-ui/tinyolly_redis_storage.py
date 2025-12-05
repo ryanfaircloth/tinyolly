@@ -9,10 +9,14 @@ import json
 import time
 import uuid
 import os
+import logging
 import msgpack
 import orjson
 from redis import asyncio as aioredis
 from async_lru import alru_cache
+
+# Configure logging
+logger = logging.getLogger(__name__)
 
 # Default configuration
 REDIS_HOST = os.getenv('REDIS_HOST', 'localhost')
@@ -86,7 +90,7 @@ class Storage:
             # Handle uncompressed msgpack
             return msgpack.unpackb(data)
         except Exception as e:
-            print(f"Deserialization error: {e}")
+            logger.error(f"Deserialization error: {e}", exc_info=True)
             return {}
     
     def _normalize_datapoint(self, dp):
@@ -232,7 +236,7 @@ class Storage:
             
             await pipe.execute()
         except Exception as e:
-            print(f"Redis error in store_spans: {e}")
+            logger.error(f"Redis error in store_spans: {e}", exc_info=True)
 
     async def get_recent_traces(self, limit=100):
         """Get recent trace IDs"""
@@ -309,7 +313,7 @@ class Storage:
                 'service_name': span.get('serviceName', 'unknown')
             }
         except Exception as e:
-            print(f"Error getting span details: {e}")
+            logger.error(f"Error getting span details: {e}", exc_info=True)
             return None
 
     async def get_trace_spans(self, trace_id):
@@ -324,7 +328,7 @@ class Storage:
                 
             return [self._decompress_if_needed(s) for s in span_data_list]
         except Exception as e:
-            print(f"Error getting trace spans: {e}")
+            logger.error(f"Error getting trace spans: {e}", exc_info=True)
             return []
 
     async def get_trace_summary(self, trace_id):
@@ -503,7 +507,7 @@ class Storage:
             
             await pipe.execute()
         except Exception as e:
-            print(f"Redis error in store_logs: {e}")
+            logger.error(f"Redis error in store_logs: {e}", exc_info=True)
 
     async def get_logs(self, trace_id=None, limit=100):
         """Get logs, optionally filtered by trace_id"""
@@ -526,7 +530,7 @@ class Storage:
             
             return logs
         except Exception as e:
-            print(f"Error getting logs: {e}")
+            logger.error(f"Error getting logs: {e}", exc_info=True)
             return []
 
     def parse_attributes(self, attrs_list):
@@ -787,7 +791,7 @@ class Storage:
             
             await pipe.execute()
         except Exception as e:
-            print(f"Error storing metric datapoint: {e}")
+            logger.error(f"Error storing metric datapoint: {e}", exc_info=True)
 
     async def store_metric(self, metric):
         """Store a single metric (legacy wrapper)"""
@@ -860,7 +864,7 @@ class Storage:
             
             await pipe.execute()
         except Exception as e:
-            print(f"Redis error in store_metrics: {e}")
+            logger.error(f"Redis error in store_metrics: {e}", exc_info=True)
 
     @alru_cache(maxsize=1, ttl=10)
     async def get_metric_names(self, limit=None):
@@ -898,7 +902,7 @@ class Storage:
             
             return orjson.loads(meta_data)
         except Exception as e:
-            print(f"Error getting metric metadata: {e}")
+            logger.error(f"Error getting metric metadata: {e}", exc_info=True)
             return {'type': 'unknown', 'unit': '', 'description': '', 'temporality': 'N/A'}
 
     async def get_all_resources(self, metric_name):
@@ -917,7 +921,7 @@ class Storage:
             
             return resources
         except Exception as e:
-            print(f"Error getting resources: {e}")
+            logger.error(f"Error getting resources: {e}", exc_info=True)
             return []
 
     async def get_all_attributes(self, metric_name, resource_filter=None):
@@ -972,7 +976,7 @@ class Storage:
             # Convert back to list of dicts
             return [orjson.loads(a) for a in attributes_set]
         except Exception as e:
-            print(f"Error getting attributes: {e}")
+            logger.error(f"Error getting attributes: {e}", exc_info=True)
             return []
 
     async def get_metric_series(self, name, resource_filter=None, attr_filter=None, 
@@ -1057,7 +1061,7 @@ class Storage:
             
             return series_list
         except Exception as e:
-            print(f"Error getting metric series: {e}")
+            logger.error(f"Error getting metric series: {e}", exc_info=True)
             return []
     
     async def get_cardinality_stats(self):
@@ -1410,7 +1414,7 @@ class Storage:
                                 prev_bound = bound_ms
         
         except Exception as e:
-            print(f"Error fetching RED metrics for {service_name}: {e}", flush=True)
+            logger.error(f"Error fetching RED metrics for {service_name}: {e}", exc_info=True)
         
         return red
 

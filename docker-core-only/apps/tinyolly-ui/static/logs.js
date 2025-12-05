@@ -3,6 +3,7 @@
  */
 import { formatTraceId, copyToClipboard, downloadJson, formatTimestamp, renderJsonDetailView, getSeverityColor, renderActionButton, renderEmptyState, filterTableRows, copyJsonWithFeedback, downloadTelemetryJson, closeAllExpandedItems } from './utils.js';
 
+const MAX_LOGS_IN_MEMORY = 1000; // Prevent unbounded memory growth
 let currentLogs = [];
 let selectedLogIndex = null;
 let displayedLogsCount = 50;
@@ -10,7 +11,14 @@ const LOGS_PER_PAGE = 50;
 
 export function renderLogs(logs, containerId = 'logs-container') {
     const container = document.getElementById(containerId);
-    currentLogs = logs;
+
+    // Apply memory limit to prevent unbounded growth
+    if (logs.length > MAX_LOGS_IN_MEMORY) {
+        currentLogs = logs.slice(-MAX_LOGS_IN_MEMORY);
+    } else {
+        currentLogs = logs;
+    }
+
     selectedLogIndex = null;
     displayedLogsCount = LOGS_PER_PAGE;
 
