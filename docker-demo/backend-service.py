@@ -8,10 +8,14 @@ import logging
 import json
 from flask import Flask, jsonify, request
 
-# Configure structured JSON logging
+# Configure structured JSON logging with stdout handler
+import sys
 logging.basicConfig(
     level=logging.INFO,
-    format='%(message)s'  # Just the message, structured logging will handle the rest
+    format='%(message)s',  # Just the message, structured logging will handle the rest
+    handlers=[
+        logging.StreamHandler(sys.stdout)  # Ensure logs go to stdout
+    ]
 )
 logger = logging.getLogger(__name__)
 

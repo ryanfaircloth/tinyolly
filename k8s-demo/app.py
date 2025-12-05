@@ -17,12 +17,20 @@ from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
 from opentelemetry.sdk.metrics.view import View, ExponentialBucketHistogramAggregation
 from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import OTLPMetricExporter
 
-# Configure structured JSON logging
+# Configure structured JSON logging with stdout handler
+# OpenTelemetry auto-instrumentation will inject trace context into logs
+import sys
 logging.basicConfig(
     level=logging.INFO,
-    format='%(message)s'  # Just the message, structured logging will handle the rest
+    format='%(levelname)s:%(name)s:%(message)s',
+    handlers=[
+        logging.StreamHandler(sys.stdout)  # Ensure logs go to stdout
+    ]
 )
 logger = logging.getLogger(__name__)
+
+# Note: OpenTelemetry auto-instrumentation (via OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED=true)
+# will automatically inject trace_id and span_id into log records
 
 # Helper for structured logging
 def log_json(level, message, **kwargs):
@@ -48,7 +56,7 @@ metric_reader = PeriodicExportingMetricReader(
 # Configure Views to use ExponentialHistogramAggregation for specific metrics
 views = [
     View(
-        instrument_name="demo.random.exponential_histogram",
+        instrument_name="demo.histogram.exponential",
         aggregation=ExponentialBucketHistogramAggregation(max_scale=20, max_size=160)
     )
 ]
@@ -114,17 +122,17 @@ demo_updown = meter.create_up_down_counter(
     unit="1"
 )
 
-# 3. Histogram: Random distribution
+# 3. Explicit Histogram: Random distribution with explicit bucket bounds
 demo_histogram = meter.create_histogram(
-    name="demo.random.histogram",
-    description="A randomized histogram",
+    name="demo.histogram.explicit",
+    description="Explicit histogram with fixed bucket boundaries",
     unit="1"
 )
 
-# 3b. Exponential Histogram (configured via View)
+# 3b. Exponential Histogram: Uses exponential bucketing (configured via View)
 demo_exponential_histogram = meter.create_histogram(
-    name="demo.random.exponential_histogram",
-    description="A randomized exponential histogram",
+    name="demo.histogram.exponential",
+    description="Exponential histogram with dynamically scaled buckets",
     unit="1"
 )
 
@@ -192,8 +200,8 @@ def generate_auto_traffic():
     # Wait a bit for the app to fully start
     time.sleep(10)
     
-    endpoints = ['/hello', '/calculate', '/process-order', '/error']
-    weights = [25, 25, 40, 10]  # 40% complex orders, 25% calc, 25% hello, 10% error
+    endpoints = ['/hello', '/calculate', '/process-order', '/error', '/not-found', '/redirect', '/server-error', '/rate-limit', '/unauthorized']
+    weights = [20, 15, 25, 10, 10, 5, 10, 3, 2]  # More varied error scenarios
     
     while True:
         try:
@@ -202,9 +210,9 @@ def generate_auto_traffic():
             
             logger.info(f"Auto-traffic: calling {endpoint}")
             
-            # Make internal request
+            # Make internal request using container hostname
             try:
-                response = requests.get(f"http://localhost:5000{endpoint}", timeout=10)
+                response = requests.get(f"http://demo-frontend:5000{endpoint}", timeout=10)
                 logger.info(f"Auto-traffic: {endpoint} -> {response.status_code}")
             except Exception as e:
                 logger.warning(f"Auto-traffic request failed: {e}")
@@ -459,9 +467,9 @@ def error():
     request_counter.add(1, {"endpoint": "error", "method": "GET"})
     active_requests.add(1)
     error_counter.add(1, {"type": "intentional"})
-    
+
     logger.error("Error endpoint called - simulating failure")
-    
+
     # Randomly decide what kind of error
     if random.random() > 0.5:
         logger.error("Raising ValueError")
@@ -471,6 +479,60 @@ def error():
         logger.warning("Returning error response")
         active_requests.add(-1)
         return jsonify({"error": "Something went wrong"}), 500
+
+@app.route('/not-found')
+def not_found():
+    """Simulate 404 Not Found"""
+    request_counter.add(1, {"endpoint": "not_found", "method": "GET"})
+    error_counter.add(1, {"type": "not_found"})
+    logger.warning("Resource not found")
+    return jsonify({"error": "Resource not found"}), 404
+
+@app.route('/unauthorized')
+def unauthorized():
+    """Simulate 401 Unauthorized"""
+    request_counter.add(1, {"endpoint": "unauthorized", "method": "GET"})
+    error_counter.add(1, {"type": "unauthorized"})
+    logger.warning("Unauthorized access attempt")
+    return jsonify({"error": "Unauthorized - please login"}), 401
+
+@app.route('/rate-limit')
+def rate_limit():
+    """Simulate 429 Too Many Requests"""
+    request_counter.add(1, {"endpoint": "rate_limit", "method": "GET"})
+    error_counter.add(1, {"type": "rate_limit"})
+    logger.warning("Rate limit exceeded")
+    return jsonify({"error": "Too many requests, please try again later"}), 429
+
+@app.route('/redirect')
+def redirect():
+    """Simulate 301/302 Redirect"""
+    request_counter.add(1, {"endpoint": "redirect", "method": "GET"})
+    logger.info("Redirecting to home")
+    from flask import redirect as flask_redirect
+    return flask_redirect('/', code=302)
+
+@app.route('/server-error')
+def server_error():
+    """Simulate various 5xx errors"""
+    request_counter.add(1, {"endpoint": "server_error", "method": "GET"})
+    error_counter.add(1, {"type": "server_error"})
+
+    # Randomly choose different 5xx errors
+    error_type = random.choice([500, 502, 503, 504])
+
+    if error_type == 500:
+        logger.error("Internal server error")
+        return jsonify({"error": "Internal server error"}), 500
+    elif error_type == 502:
+        logger.error("Bad gateway")
+        return jsonify({"error": "Bad gateway - upstream service failed"}), 502
+    elif error_type == 503:
+        logger.error("Service unavailable")
+        return jsonify({"error": "Service temporarily unavailable"}), 503
+    else:  # 504
+        logger.error("Gateway timeout")
+        return jsonify({"error": "Gateway timeout"}), 504
 
 if __name__ == '__main__':
     print("=" * 60)

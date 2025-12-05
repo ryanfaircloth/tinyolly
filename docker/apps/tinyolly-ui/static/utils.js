@@ -109,13 +109,13 @@ export function formatTimestamp(seconds) {
     });
 }
 
-/** Returns color for HTTP status code (green=2xx, orange=4xx, red=5xx) */
+/** Returns color for HTTP status code (green=2xx/3xx, orange=4xx, red=5xx) */
 export function getStatusCodeColor(status) {
     if (!status) return 'var(--text-muted)';
     const s = String(status);
-    if (s.startsWith('2') || s === 'OK') return 'var(--success)';
+    if (s.startsWith('2') || s.startsWith('3') || s === 'OK') return 'var(--success-text)';
     if (s.startsWith('4')) return '#f59e0b';
-    if (s.startsWith('5') || s === 'ERR') return 'var(--error)';
+    if (s.startsWith('5') || s === 'ERR') return 'var(--error-text)';
     return 'var(--text-muted)';
 }
 
