@@ -67,7 +67,7 @@ Open your browser to: **`http://localhost:5005`**
 You should see:
 
 <div align="center">
-  <img src="images/traces.png" alt="TinyOlly Traces View" width="600">
+  <img src="../images/traces.png" alt="TinyOlly Traces View" width="600">
   <p><em>Distributed traces view with service correlation</em></p>
 </div>
 

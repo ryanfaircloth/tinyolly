@@ -3,7 +3,7 @@
 Get TinyOlly running on Docker in minutes!
 
 <div align="center">
-  <img src="images/traces.png" alt="TinyOlly Running on Docker" width="600">
+  <img src="../images/traces.png" alt="TinyOlly Running on Docker" width="600">
   <p><em>TinyOlly UI showing distributed traces</em></p>
 </div>
 
