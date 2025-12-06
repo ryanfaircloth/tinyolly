@@ -1,9 +1,18 @@
 # Kubernetes Deployment
 
-All examples are launched from the repo - clone it first or download the current GitHub release archive:  
+Deploy TinyOlly on Kubernetes (Minikube) for local development!
+
+<div align="center">
+  <img src="images/servicemap.png" alt="TinyOlly on Kubernetes" width="600">
+  <p><em>Service map showing microservices running on Kubernetes</em></p>
+</div>
+
+---
+
+All examples are launched from the repo - clone it first or download the current GitHub release archive:
 ```bash
 git clone https://github.com/tinyolly/tinyolly
-```  
+```
 
 ## Prerequisites
 

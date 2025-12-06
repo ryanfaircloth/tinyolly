@@ -1,9 +1,18 @@
 # Docker Deployment
 
-All examples are launched from the repo - clone it first or download the current GitHub release archive:  
+Get TinyOlly running on Docker in minutes!
+
+<div align="center">
+  <img src="images/traces.png" alt="TinyOlly Running on Docker" width="600">
+  <p><em>TinyOlly UI showing distributed traces</em></p>
+</div>
+
+---
+
+All examples are launched from the repo - clone it first or download the current GitHub release archive:
 ```bash
 git clone https://github.com/tinyolly/tinyolly
-```  
+```
 
 ## 1. Deploy TinyOlly Core (Required)
 

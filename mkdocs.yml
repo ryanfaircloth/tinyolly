@@ -30,7 +30,7 @@ theme:
     - content.tabs
     - content.code.annotate
   logo: images/logo.png
-  favicon: images/contact-email.svg
+  favicon: images/logo.png
 
 extra_css:
   - assets/css/custom.css
@@ -54,13 +54,17 @@ markdown_extensions:
   - md_in_html
 
 nav:
-  - About TinyOlly: index.md
-  - Run on Docker: docker.md
-  - Run on Kubernetes: kubernetes.md
-  - OpenTelemetry Collector Config: otel-collector.md
-  - REST API: api.md
-  - Architecture: technical.md
-  - Cardinality Protection: CARDINALITY-PROTECTION.md
+  - Home: index.md
+  - Quick Start: quickstart.md
+  - Deployment:
+      - Docker: docker.md
+      - Kubernetes: kubernetes.md
+      - OpenTelemetry Collector: otel-collector.md
+  - API Reference:
+      - REST API & Examples: api.md
+  - Advanced:
+      - Architecture: technical.md
+      - Cardinality Protection: CARDINALITY-PROTECTION.md
   - Licensing: licensing.md
 
 extra:

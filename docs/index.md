@@ -7,22 +7,42 @@
 
 ## Introducing TinyOlly
 
-TinyOlly is located here: [https://github.com/tinyolly/tinyolly](https://github.com/tinyolly/tinyolly)  
+**Repository:** [https://github.com/tinyolly/tinyolly](https://github.com/tinyolly/tinyolly)
+
 ```bash
 git clone https://github.com/tinyolly/tinyolly
 ```
-Why send telemetry to a cloud observabilty platform while coding? Why not have one on your desktop?  
+
+### Why TinyOlly?
+
+Why send telemetry to a cloud observability platform while coding? Why not have one on your desktop?
 
 TinyOlly is a **lightweight OpenTelemetry-native observability platform** built from scratch to visualize and correlate logs, metrics, and traces. No 3rd party observability tools - just Python (FastAPI), Redis, OpenAPI, and JavaScript.
 
-- Think of TinyOlly as a development tool to observe and perfect your app's telemetry while in dev 
-- Export app metrics, logs, and traces to the Otel collector on Docker or K8S and TinyOlly will visualize and correlate them 
-- Try out exotic OpenTelemetry Collector configs in the safety of your own docker/k8s env  
-- Includes a **REST API** with OpenAPI docs for programmatic access to all telemetry  
-- TinyOlly is *not* designed to compete with production observability platforms! It is for local development only. It is not focused on infrastructure monitoring at this time.
+### Key Features
 
-**Platform Support:**  
-TinyOlly was built and tested Docker Desktop and Minikube Kubernetes on Apple Silicon Mac but may work on other platforms
+✅ **Development-focused** - Perfect your app's telemetry locally before production
+✅ **Full OpenTelemetry support** - Native OTLP ingestion (gRPC & HTTP)
+✅ **Trace correlation** - Link logs, metrics, and traces automatically
+✅ **Service catalog** - RED metrics (Rate, Errors, Duration) for all services
+✅ **Interactive service map** - Visualize dependencies and call graphs
+✅ **REST API** - Programmatic access with OpenAPI documentation
+✅ **Zero vendor lock-in** - Works with any OTel Collector distribution
+
+!!! note "Local Development Only"
+    TinyOlly is *not* designed to compete with production observability platforms! It's for local development only and is not focused on infrastructure monitoring at this time.
+
+### Platform Support
+
+Tested on:
+
+- Docker Desktop (macOS Apple Silicon)
+- Minikube Kubernetes (macOS Apple Silicon)
+- May work on other platforms
+
+### Quick Start
+
+Ready to try TinyOlly? Check out the [Quick Start Guide](quickstart.md) to get running in under 5 minutes!
 
 ---
 
