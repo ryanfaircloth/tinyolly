@@ -8,12 +8,12 @@ setup(
     version="0.1.0",
     description="Shared utilities for TinyOlly observability platform",
     packages=find_packages(),
-    python_requires=">=3.9",
+    python_requires=">=3.12",
     install_requires=[
-        "redis>=4.5.0",
-        "zstandard>=0.21.0",
-        "msgpack>=1.0.0",
-        "orjson>=3.9.0",
-        "async-lru>=2.0.0",
+        "redis>=4.5.0,<6.0.0",
+        "zstandard>=0.21.0,<1.0.0",
+        "msgpack>=1.0.0,<2.0.0",
+        "orjson>=3.9.0,<4.0.0",
+        "async-lru>=2.0.0,<3.0.0",
     ],
 )
