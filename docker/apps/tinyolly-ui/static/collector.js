@@ -47,13 +47,20 @@ async function loadTemplates() {
             return;
         }
 
-        // Render template cards
-        templatesGrid.innerHTML = availableTemplates.map(template => `
+        // Render template cards - compact single line format
+        templatesGrid.innerHTML = availableTemplates.map(template => {
+            // Truncate description to keep it short
+            let shortDesc = template.description || '';
+            if (shortDesc.length > 50) {
+                shortDesc = shortDesc.substring(0, 47) + '...';
+            }
+            return `
             <div class="template-card" onclick="loadTemplate('${template.id}')">
                 <h4>${escapeHtml(template.name)}</h4>
-                <p>${escapeHtml(template.description)}</p>
+                <p class="template-desc">${escapeHtml(shortDesc)}</p>
             </div>
-        `).join('');
+        `;
+        }).join('');
 
     } catch (error) {
         console.error('Error loading templates:', error);
@@ -107,49 +114,43 @@ export async function loadOpampStatus() {
 
         const data = await response.json();
 
-        // Render status
+        // Render status in compact single-line format
         statusContainer.innerHTML = `
             <div class="status-item">
-                <span class="status-label">Server Status</span>
+                <span class="status-label">Status</span>
                 <span class="status-value connected">${data.status || 'OK'}</span>
             </div>
             <div class="status-item">
-                <span class="status-label">Connected Agents</span>
+                <span class="status-label">Agents</span>
                 <span class="status-value">${data.agent_count || 0}</span>
             </div>
         `;
 
-        // Render agents
+        // Render agents in compact single-line format
         if (data.agents && Object.keys(data.agents).length > 0) {
             agentsContainer.innerHTML = Object.entries(data.agents).map(([id, agent]) => `
                 <div class="agent-card">
-                    <div class="agent-card-header">
-                        <span class="agent-status ${agent.status}">${agent.status}</span>
-                    </div>
-                    <div class="agent-id">${id}</div>
-                    <div class="agent-info">
+                    <span class="agent-status ${agent.status}">${agent.status}</span>
+                    <span class="agent-id">${id.substring(0, 20)}${id.length > 20 ? '...' : ''}</span>
+                    <span class="agent-info">
                         <span class="agent-info-label">Type:</span>
                         <span class="agent-info-value">${agent.agent_type || 'OTel Collector'}</span>
-                        <span class="agent-info-label">Version:</span>
-                        <span class="agent-info-value">${agent.agent_version || 'Unknown'}</span>
-                        <span class="agent-info-label">Last Seen:</span>
-                        <span class="agent-info-value">${formatTimestamp(agent.last_seen)}</span>
-                    </div>
+                    </span>
                 </div>
             `).join('');
         } else {
-            agentsContainer.innerHTML = '<div class="empty-state">No collectors connected. Make sure the OTel Collector is running with OpAMP extension enabled.</div>';
+            agentsContainer.innerHTML = '<div class="empty-state" style="font-size: 10px; padding: 4px;">No collectors connected</div>';
         }
 
     } catch (error) {
         console.error('Error loading OpAMP status:', error);
         statusContainer.innerHTML = `
             <div class="status-item">
-                <span class="status-label">Server Status</span>
+                <span class="status-label">Status</span>
                 <span class="status-value disconnected">Unavailable</span>
             </div>
         `;
-        agentsContainer.innerHTML = '<div class="empty-state">Unable to connect to OpAMP server</div>';
+        agentsContainer.innerHTML = '<div class="empty-state" style="font-size: 10px; padding: 4px;">Unable to connect</div>';
     }
 }
 

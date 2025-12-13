@@ -8,31 +8,38 @@
         </p>
     </div>
 
-    <!-- Config Templates Section - Moved to top -->
+    <!-- OpAMP Status and Connected Collectors - Side by side above templates -->
+    <div class="status-agents-row">
+        <!-- OpAMP Status Section -->
+        <div class="status-card">
+            <div class="status-card-header">
+                <h4>OpAMP Server</h4>
+                <button class="collector-btn collector-btn-secondary collector-btn-xs" onclick="refreshOpampStatus()">Refresh</button>
+            </div>
+            <div id="opamp-status-container" class="status-card-content">
+                <div class="loading-indicator">Loading...</div>
+            </div>
+        </div>
+
+        <!-- Connected Agents Section -->
+        <div class="status-card">
+            <div class="status-card-header">
+                <h4>Connected Collectors</h4>
+            </div>
+            <div id="agents-container" class="status-card-content">
+                <div class="empty-state">No collectors connected</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Config Templates Section -->
     <div class="config-templates-section">
-        <h3>Configuration Templates</h3>
-        <p class="templates-description">Quick-start templates for common use cases (from <code>otelcol-configs/templates/</code>):</p>
+        <div class="templates-header">
+            <h3>Configuration Templates</h3>
+            <span class="templates-description">Quick-start templates for common use cases (from <code>otelcol-configs/templates/</code>):</span>
+        </div>
         <div class="templates-grid">
             <div class="loading-indicator">Loading templates...</div>
-        </div>
-    </div>
-
-    <!-- OpAMP Status Section -->
-    <div class="opamp-status-section">
-        <div class="status-header">
-            <h3>OpAMP Server Status</h3>
-            <button class="collector-btn collector-btn-secondary collector-btn-sm" onclick="refreshOpampStatus()">Refresh Status</button>
-        </div>
-        <div id="opamp-status-container" class="status-container">
-            <div class="loading-indicator">Loading OpAMP status...</div>
-        </div>
-    </div>
-
-    <!-- Connected Agents Section -->
-    <div class="agents-section">
-        <h3>Connected Collectors</h3>
-        <div id="agents-container" class="agents-container">
-            <div class="empty-state">No collectors connected</div>
         </div>
     </div>
 
@@ -81,31 +88,80 @@
 
 <style>
 .collector-header {
-    margin-bottom: 24px;
+    margin-bottom: 12px;
 }
 
 .collector-header h2 {
-    margin: 0 0 8px 0;
+    margin: 0 0 4px 0;
     color: var(--text-main);
+    font-size: 18px;
 }
 
 .collector-description {
     color: var(--text-muted);
     margin: 0;
+    font-size: 12px;
 }
 
-.opamp-status-section,
-.agents-section,
 .config-editor-section,
 .config-templates-section {
     background: var(--bg-card);
     border-radius: 8px;
-    padding: 16px;
+    padding: 12px;
     margin-bottom: 16px;
     border: 1px solid var(--border-color);
 }
 
-.status-header,
+/* Status and Agents Row - Side by side */
+.status-agents-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.status-card {
+    background: var(--bg-hover);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 4px 8px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: auto;
+}
+
+.status-card:hover {
+    border-color: var(--primary);
+    box-shadow: 0 2px 8px rgba(0, 102, 204, 0.1);
+}
+
+.status-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2px;
+}
+
+.status-card-header h4 {
+    margin: 0;
+    color: var(--text-main);
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+.status-card-content {
+    font-size: 11px;
+    color: var(--text-main);
+    line-height: 1.3;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0;
+}
+
 .config-header {
     display: flex;
     justify-content: space-between;
@@ -113,38 +169,61 @@
     margin-bottom: 12px;
 }
 
-.status-header h3,
 .config-header h3 {
     margin: 0;
     color: var(--text-main);
+    font-size: 14px;
 }
 
-.agents-section h3,
-.config-templates-section h3 {
-    margin: 0 0 12px 0;
-    color: var(--text-main);
-}
-
-.status-container {
+.templates-header {
     display: flex;
-    gap: 24px;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
     flex-wrap: wrap;
 }
 
-.status-item {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
+.config-templates-section h3 {
+    margin: 0;
+    color: var(--text-main);
+    font-size: 14px;
+}
+
+.templates-description {
+    color: var(--text-muted);
+    margin: 0;
+    font-size: 11px;
+}
+
+/* Status card content styling - compact single line */
+.status-card-content .status-item {
+    display: inline-flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: 6px;
+    margin-right: 16px;
+    padding: 0;
+    line-height: 1.3;
+    min-width: 60px;
+}
+
+.status-card-content .status-item:last-child {
+    margin-right: 0;
+}
+
+.status-card-content .status-item:last-child {
+    margin-bottom: 0;
 }
 
 .status-label {
-    font-size: 12px;
+    font-size: 10px;
     color: var(--text-muted);
     text-transform: uppercase;
 }
 
 .status-value {
-    font-size: 16px;
+    font-size: 11px;
     font-weight: 600;
     color: var(--text-main);
 }
@@ -157,62 +236,76 @@
     color: var(--error-text);
 }
 
-.agents-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 12px;
-}
-
-.agent-card {
-    background: var(--bg-hover);
-    border: 1px solid var(--border-color);
-    border-radius: 6px;
-    padding: 12px;
-}
-
-.agent-card-header {
+/* Agents container in status card - compact single line */
+.status-card-content .agents-container {
     display: flex;
-    justify-content: space-between;
+    flex-direction: column;
+    gap: 2px;
+    width: 100%;
+}
+
+.status-card-content .agent-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 3px;
+    padding: 2px 5px;
+    display: flex;
     align-items: center;
-    margin-bottom: 8px;
+    gap: 5px;
+    flex-wrap: nowrap;
+    overflow: hidden;
 }
 
-.agent-id {
+.status-card-content .agent-card-header {
+    display: flex;
+    align-items: center;
+    margin: 0;
+}
+
+.status-card-content .agent-id {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 12px;
+    font-size: 10px;
     color: var(--text-muted);
-    word-break: break-all;
+    line-height: 1.2;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
-.agent-status {
-    padding: 2px 8px;
-    border-radius: 12px;
-    font-size: 11px;
+.status-card-content .agent-status {
+    padding: 1px 4px;
+    border-radius: 6px;
+    font-size: 9px;
     font-weight: 500;
+    white-space: nowrap;
 }
 
-.agent-status.connected {
+.status-card-content .agent-status.connected {
     background: var(--success-bg);
     color: var(--success-text);
 }
 
-.agent-status.disconnected {
+.status-card-content .agent-status.disconnected {
     background: var(--error-bg);
     color: var(--error-text);
 }
 
-.agent-info {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    gap: 4px 12px;
-    font-size: 13px;
+.status-card-content .agent-info {
+    display: inline-flex;
+    gap: 3px;
+    font-size: 10px;
+    line-height: 1.2;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
-.agent-info-label {
+.status-card-content .agent-info-label {
     color: var(--text-muted);
 }
 
-.agent-info-value {
+.status-card-content .agent-info-value {
     color: var(--text-main);
 }
 
@@ -231,7 +324,7 @@
     top: 8px;
     right: 8px;
     z-index: 10;
-    font-size: 12px;
+    font-size: 11px;
     padding: 4px 8px;
     border-radius: 4px;
     display: none;
@@ -260,7 +353,7 @@
     height: 500px;
     max-height: 70vh;
     font-family: 'JetBrains Mono', monospace;
-    font-size: 13px;
+    font-size: 12px;
     line-height: 1.5;
     padding: 12px;
     border: 1px solid var(--border-color);
@@ -281,7 +374,7 @@
 
 .config-validation {
     margin-bottom: 12px;
-    font-size: 13px;
+    font-size: 11px;
     max-height: 200px;
     overflow-y: auto;
 }
@@ -298,25 +391,24 @@
     color: var(--warning-text);
 }
 
-.templates-description {
-    color: var(--text-muted);
-    margin: 0 0 12px 0;
-    font-size: 14px;
-}
-
 .templates-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 12px;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 8px;
 }
 
 .template-card {
     background: var(--bg-hover);
     border: 1px solid var(--border-color);
     border-radius: 6px;
-    padding: 12px;
+    padding: 5px 10px;
     cursor: pointer;
     transition: border-color 0.2s, box-shadow 0.2s;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    min-height: 32px;
 }
 
 .template-card:hover {
@@ -325,22 +417,33 @@
 }
 
 .template-card h4 {
-    margin: 0 0 4px 0;
+    margin: 0;
     color: var(--text-main);
-    font-size: 14px;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.2;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .template-card p {
     margin: 0;
     color: var(--text-muted);
-    font-size: 12px;
+    font-size: 11px;
+    line-height: 1.2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+    min-width: 0;
 }
+
 
 .collector-btn {
     padding: 8px 16px;
     border: none;
     border-radius: 6px;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 500;
     cursor: pointer;
     transition: background 0.2s;
@@ -349,6 +452,13 @@
 .collector-btn-sm {
     padding: 4px 12px;
     font-size: 12px;
+}
+
+.collector-btn-xs {
+    padding: 2px 6px;
+    font-size: 10px;
+    line-height: 1.2;
+    height: 18px;
 }
 
 .collector-btn-primary {
@@ -373,13 +483,15 @@
 .loading-indicator {
     color: var(--text-muted);
     font-style: italic;
+    font-size: 11px;
 }
 
 #collector-content .empty-state {
     color: var(--text-muted);
     font-style: italic;
-    padding: 24px;
+    padding: 8px;
     text-align: center;
+    font-size: 11px;
 }
 
 /* Diff Modal Styles */
@@ -418,17 +530,18 @@
 .diff-modal-header h3 {
     margin: 0;
     color: var(--text-main);
+    font-size: 14px;
 }
 
 .diff-modal-close {
     background: none;
     border: none;
-    font-size: 24px;
+    font-size: 20px;
     color: var(--text-muted);
     cursor: pointer;
     padding: 0;
-    width: 30px;
-    height: 30px;
+    width: 24px;
+    height: 24px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -449,12 +562,12 @@
 .diff-description {
     color: var(--text-muted);
     margin: 0 0 16px 0;
-    font-size: 14px;
+    font-size: 12px;
 }
 
 .diff-content {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 12px;
+    font-size: 11px;
     line-height: 1.6;
     background: var(--bg-card);
     border: 1px solid var(--border-color);
@@ -546,15 +659,17 @@
 .validation-error-item .error-section {
     font-weight: 600;
     color: var(--error-text);
+    font-size: 11px;
 }
 
 .validation-error-item .error-message {
     color: var(--text-main);
+    font-size: 11px;
 }
 
 .validation-error-item .error-hint {
     margin-top: 4px;
-    font-size: 11px;
+    font-size: 10px;
     color: var(--text-muted);
 }
 
