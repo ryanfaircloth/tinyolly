@@ -9,21 +9,27 @@ let currentConfig = '';
 /**
  * Initialize the collector tab
  */
+// Track if collector has been initialized to avoid re-initializing
+let collectorInitialized = false;
+
 export async function initCollector() {
     const editor = document.getElementById('collector-config-editor');
     if (editor) {
-        // Add tab key support for indentation
-        editor.addEventListener('keydown', handleEditorKeydown);
-
-        // Add real-time validation
-        editor.addEventListener('input', debounce(() => validateConfig(), 500));
+        // Add tab key support for indentation (only once)
+        if (!collectorInitialized) {
+            editor.addEventListener('keydown', handleEditorKeydown);
+            // Add real-time validation
+            editor.addEventListener('input', debounce(() => validateConfig(), 500));
+            collectorInitialized = true;
+        }
     }
 
     // Load templates from API
     await loadTemplates();
 
-    // Load current config from OpAMP server
-    await loadCollectorConfig();
+    // Always load default config when switching to collector tab
+    // (User can manually load current agent config if needed)
+    await loadTemplate('default');
 }
 
 /**
@@ -200,17 +206,32 @@ export async function loadCollectorConfig() {
             setConfigStatus('success', 'Loaded');
             setTimeout(() => setConfigStatus(''), 2000);
         } else if (data.status === 'no_agents_connected') {
-            setConfigStatus('pending', 'No agents connected - showing default');
-            // Keep current editor content
+            // No agents connected - load default config
+            setConfigStatus('pending', 'No agents connected - loading default');
+            await loadTemplate('default');
+            setConfigStatus('success', 'Loaded default config');
+            setTimeout(() => setConfigStatus(''), 2000);
         } else {
-            setConfigStatus('error', 'No config available');
+            // Fallback to default if no config available
+            setConfigStatus('pending', 'Loading default config');
+            await loadTemplate('default');
+            setConfigStatus('success', 'Loaded default config');
+            setTimeout(() => setConfigStatus(''), 2000);
         }
 
         await validateConfig();
 
     } catch (error) {
         console.error('Error loading config:', error);
-        setConfigStatus('error', 'Failed to load');
+        // On error, fallback to default config
+        setConfigStatus('pending', 'Loading default config');
+        try {
+            await loadTemplate('default');
+            setConfigStatus('success', 'Loaded default config');
+            setTimeout(() => setConfigStatus(''), 2000);
+        } catch (templateError) {
+            setConfigStatus('error', 'Failed to load');
+        }
     }
 }
 
@@ -658,6 +679,7 @@ export async function loadTemplate(templateId) {
         const data = await response.json();
         if (data.config) {
             editor.value = data.config;
+            currentConfig = data.config; // Update current config tracking
             await validateConfig();
             setConfigStatus('success', `Loaded "${templateId}" template`);
             setTimeout(() => setConfigStatus(''), 2000);
