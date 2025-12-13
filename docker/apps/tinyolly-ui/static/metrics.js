@@ -296,13 +296,14 @@ async function renderMetricDetail(metric, container) {
     try {
         container.innerHTML = '<div style="text-align: center; padding: 20px;">Loading...</div>';
 
-        // Fetch full metric data with attribute filters
+        // Fetch full metric data (attribute filters disabled for now)
         const params = new URLSearchParams();
-        for (const [key, value] of Object.entries(activeAttributeFilters)) {
-            params.append(`attribute.${key}`, value);
-        }
+        // DISABLED: Attribute filters - will be reworked in the future
+        // for (const [key, value] of Object.entries(activeAttributeFilters)) {
+        //     params.append(`attribute.${key}`, value);
+        // }
 
-        const response = await fetch(`/api/metrics/query?name=${encodeURIComponent(metric.name)}&${params.toString()}`);
+        const response = await fetch(`/api/metrics/${encodeURIComponent(metric.name)}?${params.toString()}`);
         const data = await response.json();
 
         // Build action buttons
@@ -321,8 +322,8 @@ async function renderMetricDetail(metric, container) {
             </div>
             <div id="attribute-filters-${chartId}" style="margin-bottom: 16px;"></div>
             <div id="chart-legend-${chartId}" style="margin-bottom: 16px;"></div>
-            <div id="chart-container-${chartId}" style="position: relative; height: 300px;">
-                <canvas id="${chartId}"></canvas>
+            <div id="chart-container-${chartId}" style="position: relative; height: 300px; width: 100%;">
+                <canvas id="${chartId}" style="display: block; width: 100%; height: 100%;"></canvas>
             </div>
         `;
 
@@ -342,16 +343,24 @@ async function renderMetricDetail(metric, container) {
         // Render attribute filters
         renderAttributeFilters(metric, data, `attribute-filters-${chartId}`, chartId);
 
-        // Render chart
-        await loadChartJs();
-
         // Adjust container height for gauge charts
         const chartContainer = document.getElementById(`chart-container-${chartId}`);
         if (metric.type.toLowerCase() === 'gauge' && chartContainer) {
             chartContainer.style.height = '120px';
         }
 
+        // Render chart - load Chart.js and wait for canvas to be ready
+        await loadChartJs();
+        
+        // Wait for DOM to settle and container to size properly
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
         const canvas = document.getElementById(chartId);
+        if (!canvas) {
+            console.error('Canvas not found after render:', chartId);
+            return;
+        }
+        
         renderMetricChart(metric, data, canvas, chartId);
 
     } catch (error) {
@@ -396,13 +405,22 @@ function renderAttributeFilters(metric, data, containerId, chartId) {
 }
 
 function renderMetricChart(metric, data, canvas, chartId) {
+    if (!canvas) {
+        console.error('Canvas element not found:', chartId);
+        return;
+    }
+    
     if (!data || !data.series || data.series.length === 0) {
+        // Ensure canvas has size before drawing
+        const rect = canvas.getBoundingClientRect();
+        canvas.width = rect.width || 800;
+        canvas.height = rect.height || 300;
         const ctx = canvas.getContext('2d');
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.fillStyle = 'var(--text-muted)';
         ctx.font = '12px Inter';
         ctx.textAlign = 'center';
-        ctx.fillText('No data available', canvas.width / 2, 150);
+        ctx.fillText('No data available', canvas.width / 2, canvas.height / 2);
         console.warn('No series data for metric:', metric.name, data);
         return;
     }
@@ -410,12 +428,16 @@ function renderMetricChart(metric, data, canvas, chartId) {
     // Check if any series has datapoints
     const hasDatapoints = data.series.some(s => s.datapoints && s.datapoints.length > 0);
     if (!hasDatapoints) {
+        // Ensure canvas has size before drawing
+        const rect = canvas.getBoundingClientRect();
+        canvas.width = rect.width || 800;
+        canvas.height = rect.height || 300;
         const ctx = canvas.getContext('2d');
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.fillStyle = 'var(--text-muted)';
         ctx.font = '12px Inter';
         ctx.textAlign = 'center';
-        ctx.fillText('No datapoints available', canvas.width / 2, 150);
+        ctx.fillText('No datapoints available', canvas.width / 2, canvas.height / 2);
         console.warn('No datapoints in series for metric:', metric.name);
         return;
     }
@@ -436,6 +458,11 @@ function renderMetricChart(metric, data, canvas, chartId) {
 }
 
 function renderGaugeChart(metric, data, canvas, chartId) {
+    if (!canvas) {
+        console.error('Canvas not provided to renderGaugeChart');
+        return;
+    }
+    
     // Show gauge as doughnut chart with current value
     if (!data.series || data.series.length === 0) {
         console.warn('No series for gauge chart:', metric.name);
@@ -445,12 +472,15 @@ function renderGaugeChart(metric, data, canvas, chartId) {
     // Find first series with datapoints
     let seriesWithData = data.series.find(s => s.datapoints && s.datapoints.length > 0);
     if (!seriesWithData) {
+        const rect = canvas.getBoundingClientRect();
+        canvas.width = rect.width || 800;
+        canvas.height = rect.height || 300;
         const ctx = canvas.getContext('2d');
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.fillStyle = 'var(--text-muted)';
         ctx.font = '12px Inter';
         ctx.textAlign = 'center';
-        ctx.fillText('No datapoints available', canvas.width / 2, 150);
+        ctx.fillText('No datapoints available', canvas.width / 2, canvas.height / 2);
         return;
     }
 
@@ -559,24 +589,30 @@ function renderSumChart(metric, data, canvas, chartId) {
     // Aggregate series by http.method (or span.kind if no http.method) to simplify the view
 
     if (!data.series || data.series.length === 0) {
+        const rect = canvas.getBoundingClientRect();
+        canvas.width = rect.width || 800;
+        canvas.height = rect.height || 300;
         const ctx = canvas.getContext('2d');
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.fillStyle = 'var(--text-muted)';
         ctx.font = '12px Inter';
         ctx.textAlign = 'center';
-        ctx.fillText('No series data available', canvas.width / 2, 150);
+        ctx.fillText('No series data available', canvas.width / 2, canvas.height / 2);
         return;
     }
 
     // Filter out series without datapoints
     const seriesWithData = data.series.filter(s => s.datapoints && s.datapoints.length > 0);
     if (seriesWithData.length === 0) {
+        const rect = canvas.getBoundingClientRect();
+        canvas.width = rect.width || 800;
+        canvas.height = rect.height || 300;
         const ctx = canvas.getContext('2d');
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.fillStyle = 'var(--text-muted)';
         ctx.font = '12px Inter';
         ctx.textAlign = 'center';
-        ctx.fillText('No datapoints available', canvas.width / 2, 150);
+        ctx.fillText('No datapoints available', canvas.width / 2, canvas.height / 2);
         return;
     }
 
@@ -698,6 +734,11 @@ function renderSumChart(metric, data, canvas, chartId) {
 }
 
 function renderHistogramChart(metric, data, canvas, chartId) {
+    if (!canvas) {
+        console.error('Canvas not provided to renderHistogramChart');
+        return;
+    }
+    
     // Show histogram as percentile bars (P50, P75, P90, P95, P99) over time
     if (!data.series || data.series.length === 0) return;
 
@@ -755,7 +796,7 @@ function renderHistogramChart(metric, data, canvas, chartId) {
         ctx.fillStyle = 'var(--text-muted)';
         ctx.font = '12px sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText('No histogram data available', canvas.width / 2, 150);
+        ctx.fillText('No histogram data available', canvas.width / 2, canvas.height / 2);
         return;
     }
 
