@@ -1,4 +1,4 @@
-# Default OpenTelemetry Collector Configuration
+# Default TinyOlly OTel Collector Config
 # This is the default configuration template used when no agents are connected.
 # It includes OTLP receivers, OpAMP extension, batch processing, spanmetrics connector,
 # and exports to both debug and OTLP endpoints.

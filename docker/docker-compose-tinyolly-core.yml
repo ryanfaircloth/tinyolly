@@ -64,14 +64,12 @@ services:
     volumes:
       - ./otelcol-configs/templates:/app/otelcol-templates:ro
       - ./otelcol-configs/config.yaml:/app/otelcol-config.yaml:ro
-      - /var/run/docker.sock:/var/run/docker.sock:ro  # For otelcol validate command
     environment:
       - REDIS_HOST=tinyolly-redis
       - REDIS_PORT=6579
       - DEPLOYMENT_ENV=docker
       - OPAMP_SERVER_URL=http://tinyolly-opamp-server:4321
       - OTELCOL_DEFAULT_CONFIG=/app/otelcol-config.yaml
-      - OTEL_COLLECTOR_CONTAINER=otel-collector
       - OTEL_SERVICE_NAME=tinyolly-ui
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318
       - OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf

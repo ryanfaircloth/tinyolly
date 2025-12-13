@@ -13,9 +13,9 @@ receivers:
         endpoint: 0.0.0.0:4318
   
   # Prometheus Remote Write receiver (alpha feature)
-  # Prometheus should send to: http://<collector>:8888/api/v1/write
+  # Prometheus should send to: http://<collector>:19291/api/v1/write
   prometheusremotewrite:
-    endpoint: 0.0.0.0:8888
+    endpoint: 0.0.0.0:19291
     # Optional: configure authentication
     # auth:
     #   authenticator: basicauth

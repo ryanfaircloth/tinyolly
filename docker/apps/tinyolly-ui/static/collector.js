@@ -338,6 +338,43 @@ function escapeHtml(text) {
 }
 
 /**
+ * Format validation errors for display
+ */
+function formatValidationErrors(errors) {
+    if (!errors || errors.length === 0) {
+        return 'Configuration has errors';
+    }
+
+    let html = '<div class="validation-errors">';
+
+    for (const error of errors) {
+        html += '<div class="validation-error-item">';
+        html += `<span class="error-section">${escapeHtml(error.section)}</span>: `;
+        html += `<span class="error-message">${escapeHtml(error.message)}</span>`;
+
+        if (error.valid_values && error.valid_values.length > 0) {
+            // Format valid values in a more readable way
+            const maxDisplay = 8;
+            const displayValues = error.valid_values.slice(0, maxDisplay);
+            const remaining = error.total_valid - maxDisplay;
+            
+            html += '<div class="error-hint">Valid options: ';
+            // Display as comma-separated list with better spacing
+            html += `<code>${displayValues.map(v => escapeHtml(v)).join(', ')}</code>`;
+            if (remaining > 0) {
+                html += ` <span class="hint-more">and ${remaining} more...</span>`;
+            }
+            html += '</div>';
+        }
+
+        html += '</div>';
+    }
+
+    html += '</div>';
+    return html;
+}
+
+/**
  * Show config diff modal
  */
 export async function showConfigDiff() {
@@ -558,7 +595,12 @@ export async function validateConfig() {
                     return true;
                 } else {
                     validationEl.className = 'config-validation invalid';
-                    validationEl.textContent = result.error || 'Configuration has errors';
+                    // Format errors nicely if structured errors are provided
+                    if (result.errors && result.errors.length > 0) {
+                        validationEl.innerHTML = formatValidationErrors(result.errors);
+                    } else {
+                        validationEl.textContent = result.error || 'Configuration has errors';
+                    }
                     return false;
                 }
             } else {

@@ -8,6 +8,15 @@
         </p>
     </div>
 
+    <!-- Config Templates Section - Moved to top -->
+    <div class="config-templates-section">
+        <h3>Configuration Templates</h3>
+        <p class="templates-description">Quick-start templates for common use cases (from <code>otelcol-configs/templates/</code>):</p>
+        <div class="templates-grid">
+            <div class="loading-indicator">Loading templates...</div>
+        </div>
+    </div>
+
     <!-- OpAMP Status Section -->
     <div class="opamp-status-section">
         <div class="status-header">
@@ -39,6 +48,9 @@
             </div>
         </div>
 
+        <!-- Validation errors moved to top of editor section -->
+        <div class="config-validation" id="config-validation"></div>
+
         <div class="config-editor-container">
             <div class="config-status" id="config-status"></div>
             <textarea id="collector-config-editor"
@@ -46,8 +58,6 @@
                       spellcheck="false"
                       placeholder="Loading collector configuration..."></textarea>
         </div>
-
-        <div class="config-validation" id="config-validation"></div>
     </div>
 
     <!-- Config Diff Modal -->
@@ -65,15 +75,6 @@
                 <button class="collector-btn collector-btn-secondary" onclick="closeConfigDiff()">Cancel</button>
                 <button class="collector-btn collector-btn-primary" onclick="confirmApplyConfig()">Apply Changes</button>
             </div>
-        </div>
-    </div>
-
-    <!-- Config Templates Section -->
-    <div class="config-templates-section">
-        <h3>Configuration Templates</h3>
-        <p class="templates-description">Quick-start templates for common use cases (from <code>otelcol-configs/templates/</code>):</p>
-        <div class="templates-grid">
-            <div class="loading-indicator">Loading templates...</div>
         </div>
     </div>
 </div>
@@ -222,6 +223,7 @@
 
 .config-editor-container {
     position: relative;
+    overflow: hidden;
 }
 
 .config-status {
@@ -255,7 +257,8 @@
 
 .config-editor {
     width: 100%;
-    min-height: 400px;
+    height: 500px;
+    max-height: 70vh;
     font-family: 'JetBrains Mono', monospace;
     font-size: 13px;
     line-height: 1.5;
@@ -264,8 +267,10 @@
     border-radius: 6px;
     background: var(--bg-body);
     color: var(--text-main);
-    resize: vertical;
+    resize: none;
+    overflow-y: auto;
     tab-size: 2;
+    display: block;
 }
 
 .config-editor:focus {
@@ -275,8 +280,10 @@
 }
 
 .config-validation {
-    margin-top: 8px;
+    margin-bottom: 12px;
     font-size: 13px;
+    max-height: 200px;
+    overflow-y: auto;
 }
 
 .config-validation.valid {
@@ -520,5 +527,47 @@
     gap: 12px;
     padding: 16px 20px;
     border-top: 1px solid var(--border-color);
+}
+
+/* Validation Errors Styles */
+.validation-errors {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.validation-error-item {
+    padding: 8px 12px;
+    background: var(--error-bg);
+    border-radius: 4px;
+    border-left: 3px solid var(--error-text);
+}
+
+.validation-error-item .error-section {
+    font-weight: 600;
+    color: var(--error-text);
+}
+
+.validation-error-item .error-message {
+    color: var(--text-main);
+}
+
+.validation-error-item .error-hint {
+    margin-top: 4px;
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+.validation-error-item .error-hint code {
+    background: var(--bg-hover);
+    padding: 1px 4px;
+    border-radius: 3px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+}
+
+.validation-error-item .hint-more {
+    color: var(--text-muted);
+    font-style: italic;
 }
 </style>
