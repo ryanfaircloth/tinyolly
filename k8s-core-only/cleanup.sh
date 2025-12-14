@@ -9,6 +9,7 @@ echo "Checking for TinyOlly resources..."
 echo "The following resources will be deleted:"
 echo ""
 kubectl get deployments,services -l app=tinyolly-ui
+kubectl get deployments,services -l app=tinyolly-opamp-server
 kubectl get deployments,services -l app=tinyolly-otlp-receiver
 kubectl get deployments,services -l app=tinyolly-redis
 echo ""
@@ -25,6 +26,7 @@ echo "Deleting TinyOlly resources..."
 echo ""
 echo "→ Deleting resources..."
 kubectl delete -f tinyolly-ui.yaml --ignore-not-found
+kubectl delete -f tinyolly-opamp-server.yaml --ignore-not-found
 kubectl delete -f tinyolly-otlp-receiver.yaml --ignore-not-found
 kubectl delete -f redis.yaml --ignore-not-found
 
@@ -32,6 +34,7 @@ echo ""
 echo "Waiting for pods to terminate..."
 kubectl wait --for=delete pod -l app=tinyolly-redis --timeout=60s 2>/dev/null || true
 kubectl wait --for=delete pod -l app=tinyolly-otlp-receiver --timeout=60s 2>/dev/null || true
+kubectl wait --for=delete pod -l app=tinyolly-opamp-server --timeout=60s 2>/dev/null || true
 kubectl wait --for=delete pod -l app=tinyolly-ui --timeout=60s 2>/dev/null || true
 
 echo ""

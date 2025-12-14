@@ -63,14 +63,21 @@ if ! kubectl apply -f "$SCRIPT_DIR/tinyolly-otlp-receiver.yaml"; then
     FAILED=true
 fi
 
-# 4. Apply OTel Collector (depends on ConfigMap and OTLP receiver)
+# 4. Apply OpAMP server (depends on ConfigMap)
+echo "  → Deploying OpAMP server..."
+if ! kubectl apply -f "$SCRIPT_DIR/tinyolly-opamp-server.yaml"; then
+    echo "    Error: Failed to apply tinyolly-opamp-server.yaml"
+    FAILED=true
+fi
+
+# 5. Apply OTel Collector (depends on ConfigMap, OTLP receiver, and OpAMP server)
 echo "  → Deploying OTel Collector..."
 if ! kubectl apply -f "$SCRIPT_DIR/otel-collector.yaml"; then
     echo "    Error: Failed to apply otel-collector.yaml"
     FAILED=true
 fi
 
-# 5. Apply UI (depends on Redis and OTel Collector)
+# 6. Apply UI (depends on Redis, OTel Collector, and OpAMP server)
 echo "  → Deploying TinyOlly UI..."
 if ! kubectl apply -f "$SCRIPT_DIR/tinyolly-ui.yaml"; then
     echo "    Error: Failed to apply tinyolly-ui.yaml"

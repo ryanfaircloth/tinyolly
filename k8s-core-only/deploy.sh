@@ -6,6 +6,7 @@ echo "==================================="
 # Apply manifests
 kubectl apply -f redis.yaml
 kubectl apply -f tinyolly-otlp-receiver.yaml
+kubectl apply -f tinyolly-opamp-server.yaml
 kubectl apply -f tinyolly-ui.yaml
 
 echo ""

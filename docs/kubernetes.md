@@ -40,6 +40,12 @@ git clone https://github.com/tinyolly/tinyolly
     Apply the Kubernetes manifests to deploy the services:
 
     ```bash
+    ./k8s/02-deploy-tinyolly.sh
+    ```
+
+    Or manually apply all manifests:
+
+    ```bash
     kubectl apply -f k8s/
     ```
 
@@ -146,7 +152,7 @@ This removes the OpenTelemetry Demo but leaves TinyOlly running.
 
 ## 4. TinyOlly **Core-Only** Deployment: Use Your Own Kubernetes OpenTelemetry Collector
 
-To deploy TinyOlly without the bundled OTel Collector (e.g., if you have an existing collector daemonset):
+To deploy TinyOlly without the bundled OTel Collector (e.g., if you have an existing collector daemonset). Includes OpAMP server for optional remote collector configuration management:
 
 1.  **Build Images:**
     ```bash
@@ -202,6 +208,23 @@ service:
 ```
 
 The Otel Collector will forward everything to TinyOlly's OTLP receiver, which process telemetry and stores it in Redis in OTEL format for the backend and UI to access.
+
+**OpAMP Configuration (Optional):**
+
+To enable remote configuration management via TinyOlly UI, add the OpAMP extension to your collector config:
+
+```yaml
+extensions:
+  opamp:
+    server:
+      ws:
+        endpoint: ws://tinyolly-opamp-server:4320/v1/opamp
+
+service:
+  extensions: [opamp]
+```
+
+The default configuration template (included as a ConfigMap in `k8s-core-only/tinyolly-opamp-server.yaml`) shows a complete example with OTLP receivers, OpAMP extension, batch processing, and spanmetrics connector. Your collector will connect to the OpAMP server and receive configuration updates through the TinyOlly UI.
 
 ---
 

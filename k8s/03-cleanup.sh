@@ -44,10 +44,12 @@ RESOURCES_EXIST=false
 if kubectl get deployment tinyolly-redis &> /dev/null || \
    kubectl get deployment tinyolly-otlp-receiver &> /dev/null || \
    kubectl get deployment tinyolly-ui &> /dev/null || \
+   kubectl get deployment tinyolly-opamp-server &> /dev/null || \
    kubectl get deployment otel-collector &> /dev/null || \
    kubectl get service tinyolly-redis &> /dev/null || \
    kubectl get service tinyolly-otlp-receiver &> /dev/null || \
    kubectl get service tinyolly-ui &> /dev/null || \
+   kubectl get service tinyolly-opamp-server &> /dev/null || \
    kubectl get service otel-collector &> /dev/null || \
    kubectl get configmap otel-collector-config &> /dev/null; then
     RESOURCES_EXIST=true
@@ -82,6 +84,7 @@ echo ""
 echo -e "${YELLOW}→ Deleting all resources from k8s manifests...${NC}"
 kubectl delete -f "$SCRIPT_DIR/tinyolly-ui.yaml" --ignore-not-found=true 2>/dev/null || true
 kubectl delete -f "$SCRIPT_DIR/otel-collector.yaml" --ignore-not-found=true 2>/dev/null || true
+kubectl delete -f "$SCRIPT_DIR/tinyolly-opamp-server.yaml" --ignore-not-found=true 2>/dev/null || true
 kubectl delete -f "$SCRIPT_DIR/tinyolly-otlp-receiver.yaml" --ignore-not-found=true 2>/dev/null || true
 kubectl delete -f "$SCRIPT_DIR/redis.yaml" --ignore-not-found=true 2>/dev/null || true
 kubectl delete -f "$SCRIPT_DIR/otel-collector-config.yaml" --ignore-not-found=true 2>/dev/null || true
@@ -92,12 +95,14 @@ echo -e "${YELLOW}→ Ensuring all deployments are deleted...${NC}"
 kubectl delete deployment tinyolly-redis --ignore-not-found=true 2>/dev/null || true
 kubectl delete deployment tinyolly-otlp-receiver --ignore-not-found=true 2>/dev/null || true
 kubectl delete deployment tinyolly-ui --ignore-not-found=true 2>/dev/null || true
+kubectl delete deployment tinyolly-opamp-server --ignore-not-found=true 2>/dev/null || true
 kubectl delete deployment otel-collector --ignore-not-found=true 2>/dev/null || true
 
 echo -e "${YELLOW}→ Ensuring all services are deleted...${NC}"
 kubectl delete service tinyolly-redis --ignore-not-found=true 2>/dev/null || true
 kubectl delete service tinyolly-otlp-receiver --ignore-not-found=true 2>/dev/null || true
 kubectl delete service tinyolly-ui --ignore-not-found=true 2>/dev/null || true
+kubectl delete service tinyolly-opamp-server --ignore-not-found=true 2>/dev/null || true
 kubectl delete service otel-collector --ignore-not-found=true 2>/dev/null || true
 
 echo -e "${YELLOW}→ Ensuring all configmaps are deleted...${NC}"
@@ -109,6 +114,7 @@ echo -e "${BLUE}Waiting for pods to terminate...${NC}"
 kubectl wait --for=delete pod -l app=tinyolly-redis --timeout=60s 2>/dev/null || true
 kubectl wait --for=delete pod -l app=tinyolly-otlp-receiver --timeout=60s 2>/dev/null || true
 kubectl wait --for=delete pod -l app=tinyolly-ui --timeout=60s 2>/dev/null || true
+kubectl wait --for=delete pod -l app=tinyolly-opamp-server --timeout=60s 2>/dev/null || true
 kubectl wait --for=delete pod -l app=otel-collector --timeout=60s 2>/dev/null || true
 
 echo ""

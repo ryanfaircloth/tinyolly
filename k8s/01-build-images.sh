@@ -17,4 +17,9 @@ docker build --no-cache -t tinyolly-otlp-receiver:latest \
   --build-arg APP_DIR=tinyolly-otlp-receiver \
   ../docker/apps/
 
+echo "Building tinyolly-opamp-server..."
+docker build --no-cache -t tinyolly-opamp-server:latest \
+  -f ../docker/dockerfiles/Dockerfile.tinyolly-opamp-server \
+  ../docker/
+
 echo "Images built successfully in Minikube environment."

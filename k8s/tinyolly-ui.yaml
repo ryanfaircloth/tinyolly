@@ -41,6 +41,18 @@ spec:
           value: "http://otel-collector:4318/v1/logs"
         - name: OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED
           value: "true"
+        - name: OPAMP_SERVER_URL
+          value: "http://tinyolly-opamp-server:4321"
+        - name: OPAMP_SERVER_URL
+          value: "http://tinyolly-opamp-server:4321"
+        - name: OTELCOL_DEFAULT_CONFIG
+          value: "/app/otelcol-config.yaml"
+        volumeMounts:
+        - name: otelcol-config-vol
+          mountPath: /app/otelcol-config.yaml
+          subPath: otel-collector-config.yaml
+        - name: otelcol-templates-vol
+          mountPath: /app/otelcol-templates
         resources:
           requests:
             memory: "128Mi"
@@ -64,6 +76,12 @@ spec:
           periodSeconds: 5
           timeoutSeconds: 3
           failureThreshold: 3
+      volumes:
+      - name: otelcol-config-vol
+        configMap:
+          name: otel-collector-config
+      - name: otelcol-templates-vol
+        emptyDir: {}
 ---
 apiVersion: v1
 kind: Service
