@@ -19,7 +19,16 @@ import (
 	"github.com/open-telemetry/opamp-go/protobufs"
 	"github.com/open-telemetry/opamp-go/server"
 	"github.com/open-telemetry/opamp-go/server/types"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
+	"go.opentelemetry.io/otel/sdk/resource"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
+	"go.opentelemetry.io/otel/trace"
 )
+
+var tracer trace.Tracer
 
 // AgentState tracks the state of a connected OTel Collector agent
 type AgentState struct {
@@ -401,11 +410,67 @@ service:
       exporters: [debug, otlp]
 `
 
+// initTelemetry sets up OpenTelemetry tracing
+func initTelemetry(ctx context.Context) (func(context.Context) error, error) {
+	// Get OTLP endpoint from environment
+	endpoint := os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
+	if endpoint == "" {
+		endpoint = "http://otel-collector:4318"
+	}
+
+	// Create OTLP trace exporter
+	exporter, err := otlptracehttp.New(ctx,
+		otlptracehttp.WithEndpoint(endpoint[7:]), // Remove "http://" prefix
+		otlptracehttp.WithInsecure(),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create trace exporter: %w", err)
+	}
+
+	// Create resource with service name
+	serviceName := os.Getenv("OTEL_SERVICE_NAME")
+	if serviceName == "" {
+		serviceName = "tinyolly-opamp-server"
+	}
+
+	res, err := resource.New(ctx,
+		resource.WithAttributes(
+			semconv.ServiceName(serviceName),
+			semconv.ServiceVersion("1.0.0"),
+		),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create resource: %w", err)
+	}
+
+	// Create trace provider
+	tp := sdktrace.NewTracerProvider(
+		sdktrace.WithBatcher(exporter),
+		sdktrace.WithResource(res),
+	)
+
+	otel.SetTracerProvider(tp)
+	tracer = tp.Tracer("tinyolly-opamp-server")
+
+	log.Printf("OpenTelemetry tracing initialized, exporting to %s", endpoint)
+
+	return tp.Shutdown, nil
+}
+
 func main() {
-	// Note: Go OTLP logging is experimental and not yet stable.
-	// Standard log output will be available via container logs.
-	// For full OTLP logging support, consider using a log shipper
-	// or wait for stable OpenTelemetry Go logging support.
+	ctx := context.Background()
+
+	// Initialize OpenTelemetry
+	shutdown, err := initTelemetry(ctx)
+	if err != nil {
+		log.Printf("Warning: Failed to initialize telemetry: %v", err)
+	} else {
+		defer func() {
+			if err := shutdown(ctx); err != nil {
+				log.Printf("Error shutting down telemetry: %v", err)
+			}
+		}()
+	}
 
 	opampPort := os.Getenv("OPAMP_PORT")
 	if opampPort == "" {
@@ -439,7 +504,7 @@ func main() {
 		}
 	}()
 
-	// Setup HTTP REST API
+	// Setup HTTP REST API with OpenTelemetry instrumentation
 	mux := http.NewServeMux()
 	mux.HandleFunc("/health", s.handleHealth)
 	mux.HandleFunc("/status", s.handleStatus)
@@ -456,9 +521,12 @@ func main() {
 		}
 	})
 
+	// Wrap with CORS and OpenTelemetry instrumentation
+	handler := corsMiddleware(otelhttp.NewHandler(mux, "tinyolly-opamp-server"))
+
 	httpServer := &http.Server{
 		Addr:    fmt.Sprintf(":%s", httpPort),
-		Handler: corsMiddleware(mux),
+		Handler: handler,
 	}
 
 	log.Printf("Starting HTTP REST API on port %s", httpPort)

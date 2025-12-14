@@ -213,7 +213,7 @@ remote_prom_histogram = Histogram(
 )
 
 # Set up Prometheus remote write client
-prom_remote_write_endpoint = os.getenv('PROM_REMOTE_WRITE_ENDPOINT', 'http://otel-collector:8888/api/v1/write')
+prom_remote_write_endpoint = os.getenv('PROM_REMOTE_WRITE_ENDPOINT', 'http://otel-collector:19291/api/v1/write')
 prom_remote_write_client = RemoteWriter(
     url=prom_remote_write_endpoint,
     headers={}

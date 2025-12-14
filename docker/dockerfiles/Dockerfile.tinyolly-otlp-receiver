@@ -32,6 +32,6 @@ EXPOSE 4343
 # Set Python to unbuffered mode for immediate log output
 ENV PYTHONUNBUFFERED=1
 
-# Run the application
-CMD ["python", "-u", "tinyolly-otlp-receiver.py"]
+# Run the application with OpenTelemetry auto-instrumentation
+CMD ["opentelemetry-instrument", "python", "-u", "tinyolly-otlp-receiver.py"]
 
