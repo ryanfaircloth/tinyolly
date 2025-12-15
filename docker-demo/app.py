@@ -17,9 +17,7 @@ from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
 from opentelemetry.sdk.metrics.view import View, ExponentialBucketHistogramAggregation
 from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import OTLPMetricExporter
 from prometheus_client import CollectorRegistry, Gauge, Counter, Histogram, generate_latest
-from prometheus_client.parser import text_string_to_metric_families
-from prometheus_remote_writer import RemoteWriter
-from io import StringIO
+from prom_remote_write_v2 import PrometheusRemoteWriteV2Client
 
 # Configure structured JSON logging with stdout handler
 # OpenTelemetry auto-instrumentation will inject trace context into logs
@@ -187,43 +185,40 @@ memory_gauge = meter.create_observable_gauge(
     callbacks=[get_memory_usage]
 )
 
-# --- PROMETHEUS REMOTE WRITE METRICS ---
-# Set up Prometheus metrics registry for remote write
-print("Setting up Prometheus remote write metrics...", flush=True)
+# --- PROMETHEUS REMOTE WRITE V2 METRICS ---
+# Set up Prometheus metrics registry for remote write v2
+print("Setting up Prometheus remote write v2 metrics...", flush=True)
 prom_registry = CollectorRegistry()
 
 # Create Prometheus metrics for remote write
 remote_prom_gauge = Gauge(
     'remote_prom_gauge',
-    'A gauge metric sent via Prometheus remote write',
+    'A gauge metric sent via Prometheus remote write v2',
     registry=prom_registry
 )
 
 remote_prom_counter = Counter(
     'remote_prom_counter',
-    'A counter metric sent via Prometheus remote write',
+    'A counter metric sent via Prometheus remote write v2',
     registry=prom_registry
 )
 
 remote_prom_histogram = Histogram(
     'remote_prom_histogram',
-    'A histogram metric sent via Prometheus remote write',
+    'A histogram metric sent via Prometheus remote write v2',
     buckets=[0.1, 0.5, 1.0, 2.5, 5.0, 10.0, 25.0, 50.0, 100.0],
     registry=prom_registry
 )
 
-# Set up Prometheus remote write client
+# Set up Prometheus remote write v2 client
 prom_remote_write_endpoint = os.getenv('PROM_REMOTE_WRITE_ENDPOINT', 'http://otel-collector:19291/api/v1/write')
-prom_remote_write_client = RemoteWriter(
-    url=prom_remote_write_endpoint,
-    headers={}
-)
+prom_remote_write_client = PrometheusRemoteWriteV2Client(url=prom_remote_write_endpoint)
 
-print(f"Prometheus remote write configured with endpoint: {prom_remote_write_endpoint}", flush=True)
+print(f"Prometheus remote write v2 configured with endpoint: {prom_remote_write_endpoint}", flush=True)
 
 def send_prometheus_remote_write():
-    """Background thread that updates Prometheus metrics and sends them via remote write"""
-    logger.info(f"Prometheus remote write thread started (endpoint: {prom_remote_write_endpoint})")
+    """Background thread that updates Prometheus metrics and sends them via remote write v2"""
+    logger.info(f"Prometheus remote write v2 thread started (endpoint: {prom_remote_write_endpoint})")
     
     # Wait a bit for the app to fully start
     time.sleep(10)
@@ -240,45 +235,68 @@ def send_prometheus_remote_write():
             # Histogram: Record random duration
             remote_prom_histogram.observe(random.expovariate(1.0/10))  # Exponential distribution
             
-            # Collect metrics from registry and convert to remote write format
+            # Collect metrics from registry and convert to remote write v2 format
             # Generate Prometheus text format
-            output = generate_latest(prom_registry)
+            output = generate_latest(prom_registry).decode('utf-8')
             
-            # Parse the text format and convert to remote write format
-            data = []
+            # Parse the text format and convert to remote write v2 format
+            timeseries = []
             current_time_ms = int(time.time() * 1000)
             
-            for family in text_string_to_metric_families(output.decode('utf-8')):
-                for sample in family.samples:
-                    metric_labels = {label: value for label, value in sample.labels.items() if label != '__name__'}
-                    metric_labels['__name__'] = sample.name
+            # Simple parser for Prometheus text format
+            for line in output.split('\n'):
+                line = line.strip()
+                if not line or line.startswith('#'):
+                    continue
                     
-                    # Handle different metric types
-                    if sample.name.endswith('_bucket') or sample.name.endswith('_sum') or sample.name.endswith('_count'):
-                        # Histogram or summary metric
-                        data.append({
-                            'metric': metric_labels,
-                            'values': [sample.value],
-                            'timestamps': [current_time_ms]
-                        })
+                # Parse: metric_name{labels} value timestamp
+                # For simplicity, we'll handle metrics without labels and with labels
+                try:
+                    if '{' in line:
+                        # Has labels
+                        metric_part, rest = line.split('{', 1)
+                        labels_part, value = rest.split('}', 1)
+                        value = value.strip()
+                        
+                        # Parse labels
+                        labels = {'__name__': metric_part.strip()}
+                        if labels_part:
+                            for label_pair in labels_part.split(','):
+                                if '=' in label_pair:
+                                    k, v = label_pair.split('=', 1)
+                                    labels[k.strip()] = v.strip().strip('"')
                     else:
-                        # Regular metric
-                        data.append({
-                            'metric': metric_labels,
-                            'values': [sample.value],
-                            'timestamps': [current_time_ms]
-                        })
+                        # No labels
+                        parts = line.split()
+                        if len(parts) >= 2:
+                            metric_name = parts[0]
+                            value = parts[1]
+                            labels = {'__name__': metric_name}
+                        else:
+                            continue
+                    
+                    # Add timeseries entry
+                    timeseries.append({
+                        'labels': labels,
+                        'samples': [{
+                            'value': float(value),
+                            'timestamp': current_time_ms
+                        }]
+                    })
+                except (ValueError, IndexError) as e:
+                    logger.debug(f"Skipping line due to parse error: {line} - {e}")
+                    continue
             
-            # Send metrics via remote write
-            if data:
-                prom_remote_write_client.send(data)
-                logger.debug(f"Prometheus metrics sent via remote write: {len(data)} time series")
+            # Send metrics via remote write v2
+            if timeseries:
+                prom_remote_write_client.send(timeseries)
+                logger.debug(f"Prometheus metrics sent via remote write v2: {len(timeseries)} time series")
             
             # Wait before next update (default 5 seconds)
             time.sleep(int(os.getenv('PROM_REMOTE_WRITE_INTERVAL', '5')))
             
         except Exception as e:
-            logger.error(f"Prometheus remote write error: {e}", exc_info=True)
+            logger.error(f"Prometheus remote write v2 error: {e}", exc_info=True)
             time.sleep(5)
 
 app = Flask(__name__)
@@ -650,10 +668,10 @@ if __name__ == '__main__':
         print("✗ Auto-traffic generation disabled")
         logger.info("Auto-traffic generation disabled")
     
-    # Start Prometheus remote write thread
+    # Start Prometheus remote write v2 thread
     prom_remote_write_thread = threading.Thread(target=send_prometheus_remote_write, daemon=True)
     prom_remote_write_thread.start()
-    print("✓ Prometheus remote write thread started")
-    logger.info("Prometheus remote write thread started")
+    print("✓ Prometheus remote write v2 thread started")
+    logger.info("Prometheus remote write v2 thread started")
     
     app.run(host='0.0.0.0', port=5000)
