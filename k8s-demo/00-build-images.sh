@@ -17,11 +17,11 @@ eval $(minikube docker-env)
 
 # Build frontend image from docker-demo
 echo "Building demo-frontend..."
-docker build -t demo-frontend:latest -f "$DOCKER_DEMO_DIR/Dockerfile" "$DOCKER_DEMO_DIR/"
+docker build --no-cache -t demo-frontend:latest -f "$DOCKER_DEMO_DIR/Dockerfile" "$DOCKER_DEMO_DIR/"
 
 echo ""
 echo "Building demo-backend..."
-docker build -t demo-backend:latest -f "$DOCKER_DEMO_DIR/Dockerfile.backend" "$DOCKER_DEMO_DIR/"
+docker build --no-cache -t demo-backend:latest -f "$DOCKER_DEMO_DIR/Dockerfile.backend" "$DOCKER_DEMO_DIR/"
 
 echo ""
 echo "✓ Demo images built successfully in Minikube environment."
