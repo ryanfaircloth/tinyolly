@@ -22,9 +22,18 @@ class Settings:
     otel_collector_container: str = os.getenv("OTEL_COLLECTOR_CONTAINER", "otel-collector")
     
     # OTLP
+    otel_service_name: str = os.getenv("OTEL_SERVICE_NAME", "tinyolly-ui")
+    otel_exporter_otlp_endpoint: str = os.getenv(
+        "OTEL_EXPORTER_OTLP_ENDPOINT",
+        "http://localhost:4318"
+    )
     otel_exporter_otlp_metrics_endpoint: str = os.getenv(
         "OTEL_EXPORTER_OTLP_METRICS_ENDPOINT",
-        "http://localhost:5001/v1/metrics"
+        "http://localhost:4318/v1/metrics"
+    )
+    otel_exporter_otlp_logs_endpoint: str = os.getenv(
+        "OTEL_EXPORTER_OTLP_LOGS_ENDPOINT",
+        "http://localhost:4318/v1/logs"
     )
     
     # CORS

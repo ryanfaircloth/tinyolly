@@ -1196,9 +1196,13 @@ class Storage:
         client = await self.get_client()
         dropped_count_str = await client.get('metric_dropped_count')
         dropped_names = await client.smembers('metric_dropped_names')
-        
+
+        # Check OTLP format first, then legacy
+        otlp_count = await client.scard('metrics:names')
+        legacy_count = await client.scard('metric_names')
+
         return {
-            'current': await client.scard('metric_names'),
+            'current': otlp_count + legacy_count,
             'max': self.max_cardinality,
             'dropped_count': int(dropped_count_str) if dropped_count_str else 0,
             'dropped_names': [n.decode('utf-8') for n in dropped_names]

@@ -1,16 +1,25 @@
-"""OpenTelemetry metrics setup"""
+"""OpenTelemetry metrics and logging setup"""
 
 import os
+import logging
 from opentelemetry import metrics
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
 from opentelemetry.exporter.otlp.proto.http.metric_exporter import OTLPMetricExporter
+from opentelemetry.exporter.otlp.proto.http._log_exporter import OTLPLogExporter
+from opentelemetry.sdk._logs import LoggerProvider, LoggingHandler
+from opentelemetry.sdk._logs.export import BatchLogRecordProcessor
+from opentelemetry._logs import set_logger_provider
+from opentelemetry.sdk.resources import Resource
 
 from ..config import settings
 
 
 def setup_telemetry():
-    """Configure OpenTelemetry metrics"""
+    """Configure OpenTelemetry metrics and logging"""
+    # Create resource with service name
+    resource = Resource.create({"service.name": settings.otel_service_name})
+    
     # Set up OTLP metric exporter
     metric_exporter = OTLPMetricExporter(
         endpoint=settings.otel_exporter_otlp_metrics_endpoint
@@ -18,8 +27,22 @@ def setup_telemetry():
     
     # Configure metric reader with 60s export interval
     metric_reader = PeriodicExportingMetricReader(metric_exporter, export_interval_millis=60000)
-    meter_provider = MeterProvider(metric_readers=[metric_reader])
+    meter_provider = MeterProvider(metric_readers=[metric_reader], resource=resource)
     metrics.set_meter_provider(meter_provider)
+    
+    # Set up OTLP log exporter
+    log_exporter = OTLPLogExporter(
+        endpoint=settings.otel_exporter_otlp_logs_endpoint
+    )
+    
+    # Configure logger provider with batch processor
+    logger_provider = LoggerProvider(resource=resource)
+    logger_provider.add_log_record_processor(BatchLogRecordProcessor(log_exporter))
+    set_logger_provider(logger_provider)
+    
+    # Add OTLP handler to root logger
+    handler = LoggingHandler(level=logging.NOTSET, logger_provider=logger_provider)
+    logging.getLogger().addHandler(handler)
     
     # Create meter for tinyolly-ui
     meter = metrics.get_meter("tinyolly-ui")

@@ -265,13 +265,22 @@ def send_prometheus_remote_write():
                                 if '=' in label_pair:
                                     k, v = label_pair.split('=', 1)
                                     labels[k.strip()] = v.strip().strip('"')
+                        # Add standard Prometheus labels for identification
+                        if 'job' not in labels:
+                            labels['job'] = 'demo-frontend'
+                        if 'instance' not in labels:
+                            labels['instance'] = 'demo-frontend:5000'
                     else:
                         # No labels
                         parts = line.split()
                         if len(parts) >= 2:
                             metric_name = parts[0]
                             value = parts[1]
-                            labels = {'__name__': metric_name}
+                            labels = {
+                                '__name__': metric_name,
+                                'job': 'demo-frontend',
+                                'instance': 'demo-frontend:5000'
+                            }
                         else:
                             continue
                     
@@ -289,8 +298,12 @@ def send_prometheus_remote_write():
             
             # Send metrics via remote write v2
             if timeseries:
+                logger.info(f"Sending {len(timeseries)} Prometheus timeseries via remote write v2")
+                logger.info(f"Sample metric names: {[ts['labels'].get('__name__') for ts in timeseries[:5]]}")
                 prom_remote_write_client.send(timeseries)
-                logger.debug(f"Prometheus metrics sent via remote write v2: {len(timeseries)} time series")
+                logger.info(f"Prometheus metrics sent via remote write v2: {len(timeseries)} time series")
+            else:
+                logger.warning("No timeseries to send - check metric generation")
             
             # Wait before next update (default 5 seconds)
             time.sleep(int(os.getenv('PROM_REMOTE_WRITE_INTERVAL', '5')))

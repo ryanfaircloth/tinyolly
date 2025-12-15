@@ -4,6 +4,13 @@ set +e  # Don't exit on errors
 # Trap to prevent terminal exit
 trap 'echo "Script interrupted"; exit 0' INT TERM
 
+# Parse arguments
+NO_CACHE=""
+if [[ "$1" == "--no-cache" ]] || [[ "$1" == "-n" ]]; then
+    NO_CACHE="--no-cache"
+    echo "Building with --no-cache option"
+fi
+
 echo "========================================================"
 echo "  TinyOlly - Deploy Demo Apps"
 echo "========================================================"
@@ -56,7 +63,17 @@ if [ ! -f "docker-compose-demo.yml" ]; then
     exit 1
 fi
 
-docker-compose -f docker-compose-demo.yml up -d --build
+docker-compose -f docker-compose-demo.yml build $NO_CACHE
+BUILD_EXIT_CODE=$?
+
+if [ $BUILD_EXIT_CODE -ne 0 ]; then
+    echo ""
+    echo "✗ Failed to build demo apps (exit code: $BUILD_EXIT_CODE)"
+    echo "Check the error messages above for details"
+    exit 1
+fi
+
+docker-compose -f docker-compose-demo.yml up -d
 EXIT_CODE=$?
 
 if [ $EXIT_CODE -ne 0 ]; then
@@ -76,6 +93,11 @@ echo "TinyOlly UI:    http://localhost:5005"
 echo ""
 echo "The demo apps will automatically generate traffic."
 echo "Watch the TinyOlly UI for traces, logs, and metrics!"
+echo ""
+echo "Usage:"
+echo "  ./01-deploy-demo.sh           # Normal build with cache"
+echo "  ./01-deploy-demo.sh --no-cache # Force rebuild without cache"
+echo "  ./01-deploy-demo.sh -n         # Short form"
 echo ""
 echo "To stop demo apps:"
 echo "  ./02-cleanup-demo.sh"
