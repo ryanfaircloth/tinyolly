@@ -114,7 +114,7 @@ export async function renderMetrics(metricsData) {
             <div style="flex: 0 0 60px;">Unit</div>
             <div style="flex: 0 0 80px;">Type</div>
             <div style="flex: 0 0 90px;">Resources</div>
-            <div style="flex: 0 0 100px;">Attributes</div>
+            <div style="flex: 0 0 120px;">Total Cardinality</div>
             <div style="flex: 0 0 80px;">Actions</div>
         </div>
     `;
@@ -269,8 +269,8 @@ function createMetricRow(metric) {
             <div class="metric-resources-link metric-link" data-metric-name="${metric.name}" style="flex: 0 0 90px;" onclick="event.stopPropagation(); window.showMetricResources('${metric.name}', ${metric.resource_count});">
                 ${metric.resource_count} ${metric.resource_count === 1 ? 'res.' : 'res.'}
             </div>
-            <div class="metric-attributes-link metric-link" data-metric-name="${metric.name}" style="flex: 0 0 100px;" onclick="event.stopPropagation(); window.showMetricAttributes('${metric.name}', ${metric.attribute_combinations});">
-                ${metric.attribute_combinations} ${metric.attribute_combinations === 1 ? 'attr.' : 'attrs.'}
+            <div class="metric-attributes-link metric-link" data-metric-name="${metric.name}" style="flex: 0 0 120px;" onclick="event.stopPropagation(); window.showMetricAttributes('${metric.name}', ${metric.attribute_combinations});">
+                ${metric.attribute_combinations}
             </div>
             <div style="flex: 0 0 80px;">
                 ${renderActionButton(`view-chart-${metric.name.replace(/[^a-zA-Z0-9]/g, '_')}`, 'Chart', 'primary', 'dense')}
