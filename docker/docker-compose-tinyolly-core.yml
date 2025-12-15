@@ -5,16 +5,24 @@ services:
     ports:
       - "6579:6579"
     command: redis-server --port 6579 --maxmemory 256mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "-p", "6579", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
 
   tinyolly-otlp-receiver:
     build:
-      context: ./apps
-      dockerfile: ../dockerfiles/Dockerfile.tinyolly-otlp-receiver
+      context: .
+      dockerfile: dockerfiles/Dockerfile.tinyolly-otlp-receiver
       args:
         - APP_DIR=tinyolly-otlp-receiver
     container_name: tinyolly-otlp-receiver
     ports:
       - "4343:4343"
+    depends_on:
+      tinyolly-redis:
+        condition: service_healthy
     environment:
       - REDIS_HOST=tinyolly-redis
       - REDIS_PORT=6579
@@ -69,8 +77,8 @@ services:
 
   tinyolly-ui:
     build:
-      context: ./apps
-      dockerfile: ../dockerfiles/Dockerfile.tinyolly-ui
+      context: .
+      dockerfile: dockerfiles/Dockerfile.tinyolly-ui
       args:
         - APP_DIR=tinyolly-ui
     image: tinyolly-ui:latest
@@ -78,8 +86,10 @@ services:
     ports:
       - "5005:5002"  # Changed to 5005 to avoid conflict with K8s (which uses 5002)
     depends_on:
-      - tinyolly-redis
-      - otel-collector
+      tinyolly-redis:
+        condition: service_healthy
+      otel-collector:
+        condition: service_started
     volumes:
       - ./otelcol-configs/templates:/app/otelcol-templates:ro
       - ./otelcol-configs/config.yaml:/app/otelcol-config.yaml:ro

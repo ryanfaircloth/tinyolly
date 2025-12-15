@@ -1,23 +1,11 @@
 # TinyOlly UI Dockerfile
-FROM python:3.12-slim
+FROM tinyolly-python-base:latest
 
 ARG APP_DIR=tinyolly-ui
 # OTel Collector version for config validation
 ARG OTELCOL_VERSION=0.141.0
 
 WORKDIR /app
-
-# Install curl, bash, and bash-completion for better shell experience
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl \
-    ca-certificates \
-    bash \
-    bash-completion \
-    && rm -rf /var/lib/apt/lists/*
-
-# Set bash as default shell and enable completion
-SHELL ["/bin/bash", "-c"]
-RUN echo 'if [ -f /etc/bash_completion ]; then . /etc/bash_completion; fi' >> /etc/bash.bashrc
 
 # Download otelcol-contrib binary for config validation (not running as collector)
 # Using a specific version to ensure stability
@@ -28,20 +16,16 @@ RUN ARCH=$(dpkg --print-architecture) && \
     chmod +x /usr/local/bin/otelcol-contrib && \
     rm /tmp/otelcol.tar.gz
 
-# Copy and install shared tinyolly-common package
-COPY tinyolly-common /tmp/tinyolly-common
-RUN pip install --no-cache-dir -e /tmp/tinyolly-common
-
 # Install app-specific dependencies
-COPY ${APP_DIR}/requirements.txt .
+COPY apps/${APP_DIR}/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application
-COPY ${APP_DIR}/tinyolly-ui.py .
-COPY ${APP_DIR}/models.py .
-COPY ${APP_DIR}/app/ app/
-COPY ${APP_DIR}/templates/ templates/
-COPY ${APP_DIR}/static/ static/
+COPY apps/${APP_DIR}/tinyolly-ui.py .
+COPY apps/${APP_DIR}/models.py .
+COPY apps/${APP_DIR}/app/ app/
+COPY apps/${APP_DIR}/templates/ templates/
+COPY apps/${APP_DIR}/static/ static/
 
 # Expose port
 EXPOSE 5002

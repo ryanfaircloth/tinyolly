@@ -14,7 +14,16 @@ echo ""
 echo "Starting services..."
 echo ""
 
-# Clear cached OpAMP supervisor config to ensure fresh start with default config
+# Build the shared Python base image first
+# This is required because dependencies use "FROM tinyolly-python-base"
+echo "Building shared Python base image..."
+docker build -t tinyolly-python-base:latest -f dockerfiles/Dockerfile.tinyolly-python-base .
+if [ $? -ne 0 ]; then
+    echo "✗ Failed to build shared base image"
+    exit 1
+fi
+echo "✓ Base image built"
+echo ""
 # This prevents stale remote configs from persisting across restarts
 echo "Clearing cached collector config..."
 docker volume rm tinyolly-otel-supervisor-data 2>/dev/null || true

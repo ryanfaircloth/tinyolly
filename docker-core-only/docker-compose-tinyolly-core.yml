@@ -6,17 +6,23 @@ services:
       - "6579:6579"
     command: redis-server --port 6579 --maxmemory 256mb --maxmemory-policy allkeys-lru
     networks:
-      - tinyolly-network
+      - tinyolly-core-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "-p", "6579", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
 
   tinyolly-otlp-receiver:
     build:
-      context: ../docker/apps
-      dockerfile: ../dockerfiles/Dockerfile.tinyolly-otlp-receiver
+      context: ../docker
+      dockerfile: dockerfiles/Dockerfile.tinyolly-otlp-receiver
       args:
         - APP_DIR=tinyolly-otlp-receiver
     container_name: tinyolly-otlp-receiver
     depends_on:
-      - tinyolly-redis
+      tinyolly-redis:
+        condition: service_healthy
     environment:
       - REDIS_HOST=tinyolly-redis
       - REDIS_PORT=6579
@@ -25,7 +31,7 @@ services:
     ports:
       - "4343:4343"
     networks:
-      - tinyolly-network
+      - tinyolly-core-network
 
   tinyolly-opamp-server:
     build:
@@ -42,7 +48,7 @@ services:
       - HTTP_PORT=4321
       - COLLECTOR_CONFIG_PATH=/etc/otel-collector-config.yaml
     networks:
-      - tinyolly-network
+      - tinyolly-core-network
 
   # No otel-collector service - use external collector (e.g., Elastic EDOT)
   # Configure your external collector to send to: localhost:4343 (gRPC)
@@ -50,17 +56,20 @@ services:
 
   tinyolly-ui:
     build:
-      context: ../docker/apps
-      dockerfile: ../dockerfiles/Dockerfile.tinyolly-ui
+      context: ../docker
+      dockerfile: dockerfiles/Dockerfile.tinyolly-ui
       args:
         - APP_DIR=tinyolly-ui
     container_name: tinyolly-ui
     ports:
       - "5005:5002"  # Exposed on 5005 to avoid conflict if running alongside full demo
     depends_on:
-      - tinyolly-redis
-      - tinyolly-otlp-receiver
-      - tinyolly-opamp-server
+      tinyolly-redis:
+        condition: service_healthy
+      tinyolly-otlp-receiver:
+        condition: service_started
+      tinyolly-opamp-server:
+        condition: service_started
     volumes:
       - ../docker/otelcol-configs/templates:/app/otelcol-templates:ro
       - ../docker/otelcol-configs/config.yaml:/app/otelcol-config.yaml:ro
@@ -78,9 +87,9 @@ services:
       - OTEL_EXPORTER_OTLP_LOGS_ENDPOINT=http://tinyolly-otlp-receiver:4343
       - OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED=true
     networks:
-      - tinyolly-network
+      - tinyolly-core-network
 
 networks:
-  tinyolly-network:
-    name: tinyolly-network
+  tinyolly-core-network:
+    name: tinyolly-core-network
 

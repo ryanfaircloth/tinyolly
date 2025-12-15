@@ -21,6 +21,25 @@ echo ""
 echo "Starting services..."
 echo ""
 
+# Build the shared Python base image first (using ../docker as context)
+echo "Building shared Python base image..."
+docker build -t tinyolly-python-base:latest -f ../docker/dockerfiles/Dockerfile.tinyolly-python-base ../docker
+if [ $? -ne 0 ]; then
+    echo "✗ Failed to build shared base image"
+    exit 1
+fi
+echo "✓ Base image built"
+echo ""
+
+# This prevents stale remote configs from persisting across restarts
+echo "Clearing cached collector config..."
+docker volume rm tinyolly-otel-supervisor-data 2>/dev/null || true
+
+# Clear Redis data from previous runs
+# This removes stale traces, metrics, and logs for a clean start
+echo "Clearing Redis data..."
+docker exec tinyolly-redis redis-cli -p 6579 FLUSHALL 2>/dev/null || true
+
 docker compose -f docker-compose-tinyolly-core.yml up -d --build --force-recreate 2>&1
 EXIT_CODE=$?
 
