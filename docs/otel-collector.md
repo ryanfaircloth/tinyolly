@@ -1,7 +1,7 @@
 # OpenTelemetry Collector
 
 <div align="center">
-  <img src="images/collector.png" alt="OpenTelemetry Collector Configuration" width="700">
+  <img src="../images/collector.png" alt="OpenTelemetry Collector Configuration" width="700">
   <p><em>OpenTelemetry Collector configuration management via OpAMP</em></p>
 </div>
 

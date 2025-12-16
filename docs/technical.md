@@ -1,25 +1,10 @@
 # Technical Details
 
-<div align="center">
-  <img src="images/servicemap.png" alt="TinyOlly Architecture" width="700">
-  <p><em>Service dependency map showing service topology</em></p>
-</div>
-
----
-
 ## Architecture
 
-```
-Demo Frontend  ←→  Demo Backend (distributed tracing + auto-traffic)
-        ↓                    ↓
-   OTel Collector  ←─────────┘
-        ↓
-   TinyOlly OTLP Receiver (Async FastAPI, parses OTLP, stores in Redis)
-        ↓
-   Redis (30-minute TTL with cardinality protection)
-        ↓
-   TinyOlly UI & REST API (FastAPI + HTML + JavaScript)
-```
+<div align="center">
+  <img src="../images/architecture.png" alt="TinyOlly Architecture" width="700">
+</div>
 
 ---
 
@@ -41,3 +26,4 @@ TinyOlly is **fully OpenTelemetry-native**:
 - **Storage**: Stores traces, logs, and metrics in full OTEL format with resources, scopes, and attributes  
 - **Correlation**: Native support for trace/span ID correlation across all telemetry types  
 - **REST API**: Exposes OTEL-formatted JSON for programmatic access
+- **Control Plane**: OpenTelemetry Collector OpAmp for dynamic configuration  

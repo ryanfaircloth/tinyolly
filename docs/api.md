@@ -1,7 +1,7 @@
 # REST API & OpenAPI
 
 <div align="center">
-  <img src="images/api.png" alt="TinyOlly REST API" width="700">
+  <img src="../images/api.png" alt="TinyOlly REST API" width="700">
   <p><em>OpenAPI documentation with interactive Swagger UI</em></p>
 </div>
 
