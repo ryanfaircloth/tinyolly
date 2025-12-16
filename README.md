@@ -27,32 +27,43 @@ Visualize and correlate logs, metrics, and traces without sending data to the cl
 
 **Platform Support:** Tested on Docker Desktop and Minikube Kubernetes (Apple Silicon Mac)
 
-<!-- ## Screenshots
+## Screenshots
 
 <div align="center">
   <table>
     <tr>
       <td align="center" width="50%">
         <img src="docs/images/traces.png" width="400"><br>
-        <em>Distributed traces with service correlation</em>
+        <em>Trace waterfall with correlated logs</em>
       </td>
       <td align="center" width="50%">
-        <img src="docs/images/tracewaterfall.png" width="400"><br>
-        <em>Trace waterfall visualization with span timing</em>
+        <img src="docs/images/logs1.png" width="400"><br>
+        <em>Real-time logs with trace/span linking</em>
       </td>
     </tr>
     <tr>
       <td align="center" width="50%">
-        <img src="docs/images/logs.png" width="400"><br>
-        <em>Real-time logs with trace/span linking</em>
+        <img src="docs/images/metrics.png" width="400"><br>
+        <em>Metrics with chart visualizations</em>
       </td>
       <td align="center" width="50%">
-        <img src="docs/images/metrics.png" width="400"><br>
-        <em>Metrics with type-specific visualizations</em>
+        <img src="docs/images/servicecatalog.png" width="400"><br>
+        <em>Service catalog with RED metrics</em>
+      </td>
+    </tr>
+    <tr>
+      <td align="center" width="50%">
+        <img src="docs/images/servicemap.png" width="400"><br>
+        <em>Interactive service dependency map</em>
+      </td>
+      <td align="center" width="50%">
+        <img src="docs/images/collector.png" width="400"><br>
+        <em>OpenTelemetry Collector configuration via OpAMP</em>
       </td>
     </tr>
   </table>
-</div> -->
+</div>
+
 ---
 
 ## Quick Start

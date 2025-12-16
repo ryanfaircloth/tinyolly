@@ -8,6 +8,10 @@ The metrics table offers a dense, high-information view of all ingested metrics.
 
 ![Metrics Table](images/metrics.png)
 
+Click the **Chart** button to visualize metric data over time:
+
+![Metrics Chart](images/merics2.png)
+
 ### Key Columns
 
 - **Name**: The full OTel metric name (e.g., `http.server.response.size`).

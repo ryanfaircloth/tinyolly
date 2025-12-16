@@ -1,8 +1,8 @@
 # Technical Details
 
 <div align="center">
-  <img src="../images/servicecatalog.png" alt="TinyOlly Architecture" width="600">
-  <p><em>Service catalog showing RED metrics for all services</em></p>
+  <img src="images/servicemap.png" alt="TinyOlly Architecture" width="700">
+  <p><em>Service dependency map showing service topology</em></p>
 </div>
 
 ---
