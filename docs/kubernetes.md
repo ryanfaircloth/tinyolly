@@ -94,7 +94,7 @@ git clone https://github.com/tinyolly/tinyolly
     Use the cleanup script to remove all TinyOlly resources:
 
     ```bash
-    ./k8s/01-cleanup.sh
+    ./k8s/03-cleanup.sh
     ```
 
     Shut down Minikube:
@@ -115,17 +115,17 @@ To see TinyOlly in action with instrumented microservices:
 
 ```bash
 cd k8s-demo
-./01-deploy.sh
+./02-deploy.sh
 ```
 
 The deploy script automatically builds the demo images if needed. To manually rebuild images:
 ```bash
-./00-build-images.sh
+./01-build-images.sh
 ```
 
 To clean up the demo:
 ```bash
-./02-cleanup.sh
+./03-cleanup.sh
 ```
 
 The demo includes two microservices that automatically generate traffic, showcasing distributed tracing across service boundaries.
@@ -169,7 +169,7 @@ To deploy TinyOlly without the bundled OTel Collector (e.g., if you have an exis
 2.  **Deploy Core:**
     ```bash
     cd k8s-core-only
-    ./deploy.sh
+    ./01-deploy.sh
     ```
 
 3.  **Access UI:**
@@ -177,7 +177,7 @@ To deploy TinyOlly without the bundled OTel Collector (e.g., if you have an exis
 
 4.  **Cleanup:**
     ```bash
-    ./cleanup.sh
+    ./02-cleanup.sh
     ```
 
 ### Use TinyOlly with Any OpenTelemetry Collector

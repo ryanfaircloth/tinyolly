@@ -167,21 +167,21 @@ UI available at: `http://localhost:5002`
 
 ```bash
 cd k8s-demo
-./01-deploy.sh  # Automatically builds images if needed
+./02-deploy.sh  # Automatically builds images if needed
 ```
 
-**Manual image build (optional):** `./00-build-images.sh`  
-**Cleanup:** `./02-cleanup.sh`
+**Manual image build (optional):** `./01-build-images.sh`  
+**Cleanup:** `./03-cleanup.sh`
 
 ### 3. Core-Only Deployment (Use Your Own OTel Collector)
 
 ```bash
 ./k8s/01-build-images.sh
 cd k8s-core-only
-./deploy.sh
+./01-deploy.sh
 ```
 
-**Cleanup:** `./cleanup.sh`
+**Cleanup:** `./02-cleanup.sh`
 
 ---
 

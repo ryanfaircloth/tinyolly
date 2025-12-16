@@ -67,7 +67,7 @@ if [ "$USE_MINIKUBE" = true ]; then
         read -n 1 -r
         echo ""
         if [[ $REPLY =~ ^[Yy]$ ]]; then
-            bash "$SCRIPT_DIR/00-build-images.sh"
+            bash "$SCRIPT_DIR/01-build-images.sh"
         else
             echo -e "${GREEN}✓ Using existing images${NC}"
         fi
