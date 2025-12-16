@@ -197,6 +197,15 @@ cd k8s-core-only
 - OpAMP-based OpenTelemetry Collector configuration management
 
 
+### Metrics
+- Dense, aligned table layout with "Chart" buttons
+- Inline "Cardinality" column showing label dimensions and series count
+- **Cardinality Explorer**:
+    - Deep-dive into metric attributes
+    - **Label Analysis**: View high-cardinality labels and their top values (expandable)
+    - **Raw Series**: Scrollable view of all active series in PromQL-like syntax
+    - **Export**: Copy PromQL or Download JSON for offline analysis
+
 ### Service Catalog
 - RED metrics (Rate, Errors, Duration) with P50/P95 latencies
 - Inline metric visualization

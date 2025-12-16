@@ -291,8 +291,8 @@ export function filterLogs() {
         // Check severity filter first
         let showBySeverity = true;
         if (currentSeverityFilter !== 'all') {
-            // Get severity from the row - it's in a div with the severity color
-            const severityDiv = row.querySelector('div[style*="font-weight: 600"]');
+            // Get severity from the row - use class selector
+            const severityDiv = row.querySelector('.log-severity');
             if (severityDiv) {
                 const rowSeverity = severityDiv.textContent.trim().toUpperCase();
                 showBySeverity = rowSeverity === currentSeverityFilter;
