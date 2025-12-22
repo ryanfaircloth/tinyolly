@@ -147,12 +147,13 @@ async def opamp_validate_config(request: ConfigValidateRequest):
     # The binary is installed in the container at /usr/local/bin/otelcol-contrib
     otelcol_binary = "/usr/local/bin/otelcol-contrib"
 
-    # Write config to temporary file
-    with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as tmp_file:
-        tmp_file.write(request.config)
-        tmp_file_path = tmp_file.name
-
+    # Write config to temporary file (delete=False so subprocess can read it, cleanup in finally)
+    tmp_file_path = None
     try:
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as tmp_file:
+            tmp_file.write(request.config)
+            tmp_file_path = tmp_file.name
+
         # Run otelcol-contrib validate command
         validate_cmd = [otelcol_binary, "validate", f"--config={tmp_file_path}"]
 
@@ -195,10 +196,11 @@ async def opamp_validate_config(request: ConfigValidateRequest):
         return basic_validation(parsed)
     finally:
         # Clean up temp file
-        try:
-            os.unlink(tmp_file_path)
-        except:
-            pass
+        if tmp_file_path:
+            try:
+                os.unlink(tmp_file_path)
+            except (OSError, FileNotFoundError):
+                pass
 
 
 @router.post(

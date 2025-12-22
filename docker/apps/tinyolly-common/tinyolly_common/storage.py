@@ -96,7 +96,7 @@ class Storage:
             client = await self.get_client()
             await client.ping()
             return True
-        except:
+        except Exception:
             return False
 
     def _compress_for_storage(self, data: Dict[str, Any]) -> bytes:

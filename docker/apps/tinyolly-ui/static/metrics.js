@@ -46,6 +46,24 @@ export async function renderMetrics(metricsData) {
         allMetrics = allMetrics.slice(-MAX_METRICS_IN_MEMORY);
     }
 
+    // Clean up stale chart instances to prevent memory leaks
+    if (typeof Chart !== 'undefined' && Chart.instances) {
+        // Destroy charts for metrics that no longer exist
+        const currentMetricNames = new Set(allMetrics.map(m => m.name));
+        Object.values(Chart.instances).forEach(chart => {
+            const canvasId = chart.canvas?.id || '';
+            const metricName = canvasId.replace('chart-', '').replace(/_/g, '.');
+            if (metricName && !currentMetricNames.has(metricName)) {
+                chart.destroy();
+            }
+        });
+    }
+
+    // Reset expanded metric if it no longer exists
+    if (expandedMetric && !allMetrics.find(m => m.name === expandedMetric)) {
+        expandedMetric = null;
+    }
+
     // Extract all unique resource keys (for backward compatibility)
     extractResourceKeys();
 

@@ -11,11 +11,13 @@ build/
 │   ├── 01-login.sh                # Step 1: Login to Docker Hub
 │   ├── 02-build-all.sh            # Step 2: Build all images
 │   ├── 02-build-core.sh           # Step 2: Build core images
+│   ├── 02-build-ui.sh             # Step 2: Build UI only (quick iteration)
 │   ├── 02-build-demo.sh           # Step 2: Build demo images
 │   ├── 02-build-ebpf-demo.sh      # Step 2: Build eBPF demo images
 │   ├── 02-build-ai-demo.sh        # Step 2: Build AI demo image
 │   ├── 03-push-all.sh             # Step 3: Push all images
 │   ├── 03-push-core.sh            # Step 3: Push core images
+│   ├── 03-push-ui.sh              # Step 3: Push UI only
 │   ├── 03-push-demo.sh            # Step 3: Push demo images
 │   ├── 03-push-ebpf-demo.sh       # Step 3: Push eBPF demo images
 │   └── 03-push-ai-demo.sh         # Step 3: Push AI demo image
@@ -37,11 +39,15 @@ cd build/dockerhub
 ./02-build-all.sh v2.1.0       # All images
 # or
 ./02-build-core.sh v2.1.0      # Core only
+# or
+./02-build-ui.sh v2.1.0        # UI only (quick iteration)
 
 # Step 3: Push to Docker Hub
 ./03-push-all.sh v2.1.0        # All images
 # or
 ./03-push-core.sh v2.1.0       # Core only
+# or
+./03-push-ui.sh v2.1.0         # UI only
 ```
 
 ## Quick Start - Local (Minikube)
@@ -68,6 +74,7 @@ cd build/local
 |--------|-------------|
 | `02-build-all.sh` | Build all images locally |
 | `02-build-core.sh` | Build core TinyOlly images |
+| `02-build-ui.sh` | Build UI image only (quick iteration) |
 | `02-build-demo.sh` | Build demo app images |
 | `02-build-ebpf-demo.sh` | Build eBPF demo images |
 | `02-build-ai-demo.sh` | Build AI agent demo image |
@@ -78,6 +85,7 @@ cd build/local
 |--------|-------------|
 | `03-push-all.sh` | Push all images to Docker Hub |
 | `03-push-core.sh` | Push core images |
+| `03-push-ui.sh` | Push UI image only |
 | `03-push-demo.sh` | Push demo images |
 | `03-push-ebpf-demo.sh` | Push eBPF demo images |
 | `03-push-ai-demo.sh` | Push AI demo image |

@@ -255,6 +255,12 @@ cd k8s-core-only
 
 ---
 
+## Building Images
+
+For building and publishing Docker images, see [build/README.md](build/README.md).
+
+---
+
 ## Features
 
 ### UI
