@@ -101,18 +101,28 @@ export function filterTinyOllyTrace(trace) {
 }
 
 /**
- * Filter metrics - exclude if service.name is tinyolly-ui
+ * Filter metrics - exclude if only from tinyolly-ui service
  */
 export function filterTinyOllyMetric(metric) {
     if (!hideTinyOlly) return true;
 
-    // Check in resources array
+    // Check services array (from metrics list endpoint)
+    if (metric.services && Array.isArray(metric.services)) {
+        // If only service is tinyolly-ui, filter it out
+        if (metric.services.length === 1 && metric.services[0] === 'tinyolly-ui') {
+            return false;
+        }
+        // If tinyolly-ui is one of multiple services, keep the metric
+        return true;
+    }
+
+    // Check in resources object (for single metric detail)
     if (metric.resources) {
         const serviceName = metric.resources['service.name'];
         if (serviceName === 'tinyolly-ui') return false;
     }
 
-    // Check in series
+    // Check in series (for metric detail view)
     if (metric.series && Array.isArray(metric.series)) {
         // Filter out entire metric if all series are from tinyolly-ui
         const nonTinyOllySeries = metric.series.filter(s => {

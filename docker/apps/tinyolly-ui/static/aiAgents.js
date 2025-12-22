@@ -291,6 +291,19 @@ export function filterAIByModel(model) {
 window.filterAIByModel = filterAIByModel;
 window.refreshAIView = loadAISessions;
 
+export function clearAISearch() {
+    const searchInput = document.getElementById('ai-search');
+    if (searchInput) {
+        searchInput.value = '';
+    }
+    // Show all session rows
+    const sessionRows = document.querySelectorAll('#ai-sessions-container .ai-session-row');
+    sessionRows.forEach(row => {
+        row.style.display = 'flex';
+    });
+}
+window.clearAISearch = clearAISearch;
+
 export function showAISessionDetail(traceId) {
     const session = aiSessions.find(s => s.trace_id === traceId);
     if (!session) return;

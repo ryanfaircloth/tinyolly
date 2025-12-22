@@ -130,6 +130,12 @@ export async function renderMetrics(metricsData) {
     container.innerHTML = '';
     container.appendChild(countHeader);
     container.appendChild(tableContainer);
+
+    // Reapply search filter if there's a search term (input is outside container, so value persists)
+    const searchInput = document.getElementById('metric-search');
+    if (searchInput && searchInput.value.trim()) {
+        filterMetrics();
+    }
 }
 
 function extractResourceKeys() {
@@ -231,6 +237,50 @@ function filterMetricsByAttributes(metrics) {
     // Filtering by attributes happens when fetching series data
     // For now, return all metrics (they'll be filtered when expanded)
     return metrics;
+}
+
+/**
+ * Clear the metrics search filter and show all metrics
+ */
+export function clearMetricSearch() {
+    const searchInput = document.getElementById('metric-search');
+    if (searchInput) {
+        searchInput.value = '';
+    }
+    // Show all metric rows
+    const metricRows = document.querySelectorAll('#metrics-container .metric-row');
+    metricRows.forEach(row => {
+        row.style.display = 'block';
+    });
+}
+
+// Expose to window for onclick handler
+window.clearMetricSearch = clearMetricSearch;
+
+/**
+ * Filter metrics by search term - filters the visible metric rows
+ */
+export function filterMetrics() {
+    const searchInput = document.getElementById('metric-search');
+    if (!searchInput) return;
+
+    const searchTerm = searchInput.value.toLowerCase().trim();
+    const metricRows = document.querySelectorAll('#metrics-container .metric-row');
+
+    metricRows.forEach(row => {
+        if (!searchTerm) {
+            row.style.display = 'block';
+            return;
+        }
+
+        // Search in metric name, description, type, and services
+        const metricName = row.dataset.metricName || '';
+        const header = row.querySelector('.metric-header');
+        const rowText = header ? header.textContent.toLowerCase() : '';
+
+        const matches = metricName.toLowerCase().includes(searchTerm) || rowText.includes(searchTerm);
+        row.style.display = matches ? 'block' : 'none';
+    });
 }
 
 // Check if metric is from Prometheus histogram (Remote Write)

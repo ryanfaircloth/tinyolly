@@ -3,6 +3,7 @@
  */
 import { loadLogs, loadSpans, loadTraces, loadMetrics, loadServiceMap, loadServiceCatalog, loadCollector, initCollector } from './api.js';
 import { showTracesList, isSpanDetailOpen } from './render.js';
+import { clearMetricSearch } from './metrics.js';
 
 let currentTab = 'traces';
 let autoRefreshInterval = null;
@@ -38,6 +39,11 @@ export function initTabs() {
 }
 
 export function switchTab(tabName, element, fromHistory = false) {
+    // Clear metric search when leaving metrics tab
+    if (currentTab === 'metrics' && tabName !== 'metrics') {
+        clearMetricSearch();
+    }
+
     currentTab = tabName;
     try {
         localStorage.setItem('tinyolly-active-tab', tabName);

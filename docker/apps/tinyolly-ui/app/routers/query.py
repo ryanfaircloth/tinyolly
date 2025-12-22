@@ -254,7 +254,13 @@ async def get_metrics(
             storage.get_all_resources(name),
             storage.get_all_attributes(name)
         )
-        
+
+        # Extract unique service names from resources
+        services = list(set(
+            r.get('service.name') for r in resources
+            if r.get('service.name')
+        ))
+
         return {
             'name': name,
             'type': metadata.get('type') or 'unknown',
@@ -262,7 +268,8 @@ async def get_metrics(
             'description': metadata.get('description', ''),
             'resource_count': len(resources),
             'attribute_combinations': len(attributes),
-            'label_count': len(attributes[0].keys()) if attributes else 0
+            'label_count': len(attributes[0].keys()) if attributes else 0,
+            'services': services
         }
 
     # Fetch all metrics in parallel

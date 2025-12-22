@@ -139,7 +139,8 @@ class MetricMetadata(BaseModel):
     resource_count: int = Field(..., description="Number of unique resource combinations")
     attribute_combinations: int = Field(..., description="Number of unique attribute combinations")
     label_count: int = Field(..., description="Number of label dimension keys")
-    
+    services: List[str] = Field(default=[], description="List of service names emitting this metric")
+
     class Config:
         json_schema_extra = {
             "example": {
@@ -148,7 +149,8 @@ class MetricMetadata(BaseModel):
                 "unit": "ms",
                 "description": "HTTP request duration",
                 "resource_count": 3,
-                "attribute_combinations": 10
+                "attribute_combinations": 10,
+                "services": ["frontend", "backend"]
             }
         }
 

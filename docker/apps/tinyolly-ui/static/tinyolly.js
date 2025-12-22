@@ -13,8 +13,9 @@ import {
     filterLogs
 } from './render.js';
 
-import { clearTraceFilter } from './traces.js';
+import { clearTraceFilter, filterTraces } from './traces.js';
 import { clearSpanFilter, filterSpans } from './spans.js';
+import { filterMetrics } from './metrics.js';
 
 import { debounce } from './utils.js';
 
@@ -65,7 +66,17 @@ document.addEventListener('DOMContentLoaded', () => {
             spanSearch.addEventListener('keyup', debounce(filterSpans, 300));
         }
 
-        // Metric search removed in OTEL rewrite (filtering now done via resource/attribute filters)
+        // Attach trace search event listener with debounce
+        const traceSearch = document.getElementById('trace-search');
+        if (traceSearch) {
+            traceSearch.addEventListener('keyup', debounce(filterTraces, 300));
+        }
+
+        // Attach metric search event listener with debounce
+        const metricSearch = document.getElementById('metric-search');
+        if (metricSearch) {
+            metricSearch.addEventListener('keyup', debounce(filterMetrics, 300));
+        }
 
         if (localStorage.getItem('tinyolly-auto-refresh') !== 'false') {
             startAutoRefresh();

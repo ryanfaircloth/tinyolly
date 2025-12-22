@@ -88,7 +88,7 @@ export function renderTraces(traces) {
     }
 }
 
-function filterTraces() {
+export function filterTraces() {
     const searchInput = document.getElementById('trace-search');
     if (!searchInput) return;
 
