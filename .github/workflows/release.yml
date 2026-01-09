@@ -31,12 +31,12 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build all images
-        run: ./build/dockerhub/02-build-all.sh ${{ github.ref_name }}
+        run: bash ./build/dockerhub/02-build-all.sh ${{ github.ref_name }}
         env:
           CONTAINER_REGISTRY: ghcr.io/ryanfaircloth
 
       - name: Push all images
-        run: ./build/dockerhub/03-push-all.sh ${{ github.ref_name }}
+        run: bash ./build/dockerhub/03-push-all.sh ${{ github.ref_name }}
         env:
           CONTAINER_REGISTRY: ghcr.io/ryanfaircloth
 
