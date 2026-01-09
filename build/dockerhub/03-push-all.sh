@@ -52,25 +52,25 @@ echo ""
 echo ""
 echo ">>> Pushing Core Images..."
 echo ""
-"$SCRIPT_DIR/push-core.sh" "$VERSION"
+"$SCRIPT_DIR/03-push-core.sh" "$VERSION"
 
 # Push demo images
 echo ""
 echo ">>> Pushing Demo Images..."
 echo ""
-"$SCRIPT_DIR/push-demo.sh" "$VERSION"
+"$SCRIPT_DIR/03-push-demo.sh" "$VERSION"
 
 # Push eBPF demo images
 echo ""
 echo ">>> Pushing eBPF Demo Images..."
 echo ""
-"$SCRIPT_DIR/push-ebpf-demo.sh" "$VERSION"
+"$SCRIPT_DIR/03-push-ebpf-demo.sh" "$VERSION"
 
 # Push AI demo image
 echo ""
 echo ">>> Pushing AI Demo Image..."
 echo ""
-"$SCRIPT_DIR/push-ai-demo.sh" "$VERSION"
+"$SCRIPT_DIR/03-push-ai-demo.sh" "$VERSION"
 
 echo ""
 echo "=========================================="
