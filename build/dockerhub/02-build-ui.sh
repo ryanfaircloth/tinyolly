@@ -70,7 +70,7 @@ docker buildx build --platform $PLATFORMS \
   --build-arg APP_DIR=tinyolly-ui \
   -t $CONTAINER_REGISTRY/ui:latest \
   -t $CONTAINER_REGISTRY/ui:$VERSION \
-  --load .
+  $BUILD_ACTION .
 echo "✓ Built $CONTAINER_REGISTRY/ui:$VERSION"
 echo ""
 

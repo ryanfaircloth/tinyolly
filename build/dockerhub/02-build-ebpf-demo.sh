@@ -70,7 +70,7 @@ docker buildx build --platform $PLATFORMS \
   -f Dockerfile \
   -t $CONTAINER_REGISTRY/ebpf-frontend:latest \
   -t $CONTAINER_REGISTRY/ebpf-frontend:$VERSION \
-  --load .
+  $BUILD_ACTION .
 echo "✓ Built $CONTAINER_REGISTRY/ebpf-frontend:$VERSION"
 echo ""
 
@@ -83,7 +83,7 @@ docker buildx build --platform $PLATFORMS \
   -f Dockerfile.backend \
   -t $CONTAINER_REGISTRY/ebpf-backend:latest \
   -t $CONTAINER_REGISTRY/ebpf-backend:$VERSION \
-  --load .
+  $BUILD_ACTION .
 echo "✓ Built $CONTAINER_REGISTRY/ebpf-backend:$VERSION"
 echo ""
 

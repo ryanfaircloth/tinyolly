@@ -70,7 +70,7 @@ docker buildx build --platform $PLATFORMS \
   -f Dockerfile \
   -t $CONTAINER_REGISTRY/demo-frontend:latest \
   -t $CONTAINER_REGISTRY/demo-frontend:$VERSION \
-  --load .
+  $BUILD_ACTION .
 echo "✓ Built $CONTAINER_REGISTRY/demo-frontend:$VERSION"
 echo ""
 
@@ -83,7 +83,7 @@ docker buildx build --platform $PLATFORMS \
   -f Dockerfile.backend \
   -t $CONTAINER_REGISTRY/demo-backend:latest \
   -t $CONTAINER_REGISTRY/demo-backend:$VERSION \
-  --load .
+  $BUILD_ACTION .
 echo "✓ Built $CONTAINER_REGISTRY/demo-backend:$VERSION"
 echo ""
 

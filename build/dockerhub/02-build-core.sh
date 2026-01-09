@@ -45,9 +45,18 @@ cd "$SCRIPT_DIR/../../docker"
 VERSION=${1:-"latest"}
 CONTAINER_REGISTRY=${CONTAINER_REGISTRY:-"tinyolly"}  # Default to Docker Hub (tinyolly), can be overridden with ghcr.io/ryanfaircloth
 PLATFORMS="linux/amd64,linux/arm64"
+DOCKER_BUILD_PUSH=${DOCKER_BUILD_PUSH:-"false"}  # Set to "true" in CI to push multi-platform images
+
+if [ "$DOCKER_BUILD_PUSH" = "true" ]; then
+  BUILD_ACTION="--push"
+  ACTION_DESC="Build and Push"
+else
+  BUILD_ACTION="--load"
+  ACTION_DESC="Build (No Push)"
+fi
 
 echo "=========================================="
-echo "TinyOlly Core - Build (No Push)"
+echo "TinyOlly Core - $ACTION_DESC"
 echo "=========================================="
 echo "Registry: $CONTAINER_REGISTRY"
 echo "Version: $VERSION"
@@ -73,7 +82,7 @@ docker buildx build --platform $PLATFORMS \
   -f dockerfiles/Dockerfile.tinyolly-python-base \
   -t $CONTAINER_REGISTRY/python-base:latest \
   -t $CONTAINER_REGISTRY/python-base:$VERSION \
-  --load .
+  $BUILD_ACTION .
 echo "✓ Built $CONTAINER_REGISTRY/python-base:$VERSION"
 echo ""
 
@@ -87,7 +96,7 @@ docker buildx build --platform $PLATFORMS \
   --build-arg APP_DIR=tinyolly-otlp-receiver \
   -t $CONTAINER_REGISTRY/otlp-receiver:latest \
   -t $CONTAINER_REGISTRY/otlp-receiver:$VERSION \
-  --load .
+  $BUILD_ACTION .
 echo "✓ Built $CONTAINER_REGISTRY/otlp-receiver:$VERSION"
 echo ""
 
@@ -101,7 +110,7 @@ docker buildx build --platform $PLATFORMS \
   --build-arg APP_DIR=tinyolly-ui \
   -t $CONTAINER_REGISTRY/ui:latest \
   -t $CONTAINER_REGISTRY/ui:$VERSION \
-  --load .
+  $BUILD_ACTION .
 echo "✓ Built $CONTAINER_REGISTRY/ui:$VERSION"
 echo ""
 
@@ -114,7 +123,7 @@ docker buildx build --platform $PLATFORMS \
   -f dockerfiles/Dockerfile.tinyolly-opamp-server \
   -t $CONTAINER_REGISTRY/opamp-server:latest \
   -t $CONTAINER_REGISTRY/opamp-server:$VERSION \
-  --load .
+  $BUILD_ACTION .
 echo "✓ Built $CONTAINER_REGISTRY/opamp-server:$VERSION"
 echo ""
 
@@ -127,7 +136,7 @@ docker buildx build --platform $PLATFORMS \
   -f dockerfiles/Dockerfile.otel-supervisor \
   -t $CONTAINER_REGISTRY/otel-supervisor:latest \
   -t $CONTAINER_REGISTRY/otel-supervisor:$VERSION \
-  --load .
+  $BUILD_ACTION .
 echo "✓ Built $CONTAINER_REGISTRY/otel-supervisor:$VERSION"
 echo ""
 

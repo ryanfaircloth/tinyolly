@@ -70,7 +70,7 @@ docker buildx build --platform $PLATFORMS \
   -f Dockerfile \
   -t $CONTAINER_REGISTRY/ai-agent-demo:latest \
   -t $CONTAINER_REGISTRY/ai-agent-demo:$VERSION \
-  --load .
+  $BUILD_ACTION .
 echo "✓ Built $CONTAINER_REGISTRY/ai-agent-demo:$VERSION"
 echo ""
 

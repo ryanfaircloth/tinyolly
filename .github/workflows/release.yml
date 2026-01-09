@@ -30,15 +30,11 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build all images
+      - name: Build and push all images
         run: bash ./build/dockerhub/02-build-all.sh ${{ github.ref_name }}
         env:
           CONTAINER_REGISTRY: ghcr.io/ryanfaircloth
-
-      - name: Push all images
-        run: bash ./build/dockerhub/03-push-all.sh ${{ github.ref_name }}
-        env:
-          CONTAINER_REGISTRY: ghcr.io/ryanfaircloth
+          DOCKER_BUILD_PUSH: "true"
 
       - name: Verify images
         run: |
