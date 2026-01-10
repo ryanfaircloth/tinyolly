@@ -88,23 +88,24 @@ cd k8s
 
 1. Rebuild `python-base` image (contains tinyolly-common)
 2. Rebuild dependent images (UI, OTLP receiver)
-3. Push to registry (localhost:5050 for local k8s)
-4. Deploy updated images
+3. Push to registry (`registry.tinyolly.test:49443` with `--tls-verify=false` for podman)
+4. Deploy updated images via ArgoCD or kubectl
 
 Example from terminal history:
 
 ```bash
-cd docker && podman build -f dockerfiles/Dockerfile.tinyolly-python-base -t tinyolly/python-base:latest .
-podman build -f dockerfiles/Dockerfile.tinyolly-ui --build-arg APP_DIR=tinyolly-ui -t localhost:5050/tinyolly/ui:v2.1.7-debug .
-podman push --tls-verify=false localhost:5050/tinyolly/ui:v2.1.7-debug
-kubectl set image deployment/tinyolly-ui tinyolly-ui=localhost:5050/tinyolly/ui:v2.1.7-debug -n tinyolly
+cd k8s && ./06-rebuild-all-local.sh v2.1.8-test
+./07-deploy-local-images.sh v2.1.8-test
+# Or manually:
+kubectl set image deployment/tinyolly-ui tinyolly-ui=registry.tinyolly.test:49443/tinyolly/ui:v2.1.8-test -n tinyolly
 ```
 
 ### Testing Changes
 
 - **Clear cache after deployment**: `kubectl exec -n tinyolly deployment/tinyolly-redis -- redis-cli -p 6579 FLUSHDB`
 - **Check logs**: `kubectl logs -n tinyolly deployment/tinyolly-ui -f`
-- **Verify image**: `podman images | grep localhost:5050/tinyolly/ui`
+- **Verify image**: `podman images | grep registry.tinyolly.test:49443/tinyolly/ui`
+- **Check ArgoCD sync**: `kubectl -n argocd get application docker-registry -o yaml`
 
 ## Development Patterns
 
@@ -151,9 +152,17 @@ kubectl set image deployment/tinyolly-ui tinyolly-ui=localhost:5050/tinyolly/ui:
 
 ### Kubernetes
 
-- Uses local registry `localhost:5050` for dev builds
-- Namespace: `tinyolly`
-- Services exposed via LoadBalancer (Minikube tunnel required)
+- **Deployment**: ArgoCD manages infrastructure and applications
+- **Local registry**: `registry.tinyolly.test:49443` (TLS, skip verify) for dev builds
+- **Namespace**: `tinyolly`
+- **Services**: Exposed via Envoy Gateway with HTTPRoutes
+
+### ArgoCD GitOps
+
+- **Infrastructure apps**: `.kind/modules/main/argocd-applications/infrastructure/`
+- **Application pattern**: Separate Applications for Helm charts and HTTPRoutes
+- **Example**: `docker-registry.yaml` (Helm) + `docker-registry-route.yaml` (raw HTTPRoute)
+- **No Flux**: All deployments use ArgoCD native Helm support, not Flux HelmRelease CRDs
 
 ## Common Tasks
 
