@@ -1,0 +1,117 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "tinyolly.ui.name" . }}
+  labels:
+    {{- include "tinyolly.ui.labels" . | nindent 4 }}
+  {{- with .Values.commonAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  replicas: {{ .Values.ui.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "tinyolly.ui.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.ui.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "tinyolly.ui.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.image.pullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "tinyolly.ui.serviceAccountName" . }}
+      {{- with .Values.ui.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+      - name: tinyolly-ui
+        {{- with .Values.ui.securityContext }}
+        securityContext:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+        image: "{{ .Values.ui.image.repository }}:{{ .Values.ui.image.tag }}"
+        imagePullPolicy: {{ include "tinyolly.imagePullPolicy" (dict "component" .Values.ui.image "global" .) }}
+        ports:
+        - name: http
+          containerPort: {{ .Values.ui.service.targetPort }}
+          protocol: TCP
+        env:
+        - name: REDIS_HOST
+          value: {{ .Values.redis.host | quote }}
+        - name: REDIS_PORT
+          value: {{ .Values.redis.port | quote }}
+        - name: OTEL_SERVICE_NAME
+          value: "tinyolly-ui"
+        - name: OTEL_EXPORTER_OTLP_ENDPOINT
+          value: {{ .Values.otelCollector.endpoint | quote }}
+        - name: OTEL_EXPORTER_OTLP_PROTOCOL
+          value: {{ .Values.otelCollector.protocol | quote }}
+        - name: OTEL_EXPORTER_OTLP_TRACES_ENDPOINT
+          value: {{ .Values.otelCollector.tracesEndpoint | quote }}
+        - name: OTEL_EXPORTER_OTLP_METRICS_ENDPOINT
+          value: {{ .Values.otelCollector.metricsEndpoint | quote }}
+        - name: OTEL_EXPORTER_OTLP_LOGS_ENDPOINT
+          value: {{ .Values.otelCollector.logsEndpoint | quote }}
+        - name: OPAMP_SERVER_URL
+          value: "http://{{ include "tinyolly.opampServer.name" . }}:{{ .Values.opampServer.service.httpPort }}"
+        - name: OTELCOL_DEFAULT_CONFIG
+          value: "/app/otelcol-config.yaml"
+        {{- range .Values.ui.env }}
+        - name: {{ .name }}
+          value: {{ .value | quote }}
+        {{- end }}
+        {{- range $key, $value := .Values.ui.extraEnv }}
+        - name: {{ $key }}
+          value: {{ $value | quote }}
+        {{- end }}
+        volumeMounts:
+        - name: otelcol-config-vol
+          mountPath: /app/otelcol-config.yaml
+          subPath: otel-collector-config.yaml
+        - name: otelcol-templates-vol
+          mountPath: /app/otelcol-templates
+        {{- with .Values.ui.volumeMounts }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.ui.resources }}
+        resources:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+        {{- with .Values.ui.livenessProbe }}
+        livenessProbe:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+        {{- with .Values.ui.readinessProbe }}
+        readinessProbe:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+      volumes:
+      - name: otelcol-config-vol
+        configMap:
+          name: {{ include "tinyolly.fullname" . }}-otel-config
+      - name: otelcol-templates-vol
+        configMap:
+          name: {{ include "tinyolly.fullname" . }}-otelcol-templates
+      {{- with .Values.ui.volumes }}
+        {{- toYaml . | nindent 6 }}
+      {{- end }}
+      {{- with .Values.ui.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.ui.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.ui.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

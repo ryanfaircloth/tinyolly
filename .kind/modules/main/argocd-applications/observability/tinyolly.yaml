@@ -1,0 +1,61 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: tinyolly
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "50"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: observability
+  source:
+    repoURL: 'docker-registry.registry.svc.cluster.local:5000/tinyolly/charts'
+    chart: tinyolly
+    targetRevision: 0.1.1-v2.1.9-perms
+    helm:
+      valuesObject:
+        ui:
+          image:
+            repository: docker-registry.registry.svc.cluster.local:5000/tinyolly/ui
+            tag: latest
+          
+          httpRoute:
+            enabled: true
+            parentRefs:
+              - name: management-gateway
+                namespace: envoy-gateway-system
+            hosts:
+              - host: tinyolly.${gateway_dns_suffix}
+                path: /
+                pathType: PathPrefix
+        
+        opampServer:
+          image:
+            repository: docker-registry.registry.svc.cluster.local:5000/tinyolly/opamp-server
+            tag: latest
+        
+        otlpReceiver:
+          image:
+            repository: docker-registry.registry.svc.cluster.local:5000/tinyolly/otlp-receiver
+            tag: latest
+        
+        redis:
+          host: tinyolly-redis
+          port: 6579
+        
+        otelCollector:
+          endpoint: http://otel-collector:4318
+          protocol: http/protobuf
+          tracesEndpoint: http://otel-collector:4318/v1/traces
+          metricsEndpoint: http://otel-collector:4318/v1/metrics
+          logsEndpoint: http://otel-collector:4318/v1/logs
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: tinyolly
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
