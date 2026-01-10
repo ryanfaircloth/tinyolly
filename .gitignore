@@ -16,7 +16,6 @@ docker/certs/
 *.key
 *.crt
 .claude
-
 # Terraform
 .terraform/
 .terraform.lock.hcl

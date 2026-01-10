@@ -7,7 +7,7 @@ set -e
 # Example: ./05-rebuild-local-changes.sh v2.1.8-test
 
 VERSION=${1:-"local-$(date +%s)"}
-REGISTRY="localhost:5050"
+REGISTRY="registry.tinyolly.test:49443"
 
 echo "==============================================="
 echo "Rebuilding TinyOlly for Local Testing"
@@ -57,8 +57,8 @@ echo ""
 echo "Step 3/5: Pushing to local registry ($REGISTRY)"
 echo "---------------------------------------------------"
 # Quick check that registry is accessible
-if ! curl -sf http://localhost:5050/v2/_catalog > /dev/null 2>&1; then
-    echo "⚠ Warning: Registry at localhost:5050 may not be accessible"
+if ! curl -sfk https://registry.tinyolly.test:49443/v2/_catalog > /dev/null 2>&1; then
+    echo "⚠ Warning: Registry at registry.tinyolly.test:49443 may not be accessible"
     echo "Attempting to push anyway..."
     echo ""
 fi
@@ -88,6 +88,9 @@ echo ""
 echo "Manual deployment commands (if needed):"
 echo "  kubectl set image deployment/tinyolly-ui tinyolly-ui=$REGISTRY/tinyolly/ui:$VERSION -n tinyolly"
 echo "  kubectl rollout status deployment/tinyolly-ui -n tinyolly"
+echo ""
+echo "Note: Registry uses TLS without trust - ensure imagePullSecrets configured"
+echo "or use insecureSkipTLSVerify in cluster registry configuration"
 echo ""
 echo "Clear Redis cache after deployment:"
 echo "  kubectl exec -n tinyolly deployment/tinyolly-redis -- redis-cli -p 6579 FLUSHDB"
