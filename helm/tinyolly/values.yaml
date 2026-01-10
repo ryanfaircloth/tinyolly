@@ -1,0 +1,384 @@
+# Default values for tinyolly.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# Global settings
+global:
+  # -- Namespace for TinyOlly deployment
+  namespace: tinyolly
+
+# -- Number of replicas for each component (can be overridden per component)
+replicaCount: 1
+
+# Image settings
+image:
+  # -- Image pull policy
+  pullPolicy: Always
+  # -- Image pull secrets
+  pullSecrets: []
+
+# -- Labels to add to all resources
+commonLabels: {}
+
+# -- Annotations to add to all resources
+commonAnnotations: {}
+
+# Redis configuration (assumes redis-operator managed cluster)
+redis:
+  # -- Redis host (should match your redis-operator cluster name)
+  host: tinyolly-redis
+  # -- Redis port
+  port: 6379
+
+# OpenTelemetry Collector configuration (assumes existing deployment)
+otelCollector:
+  # -- OTel Collector endpoint for OTLP export
+  endpoint: http://otel-collector:4318
+  # -- OTel Collector protocol
+  protocol: http/protobuf
+  # -- OTel Collector traces endpoint
+  tracesEndpoint: http://otel-collector:4318/v1/traces
+  # -- OTel Collector metrics endpoint
+  metricsEndpoint: http://otel-collector:4318/v1/metrics
+  # -- OTel Collector logs endpoint
+  logsEndpoint: http://otel-collector:4318/v1/logs
+
+# TinyOlly UI component
+ui:
+  # -- Number of replicas for UI
+  replicaCount: 1
+  
+  image:
+    # -- UI image repository
+    repository: ghcr.io/ryanfaircloth/ui
+    # -- UI image tag
+    tag: latest
+    # -- UI image pull policy (overrides global)
+    pullPolicy: ""
+  
+  # -- Service account settings
+  serviceAccount:
+    # -- Create service account for UI
+    create: true
+    # -- Service account name (generated if not set)
+    name: ""
+    # -- Annotations for service account
+    annotations: {}
+  
+  # -- Pod annotations
+  podAnnotations: {}
+  
+  # -- Pod security context
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    fsGroup: 1000
+  
+  # -- Container security context
+  securityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+      - ALL
+    readOnlyRootFilesystem: false
+  
+  service:
+    # -- Service type
+    type: ClusterIP
+    # -- Service port
+    port: 5002
+    # -- Target port
+    targetPort: 5002
+    # -- Node port (if type is NodePort)
+    nodePort: null
+    # -- Service annotations
+    annotations: {}
+  
+  # -- HTTPRoute configuration (Gateway API)
+  httpRoute:
+    # -- Enable HTTPRoute for UI
+    enabled: false
+    # -- Annotations for HTTPRoute
+    annotations: {}
+    # -- Gateway parentRefs (required for HTTPRoute)
+    parentRefs:
+      - name: management-gateway
+        namespace: envoy-gateway-system
+    # -- Hosts configuration
+    hosts:
+      - host: tinyolly.local.gd
+        path: /
+        pathType: PathPrefix
+  
+  # -- Resource limits and requests
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+  
+  # -- Liveness probe configuration
+  livenessProbe:
+    httpGet:
+      path: /health
+      port: 5002
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+  
+  # -- Readiness probe configuration
+  readinessProbe:
+    httpGet:
+      path: /health
+      port: 5002
+    initialDelaySeconds: 10
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 3
+  
+  # -- Environment variables
+  env:
+    - name: DEPLOYMENT_ENV
+      value: kubernetes
+    - name: OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED
+      value: "true"
+    - name: OTELCOL_DEFAULT_CONFIG
+      value: /app/otelcol-config.yaml
+  
+  # -- Additional environment variables (key-value pairs)
+  extraEnv: {}
+  
+  # -- Volume mounts
+  volumeMounts:
+    - name: otelcol-config-vol
+      mountPath: /app/otelcol-config.yaml
+      subPath: otel-collector-config.yaml
+    - name: otelcol-templates-vol
+      mountPath: /app/otelcol-templates
+  
+  # -- Volumes
+  volumes:
+    - name: otelcol-config-vol
+      configMap:
+        name: otel-collector-config
+    - name: otelcol-templates-vol
+      configMap:
+        name: otelcol-templates
+  
+  # -- Node selector
+  nodeSelector: {}
+  
+  # -- Tolerations
+  tolerations: []
+  
+  # -- Affinity
+  affinity: {}
+
+# TinyOlly OpAMP Server component
+opampServer:
+  # -- Number of replicas for OpAMP Server
+  replicaCount: 1
+  
+  image:
+    # -- OpAMP Server image repository
+    repository: ghcr.io/ryanfaircloth/opamp-server
+    # -- OpAMP Server image tag
+    tag: latest
+    # -- OpAMP Server image pull policy (overrides global)
+    pullPolicy: ""
+  
+  # -- Service account settings
+  serviceAccount:
+    # -- Create service account for OpAMP Server
+    create: true
+    # -- Service account name (generated if not set)
+    name: ""
+    # -- Annotations for service account
+    annotations: {}
+  
+  # -- Pod annotations
+  podAnnotations: {}
+  
+  # -- Pod security context
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    fsGroup: 1000
+  
+  # -- Container security context
+  securityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+      - ALL
+    readOnlyRootFilesystem: false
+  
+  service:
+    # -- Service type
+    type: ClusterIP
+    # -- WebSocket port
+    websocketPort: 4320
+    # -- HTTP port
+    httpPort: 4321
+    # -- Service annotations
+    annotations: {}
+  
+  # -- Resource limits and requests
+  resources:
+    limits:
+      cpu: 200m
+      memory: 256Mi
+    requests:
+      cpu: 50m
+      memory: 64Mi
+  
+  # -- Liveness probe configuration
+  livenessProbe:
+    httpGet:
+      path: /health
+      port: 4321
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+  
+  # -- Readiness probe configuration
+  readinessProbe:
+    httpGet:
+      path: /health
+      port: 4321
+    initialDelaySeconds: 10
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 3
+  
+  # -- Environment variables
+  env:
+    - name: OPAMP_PORT
+      value: "4320"
+    - name: HTTP_PORT
+      value: "4321"
+    - name: COLLECTOR_CONFIG_PATH
+      value: /etc/otel-collector-config.yaml
+  
+  # -- Additional environment variables
+  extraEnv: {}
+  
+  # -- Volume mounts
+  volumeMounts:
+    - name: otel-collector-config-vol
+      mountPath: /etc/otel-collector-config.yaml
+      subPath: otel-collector-config.yaml
+  
+  # -- Volumes
+  volumes:
+    - name: otel-collector-config-vol
+      configMap:
+        name: otel-collector-config
+  
+  # -- Node selector
+  nodeSelector: {}
+  
+  # -- Tolerations
+  tolerations: []
+  
+  # -- Affinity
+  affinity: {}
+
+# TinyOlly OTLP Receiver component
+otlpReceiver:
+  # -- Number of replicas for OTLP Receiver
+  replicaCount: 1
+  
+  image:
+    # -- OTLP Receiver image repository
+    repository: ghcr.io/ryanfaircloth/otlp-receiver
+    # -- OTLP Receiver image tag
+    tag: latest
+    # -- OTLP Receiver image pull policy (overrides global)
+    pullPolicy: ""
+  
+  # -- Service account settings
+  serviceAccount:
+    # -- Create service account for OTLP Receiver
+    create: true
+    # -- Service account name (generated if not set)
+    name: ""
+    # -- Annotations for service account
+    annotations: {}
+  
+  # -- Pod annotations
+  podAnnotations: {}
+  
+  # -- Pod security context
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    fsGroup: 1000
+  
+  # -- Container security context
+  securityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+      - ALL
+    readOnlyRootFilesystem: false
+  
+  service:
+    # -- Service type
+    type: ClusterIP
+    # -- Service port
+    port: 4343
+    # -- Target port
+    targetPort: 4343
+    # -- Service annotations
+    annotations: {}
+  
+  # -- Resource limits and requests
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+  
+  # -- Liveness probe configuration
+  livenessProbe:
+    tcpSocket:
+      port: 4343
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+  
+  # -- Readiness probe configuration
+  readinessProbe:
+    tcpSocket:
+      port: 4343
+    initialDelaySeconds: 10
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 3
+  
+  # -- Environment variables
+  env:
+    - name: PORT
+      value: "4343"
+    - name: OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED
+      value: "true"
+  
+  # -- Additional environment variables
+  extraEnv: {}
+  
+  # -- Node selector
+  nodeSelector: {}
+  
+  # -- Tolerations
+  tolerations: []
+  
+  # -- Affinity
+  affinity: {}

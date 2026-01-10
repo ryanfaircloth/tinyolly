@@ -1,0 +1,18 @@
+# Auto-generated local development values
+# Generated: Sat Jan 10 10:19:42 CST 2026
+# Version: latest
+
+ui:
+  image:
+    repository: registry.tinyolly.test:49443/tinyolly/ui
+    tag: latest
+
+opampServer:
+  image:
+    repository: registry.tinyolly.test:49443/tinyolly/opamp-server
+    tag: latest
+
+otlpReceiver:
+  image:
+    repository: registry.tinyolly.test:49443/tinyolly/otlp-receiver
+    tag: latest

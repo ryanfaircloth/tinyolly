@@ -94,7 +94,13 @@ configs:
   credentialTemplates: {}
   
   # Default repositories
-  repositories: {}
+  repositories:
+    local-oci-registry:
+      url: docker-registry.registry.svc.cluster.local:5000
+      name: local-oci-registry
+      type: helm
+      enableOCI: "true"
+      insecure: "true"
 
 # RBAC configuration
 rbac:

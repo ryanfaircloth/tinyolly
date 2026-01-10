@@ -20,6 +20,9 @@ up:
 		echo "🚀 Bootstrap mode: Creating new cluster..."; \
 		export TF_VAR_bootstrap=true && pushd .kind && terraform apply -auto-approve && popd; \
 		echo ""; \
+		echo "⏳ Waiting for Gateway API CRDs to be installed..."; \
+		kubectl wait --for condition=established --timeout=300s crd/gateways.gateway.networking.k8s.io crd/httproutes.gateway.networking.k8s.io || true; \
+		echo ""; \
 		echo "🔄 Running second pass to enable HTTPRoutes..."; \
 		export TF_VAR_bootstrap=false && pushd .kind && terraform apply -auto-approve && popd; \
 	else \

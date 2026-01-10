@@ -29,7 +29,6 @@ spec:
         externalConfig:
           enabled: true
           data: |
-            port 6579
             maxmemory 256mb
             maxmemory-policy allkeys-lru
         externalService:

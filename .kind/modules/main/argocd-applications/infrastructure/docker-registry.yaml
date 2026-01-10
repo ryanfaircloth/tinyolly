@@ -17,6 +17,19 @@ spec:
       valuesObject:
         service:
           port: 5000
+          type: NodePort
+          nodePort: 30500
+        affinity:
+          nodeAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+              nodeSelectorTerms:
+              - matchExpressions:
+                - key: node-role.kubernetes.io/control-plane
+                  operator: Exists
+        tolerations:
+        - key: node-role.kubernetes.io/control-plane
+          operator: Exists
+          effect: NoSchedule
         persistence:
           enabled: true
           size: 20Gi
