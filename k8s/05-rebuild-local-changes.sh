@@ -93,4 +93,4 @@ echo "Note: Registry uses TLS without trust - ensure imagePullSecrets configured
 echo "or use insecureSkipTLSVerify in cluster registry configuration"
 echo ""
 echo "Clear Redis cache after deployment:"
-echo "  kubectl exec -n tinyolly deployment/tinyolly-redis -- redis-cli -p 6579 FLUSHDB"
+echo "  kubectl exec -n tinyolly deployment/tinyolly-redis -- redis-cli -p 6379 FLUSHDB"

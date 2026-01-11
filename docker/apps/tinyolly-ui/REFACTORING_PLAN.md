@@ -54,7 +54,7 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     # Redis
     redis_host: str = "localhost"
-    redis_port: int = 6579
+    redis_port: int = 6379
 
     # Server
     port: int = 5002

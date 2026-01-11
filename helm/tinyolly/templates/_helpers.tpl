@@ -157,6 +157,41 @@ app: tinyolly-otlp-receiver
 {{- end }}
 
 {{/*
+OTel Collector Supervisor component name
+*/}}
+{{- define "tinyolly.otelCollectorSupervisor.name" -}}
+{{ include "tinyolly.fullname" . }}-otel-collector
+{{- end }}
+
+{{/*
+OTel Collector Supervisor service account name
+*/}}
+{{- define "tinyolly.otelCollectorSupervisor.serviceAccountName" -}}
+{{- if .Values.otelCollectorSupervisor.serviceAccount.create }}
+{{- default (include "tinyolly.otelCollectorSupervisor.name" .) .Values.otelCollectorSupervisor.serviceAccount.name }}
+{{- else }}
+{{- default "default" .Values.otelCollectorSupervisor.serviceAccount.name }}
+{{- end }}
+{{- end }}
+
+{{/*
+OTel Collector Supervisor component labels
+*/}}
+{{- define "tinyolly.otelCollectorSupervisor.labels" -}}
+{{ include "tinyolly.labels" . }}
+app.kubernetes.io/component: otel-collector
+{{- end }}
+
+{{/*
+OTel Collector Supervisor selector labels
+*/}}
+{{- define "tinyolly.otelCollectorSupervisor.selectorLabels" -}}
+{{ include "tinyolly.selectorLabels" . }}
+app.kubernetes.io/component: otel-collector
+app: otel-collector
+{{- end }}
+
+{{/*
 Image pull policy helper
 Usage: include "tinyolly.imagePullPolicy" (dict "component" .Values.ui.image "global" .)
 */}}

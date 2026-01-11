@@ -24,7 +24,7 @@ spec:
         - name: REDIS_HOST
           value: "tinyolly-redis"
         - name: REDIS_PORT
-          value: "6579"
+          value: "6379"
         - name: DEPLOYMENT_ENV
           value: "kubernetes"
         - name: OTEL_SERVICE_NAME

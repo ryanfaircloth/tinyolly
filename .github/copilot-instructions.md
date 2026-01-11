@@ -13,13 +13,13 @@
 - **tinyolly-ui** (FastAPI): Web UI + REST API + OTLP ingestion (port 5002)
 - **tinyolly-otlp-receiver** (FastAPI): Dedicated OTLP receiver (port 4343)
 - **tinyolly-opamp-server** (Go): OpAMP server for OTel Collector remote config (ports 4320/4321)
-- **Redis**: Storage backend (port 6579)
+- **Redis**: Storage backend (port 6379)
 - **OTel Collector**: Bundled collector for demo environments (ports 4317/4318)
 
 ### Data Flow
 
 ```
-OTel SDK → Collector (4317/4318) → OTLP Receiver (4343) → Redis (6579) ← UI (5002)
+OTel SDK → Collector (4317/4318) → OTLP Receiver (4343) → Redis (6379) ← UI (5002)
                                                                           ↑
                                                          OpAMP Server (4320/4321)
 ```
@@ -133,7 +133,7 @@ kubectl set image deployment/tinyolly-ui \
 
 ### Testing Changes
 
-- **Clear cache after deployment**: `kubectl exec -n tinyolly deployment/tinyolly-redis -- redis-cli -p 6579 FLUSHDB`
+- **Clear cache after deployment**: `kubectl exec -n tinyolly deployment/tinyolly-redis -- redis-cli -p 6379 FLUSHDB`
 - **Check logs**: `kubectl logs -n tinyolly deployment/tinyolly-ui -f`
 - **Verify image**: `podman images | grep registry.tinyolly.test:49443/tinyolly/ui`
 - **Check ArgoCD sync**: `kubectl -n argocd get application docker-registry -o yaml`
@@ -200,17 +200,17 @@ kubectl set image deployment/tinyolly-ui \
 ### Debugging OTLP Issues
 
 1. Check span attributes: `kubectl logs -n tinyolly deployment/tinyolly-ui | grep "kind"`
-2. Verify storage format: `kubectl exec -n tinyolly deployment/tinyolly-redis -- redis-cli -p 6579 KEYS "span:*" | head -5`
+2. Verify storage format: `kubectl exec -n tinyolly deployment/tinyolly-redis -- redis-cli -p 6379 KEYS "span:*" | head -5`
 3. Test attribute parsing: Use `get_attr_value()` from `otlp_utils` with multiple semantic convention keys
 
 ### Clearing Data
 
 ```bash
 # Docker
-docker exec tinyolly-redis redis-cli -p 6579 FLUSHDB
+docker exec tinyolly-redis redis-cli -p 6379 FLUSHDB
 
 # Kubernetes
-kubectl exec -n tinyolly deployment/tinyolly-redis -- redis-cli -p 6579 FLUSHDB
+kubectl exec -n tinyolly deployment/tinyolly-redis -- redis-cli -p 6379 FLUSHDB
 ```
 
 ### Adding Metrics to Service Catalog

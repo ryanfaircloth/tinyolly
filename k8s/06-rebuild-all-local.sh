@@ -152,4 +152,4 @@ echo "  kubectl set image deployment/tinyolly-otlp-receiver tinyolly-otlp-receiv
 echo "  kubectl set image deployment/tinyolly-opamp-server tinyolly-opamp-server=$REGISTRY/tinyolly/opamp-server:$VERSION -n tinyolly"
 echo ""
 echo "Clear Redis cache after deployment:"
-echo "  kubectl exec -n tinyolly deployment/tinyolly-redis -- redis-cli -p 6579 FLUSHDB"
+echo "  kubectl exec -n tinyolly deployment/tinyolly-redis -- redis-cli -p 6379 FLUSHDB"

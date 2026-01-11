@@ -92,7 +92,7 @@ cd docker
 - **OTLP Receiver**: `localhost:4343` (gRPC)
 - **OpAMP Server**: `ws://localhost:4320/v1/opamp` (WebSocket), `localhost:4321` (HTTP REST API)
 - **UI**: `http://localhost:5005`
-- **Redis**: `localhost:6579`
+- **Redis**: `localhost:6379`
 - **OTel Collector**: `localhost:4317` (gRPC), `localhost:4318` (HTTP)
 
 **Stop:** `./02-stop-core.sh`
@@ -179,7 +179,7 @@ Deploys TinyOlly without the bundled OTel Collector. Includes:
 - **OTLP Receiver**: `localhost:4343` (gRPC only)
 - **OpAMP Server**: `ws://localhost:4320/v1/opamp` (WebSocket), `localhost:4321` (HTTP REST API)
 - **UI**: `http://localhost:5005`
-- **Redis**: `localhost:6579`
+- **Redis**: `localhost:6379`
 
 Point your external collector to `localhost:4343` for telemetry ingestion.
 

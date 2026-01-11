@@ -39,7 +39,7 @@ class Settings:
     
     # Redis
     redis_host: str = os.getenv("REDIS_HOST", "localhost")
-    redis_port: int = int(os.getenv("REDIS_PORT", "6579"))
+    redis_port: int = int(os.getenv("REDIS_PORT", "6379"))
     
     # Server
     port: int = int(os.getenv("PORT", "5002"))

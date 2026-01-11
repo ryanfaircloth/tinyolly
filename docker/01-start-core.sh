@@ -63,7 +63,7 @@ docker volume rm tinyolly-otel-supervisor-data 2>/dev/null || true
 # Clear Redis data from previous runs
 # This removes stale traces, metrics, and logs for a clean start
 echo "Clearing Redis data..."
-docker exec tinyolly-redis redis-cli -p 6579 FLUSHALL 2>/dev/null || true
+docker exec tinyolly-redis redis-cli -p 6379 FLUSHALL 2>/dev/null || true
 
 # Use docker-compose with TinyOlly Core config
 # --force-recreate ensures config file changes are picked up

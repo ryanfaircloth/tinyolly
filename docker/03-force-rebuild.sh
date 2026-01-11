@@ -57,7 +57,7 @@ docker-compose -f docker-compose-tinyolly-core.yml down
 
 echo ""
 echo "Step 2: Clearing Redis data..."
-docker exec tinyolly-redis redis-cli -p 6579 FLUSHALL 2>/dev/null || true
+docker exec tinyolly-redis redis-cli -p 6379 FLUSHALL 2>/dev/null || true
 
 echo ""
 echo "Step 3: Clearing cached collector config..."

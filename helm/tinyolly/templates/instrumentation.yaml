@@ -1,0 +1,54 @@
+{{- if .Values.instrumentation.enabled -}}
+apiVersion: opentelemetry.io/v1alpha1
+kind: Instrumentation
+metadata:
+  name: {{ include "tinyolly.fullname" . }}-python
+  labels:
+    {{- include "tinyolly.labels" . | nindent 4 }}
+    app.kubernetes.io/component: instrumentation
+  {{- with .Values.commonAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  # Export to our OpenTelemetryCollector service (no namespace needed - same namespace)
+  exporter:
+    endpoint: http://{{ include "tinyolly.fullname" . }}-otel-collector-collector:{{ .Values.otelCollector.port }}
+  
+  # Propagators for context propagation
+  propagators:
+    - tracecontext
+    - baggage
+  
+  # Python-specific configuration
+  python:
+    image: {{ .Values.instrumentation.python.image.repository }}:{{ .Values.instrumentation.python.image.tag }}
+    env:
+      - name: OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED
+        value: "true"
+      - name: OTEL_PYTHON_LOGGING_INJECTION_ENABLED
+        value: "true"
+      - name: OTEL_PYTHON_LOG_LEVEL
+        value: {{ .Values.instrumentation.python.logLevel }}
+      - name: OTEL_PYTHON_LOG_CORRELATION
+        value: "true"
+      - name: OTEL_INSTRUMENTATION_HTTP_CAPTURE_HEADERS_SERVER_REQUEST
+        value: "content-.*,x-.*"
+      - name: OTEL_INSTRUMENTATION_HTTP_CAPTURE_HEADERS_SERVER_RESPONSE
+        value: "content-.*,x-.*"
+      - name: OTEL_PYTHON_EXCLUDED_URLS
+        value: "/health,/metrics,/ready"
+      # Override the protocol-specific endpoints to use correct hostname
+      - name: OTEL_EXPORTER_OTLP_TRACES_ENDPOINT
+        value: http://{{ include "tinyolly.fullname" . }}-otel-collector-collector:{{ .Values.otelCollector.port }}/v1/traces
+      - name: OTEL_EXPORTER_OTLP_METRICS_ENDPOINT
+        value: http://{{ include "tinyolly.fullname" . }}-otel-collector-collector:{{ .Values.otelCollector.port }}/v1/metrics
+      - name: OTEL_EXPORTER_OTLP_LOGS_ENDPOINT
+        value: http://{{ include "tinyolly.fullname" . }}-otel-collector-collector:{{ .Values.otelCollector.port }}/v1/logs
+    resourceRequirements:
+      {{- toYaml .Values.instrumentation.python.resources | nindent 6 }}
+  
+  # Resource attributes
+  resource:
+    addK8sUIDAttributes: true
+{{- end }}

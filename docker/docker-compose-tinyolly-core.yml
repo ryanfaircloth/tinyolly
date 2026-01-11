@@ -3,10 +3,10 @@ services:
     image: redis:7-alpine
     container_name: tinyolly-redis
     ports:
-      - "6579:6579"
-    command: redis-server --port 6579 --maxmemory 256mb --maxmemory-policy allkeys-lru
+      - "6379:6379"
+    command: redis-server --port 6379 --maxmemory 256mb --maxmemory-policy allkeys-lru
     healthcheck:
-      test: ["CMD", "redis-cli", "-p", "6579", "ping"]
+      test: ["CMD", "redis-cli", "-p", "6379", "ping"]
       interval: 5s
       timeout: 3s
       retries: 5
@@ -21,7 +21,7 @@ services:
         condition: service_healthy
     environment:
       - REDIS_HOST=tinyolly-redis
-      - REDIS_PORT=6579
+      - REDIS_PORT=6379
       - PORT=4343
       - OTEL_SERVICE_NAME=tinyolly-otlp-receiver
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318
@@ -82,7 +82,7 @@ services:
       - ./otelcol-configs/config.yaml:/app/otelcol-config.yaml:ro
     environment:
       - REDIS_HOST=tinyolly-redis
-      - REDIS_PORT=6579
+      - REDIS_PORT=6379
       - DEPLOYMENT_ENV=docker
       - OPAMP_SERVER_URL=http://tinyolly-opamp-server:4321
       - OTELCOL_DEFAULT_CONFIG=/app/otelcol-config.yaml

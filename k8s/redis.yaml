@@ -20,13 +20,13 @@ spec:
         command: 
         - redis-server
         - --port
-        - "6579"
+        - "6379"
         - --maxmemory
         - "256mb"
         - --maxmemory-policy
         - "allkeys-lru"
         ports:
-        - containerPort: 6579
+        - containerPort: 6379
         resources:
           requests:
             memory: "128Mi"
@@ -39,7 +39,7 @@ spec:
             command:
             - redis-cli
             - -p
-            - "6579"
+            - "6379"
             - ping
           initialDelaySeconds: 30
           periodSeconds: 10
@@ -50,7 +50,7 @@ spec:
             command:
             - redis-cli
             - -p
-            - "6579"
+            - "6379"
             - ping
           initialDelaySeconds: 5
           periodSeconds: 5
@@ -66,5 +66,5 @@ spec:
     app: tinyolly-redis
   ports:
     - protocol: TCP
-      port: 6579
-      targetPort: 6579
+      port: 6379
+      targetPort: 6379

@@ -15,10 +15,13 @@ spec:
       {{- include "tinyolly.ui.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.ui.podAnnotations }}
       annotations:
+        {{- if .Values.instrumentation.enabled }}
+        instrumentation.opentelemetry.io/inject-python: "{{ .Release.Namespace }}/{{ include "tinyolly.fullname" . }}-python"
+        {{- end }}
+        {{- with .Values.ui.podAnnotations }}
         {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- end }}
       labels:
         {{- include "tinyolly.ui.selectorLabels" . | nindent 8 }}
     spec:
@@ -50,20 +53,8 @@ spec:
           value: {{ .Values.redis.port | quote }}
         - name: OTEL_SERVICE_NAME
           value: "tinyolly-ui"
-        - name: OTEL_EXPORTER_OTLP_ENDPOINT
-          value: {{ .Values.otelCollector.endpoint | quote }}
-        - name: OTEL_EXPORTER_OTLP_PROTOCOL
-          value: {{ .Values.otelCollector.protocol | quote }}
-        - name: OTEL_EXPORTER_OTLP_TRACES_ENDPOINT
-          value: {{ .Values.otelCollector.tracesEndpoint | quote }}
-        - name: OTEL_EXPORTER_OTLP_METRICS_ENDPOINT
-          value: {{ .Values.otelCollector.metricsEndpoint | quote }}
-        - name: OTEL_EXPORTER_OTLP_LOGS_ENDPOINT
-          value: {{ .Values.otelCollector.logsEndpoint | quote }}
         - name: OPAMP_SERVER_URL
           value: "http://{{ include "tinyolly.opampServer.name" . }}:{{ .Values.opampServer.service.httpPort }}"
-        - name: OTELCOL_DEFAULT_CONFIG
-          value: "/app/otelcol-config.yaml"
         {{- range .Values.ui.env }}
         - name: {{ .name }}
           value: {{ .value | quote }}
@@ -73,9 +64,6 @@ spec:
           value: {{ $value | quote }}
         {{- end }}
         volumeMounts:
-        - name: otelcol-config-vol
-          mountPath: /app/otelcol-config.yaml
-          subPath: otel-collector-config.yaml
         - name: otelcol-templates-vol
           mountPath: /app/otelcol-templates
         {{- with .Values.ui.volumeMounts }}
@@ -94,9 +82,6 @@ spec:
           {{- toYaml . | nindent 10 }}
         {{- end }}
       volumes:
-      - name: otelcol-config-vol
-        configMap:
-          name: {{ include "tinyolly.fullname" . }}-otel-config
       - name: otelcol-templates-vol
         configMap:
           name: {{ include "tinyolly.fullname" . }}-otelcol-templates
