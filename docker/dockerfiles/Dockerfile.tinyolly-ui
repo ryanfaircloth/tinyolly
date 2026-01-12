@@ -1,5 +1,5 @@
 # TinyOlly UI Dockerfile
-FROM tinyolly/python-base:latest
+FROM ghcr.io/ryanfaircloth/tinyolly/python-base:latest
 
 ARG APP_DIR=tinyolly-ui
 
