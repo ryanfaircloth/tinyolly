@@ -28,11 +28,17 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""OpenTelemetry metrics and logging setup
+"""OpenTelemetry telemetry setup
 
 Note: When running in Kubernetes with the OpenTelemetry Operator,
 auto-instrumentation is injected automatically via the Instrumentation CR.
-This module provides fallback setup for local development and metric definitions.
+
+Auto-instrumented components (no manual setup needed):
+- FastAPI HTTP requests/responses (opentelemetry-instrumentation-fastapi)
+- Redis operations (opentelemetry-instrumentation-redis)  
+- Logging with trace context (opentelemetry-instrumentation-logging)
+
+This module only provides domain-specific metrics for TinyOlly operations.
 """
 
 import logging
@@ -57,14 +63,15 @@ def _is_telemetry_disabled() -> bool:
 
 
 def setup_telemetry():
-    """Configure OpenTelemetry metrics and logging
+    """Configure domain-specific OpenTelemetry metrics
     
     When running in Kubernetes with OTel Operator, the operator automatically:
     - Injects the opentelemetry-instrument wrapper
     - Sets all OTEL_* environment variables
     - Configures exporters to send to the collector
+    - Instruments FastAPI, Redis, and logging automatically
     
-    This function only needs to provide metric definitions that the app uses.
+    This function only defines TinyOlly-specific business metrics.
     """
     global _telemetry_enabled
     
@@ -86,42 +93,22 @@ def setup_telemetry():
         # Get the meter - operator will have already configured the provider
         meter = metrics.get_meter("tinyolly-ui")
         
-        # Create metrics that the application uses
-        request_counter = meter.create_counter(
-            name="http.server.requests",
-            description="Total HTTP requests",
-            unit="1"
-        )
-        
-        error_counter = meter.create_counter(
-            name="http.server.errors",
-            description="Total HTTP errors",
-            unit="1"
-        )
-        
-        response_time_histogram = meter.create_histogram(
-            name="http.server.duration",
-            description="HTTP request duration",
-            unit="ms"
-        )
-        
+        # Domain-specific metrics for TinyOlly ingestion operations
+        # These are business metrics, not infrastructure metrics
         ingestion_counter = meter.create_counter(
             name="tinyolly.ingestion.count",
-            description="Total telemetry ingestion operations",
+            description="Total telemetry items ingested by type (spans, logs, metrics)",
             unit="1"
         )
         
         storage_operations_counter = meter.create_counter(
             name="tinyolly.storage.operations",
-            description="Storage operations by type",
+            description="Storage operations by type (store_spans, store_logs, store_metrics)",
             unit="1"
         )
         
-        logger.info("OpenTelemetry metrics initialized successfully")
+        logger.info("OpenTelemetry domain-specific metrics initialized successfully")
         return {
-            "request_counter": request_counter,
-            "error_counter": error_counter,
-            "response_time_histogram": response_time_histogram,
             "ingestion_counter": ingestion_counter,
             "storage_operations_counter": storage_operations_counter,
         }
@@ -144,9 +131,6 @@ def _create_noop_metrics():
     
     noop = NoopMetric()
     return {
-        "request_counter": noop,
-        "error_counter": noop,
-        "response_time_histogram": noop,
         "ingestion_counter": noop,
         "storage_operations_counter": noop,
     }

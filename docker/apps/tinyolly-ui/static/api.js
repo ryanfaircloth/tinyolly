@@ -36,7 +36,7 @@
 import { renderSpans, renderTraces, renderLogs, renderMetrics, renderServiceMap, renderStats } from './render.js';
 import { renderServiceCatalog } from './serviceCatalog.js';
 import { renderErrorState, renderLoadingState } from './utils.js';
-import { filterTinyOllyData, filterTinyOllyTrace, filterTinyOllyMetric, filterTinyOllyMetricSeries } from './filter.js';
+import { filterTinyOllyData, filterTinyOllyTrace, filterTinyOllyMetric, filterTinyOllyMetricSeries, shouldHideTinyOlly } from './filter.js';
 import { loadOpampStatus, initCollector } from './collector.js';
 
 export async function loadStats() {
@@ -158,11 +158,11 @@ export async function loadServiceMap() {
         const response = await fetch('/api/service-map?limit=500');
         let graph = await response.json();
 
-        // Filter out TinyOlly nodes and edges
+        // Filter out TinyOlly nodes and edges based on toggle state
         if (graph.nodes) {
             graph.nodes = graph.nodes.filter(filterTinyOllyData);
         }
-        if (graph.edges) {
+        if (graph.edges && shouldHideTinyOlly()) {
             graph.edges = graph.edges.filter(edge => {
                 // Filter edges where either source or target is a TinyOlly service
                 const tinyollyServices = ['tinyolly-ui', 'tinyolly-otlp-receiver', 'tinyolly-opamp-server'];

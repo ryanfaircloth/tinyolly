@@ -30,59 +30,19 @@
 
 """HTTP middleware configuration"""
 
-import time
-from fastapi import Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 
 from ..config import settings
-from .telemetry import get_metrics
 
 
 def setup_middleware(app):
-    """Setup all middleware for the FastAPI app"""
-    metrics = get_metrics()
+    """Setup all middleware for the FastAPI app
     
-    # Add custom metrics middleware
-    @app.middleware("http")
-    async def metrics_middleware(request: Request, call_next):
-        """Track request metrics for all HTTP endpoints"""
-        start_time = time.time()
-        
-        # Track request
-        metrics["request_counter"].add(1, {
-            "method": request.method,
-            "endpoint": request.url.path
-        })
-        
-        try:
-            response = await call_next(request)
-            
-            # Track response time
-            duration_ms = (time.time() - start_time) * 1000
-            metrics["response_time_histogram"].record(duration_ms, {
-                "method": request.method,
-                "endpoint": request.url.path,
-                "status": response.status_code
-            })
-            
-            # Track errors
-            if response.status_code >= 400:
-                metrics["error_counter"].add(1, {
-                    "method": request.method,
-                    "endpoint": request.url.path,
-                    "status": response.status_code
-                })
-            
-            return response
-        except Exception as e:
-            # Track exceptions
-            metrics["error_counter"].add(1, {
-                "method": request.method,
-                "endpoint": request.url.path,
-                "error_type": type(e).__name__
-            })
-            raise
+    Note: HTTP request/response metrics and tracing are handled automatically
+    by OpenTelemetry auto-instrumentation (opentelemetry-instrumentation-fastapi).
+    No manual instrumentation needed.
+    """
     
     # Add CORS middleware
     # Default to localhost only for security, can be customized via environment variable

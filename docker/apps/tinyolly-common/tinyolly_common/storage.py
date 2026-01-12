@@ -32,6 +32,9 @@
 TinyOlly Storage Module (Async)
 Handles all Redis interactions for traces, logs, and metrics using async operations.
 Optimized with MessagePack, ZSTD, and Batch Operations.
+
+Redis operations are automatically instrumented by OpenTelemetry auto-instrumentation.
+No manual instrumentation needed.
 """
 import zstandard as zstd
 import base64
