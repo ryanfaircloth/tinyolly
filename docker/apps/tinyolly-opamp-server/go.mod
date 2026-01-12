@@ -2,7 +2,7 @@ module tinyolly-opamp-server
 
 go 1.24.0
 
-toolchain go1.24.11
+toolchain go1.25.5
 
 require (
 	github.com/open-telemetry/opamp-go v0.22.0
