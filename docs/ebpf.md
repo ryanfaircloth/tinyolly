@@ -32,10 +32,11 @@ Access the UI at `http://localhost:5005`
 ```bash
 # Start TinyOlly core first
 minikube start
-./k8s/02-deploy-tinyolly.sh
+cd helm
+./install.sh
 
 # Deploy eBPF demo (pulls pre-built images from Docker Hub)
-cd k8s-demo-ebpf
+cd ../k8s-demo-ebpf
 ./02-deploy.sh
 ```
 

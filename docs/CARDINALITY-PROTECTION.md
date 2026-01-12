@@ -20,14 +20,19 @@ TinyOlly includes built-in protection against metric cardinality explosion with 
 
 ### Kubernetes Deployment
 
-Update `k8s/tinyolly-otlp-receiver.yaml`:
+Update Helm values in `helm/tinyolly/values.yaml`:
 
 ```yaml
-env:
-  - name: MAX_METRIC_CARDINALITY
-    value: "2000"  # Increase limit
-  - name: REDIS_TTL
-    value: "3600"  # 1 hour retention
+otlpReceiver:
+  env:
+    MAX_METRIC_CARDINALITY: "2000"  # Increase limit
+    REDIS_TTL: "3600"  # 1 hour retention
+```
+
+Then upgrade the deployment:
+```bash
+cd helm
+helm upgrade tinyolly ./tinyolly -n tinyolly
 ```
 
 ### Docker Deployment

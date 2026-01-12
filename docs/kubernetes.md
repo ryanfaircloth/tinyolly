@@ -29,18 +29,18 @@ git clone https://github.com/tinyolly/tinyolly
 
 2.  **Deploy TinyOlly:**
 
-    Images will be pulled from Docker Hub automatically:
+    Deploy using Helm (images will be pulled from Docker Hub automatically):
 
     ```bash
-    ./k8s/02-deploy-tinyolly.sh
+    cd helm
+    ./install.sh
     ```
 
-    Alternatively, you can manually apply all manifests with `kubectl apply -f k8s/`
-
     !!! note "Local Development Build (Optional)"
-        To build images locally for Minikube instead of pulling from Docker Hub:
+        To build and deploy custom images for local development:
         ```bash
-        ./build/local/build-core-minikube.sh
+        cd helm
+        ./build-and-push-local.sh <version>
         ```
 
 3.  **Access the UI:**
@@ -85,10 +85,11 @@ git clone https://github.com/tinyolly/tinyolly
 
 5.  **Clean Up:**
 
-    Use the cleanup script to remove all TinyOlly resources:
+    Uninstall TinyOlly using Helm:
 
     ```bash
-    ./k8s/03-cleanup.sh
+    helm uninstall tinyolly -n tinyolly
+    kubectl delete namespace tinyolly
     ```
 
     Shut down Minikube:

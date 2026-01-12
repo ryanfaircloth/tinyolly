@@ -207,8 +207,8 @@ The default configuration template (located at `docker/otelcol-configs/config.ya
 ### 1. Deploy TinyOlly Core
 
 ```bash
-minikube start
-./k8s/02-deploy-tinyolly.sh
+cd helm
+./install.sh  # Installs to Kubernetes using Helm
 ```
 
 **Access UI:**
@@ -217,7 +217,11 @@ minikube tunnel  # Keep running in separate terminal
 ```
 UI available at: `http://localhost:5002`
 
-**Cleanup:** `./k8s/03-cleanup.sh`
+**Cleanup:** 
+```bash
+helm uninstall tinyolly -n tinyolly
+kubectl delete namespace tinyolly
+```
 
 ---
 
