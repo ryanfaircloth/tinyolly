@@ -15,10 +15,13 @@ spec:
       {{- include "tinyolly.otlpReceiver.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.otlpReceiver.podAnnotations }}
       annotations:
+        {{- if .Values.instrumentation.enabled }}
+        instrumentation.opentelemetry.io/inject-python: "{{ .Release.Namespace }}/{{ include "tinyolly.fullname" . }}-python"
+        {{- end }}
+        {{- with .Values.otlpReceiver.podAnnotations }}
         {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- end }}
       labels:
         {{- include "tinyolly.otlpReceiver.selectorLabels" . | nindent 8 }}
     spec:
@@ -50,12 +53,6 @@ spec:
           value: {{ .Values.redis.port | quote }}
         - name: OTEL_SERVICE_NAME
           value: "tinyolly-otlp-receiver"
-        - name: OTEL_EXPORTER_OTLP_ENDPOINT
-          value: {{ .Values.otelCollector.endpoint | quote }}
-        - name: OTEL_EXPORTER_OTLP_PROTOCOL
-          value: {{ .Values.otelCollector.protocol | quote }}
-        - name: OTEL_EXPORTER_OTLP_LOGS_ENDPOINT
-          value: {{ .Values.otelCollector.logsEndpoint | quote }}
         {{- range .Values.otlpReceiver.env }}
         - name: {{ .name }}
           value: {{ .value | quote }}

@@ -7,14 +7,16 @@ set -e
 # Example: ./07-deploy-local-images.sh v2.1.8-test
 
 VERSION=${1:-"latest"}
-REGISTRY="registry.tinyolly.test:49443"
+REGISTRY_EXTERNAL="registry.tinyolly.test:49443"
+REGISTRY_INTERNAL="docker-registry.registry.svc.cluster.local:5000"
 NAMESPACE="tinyolly"
 
 echo "==============================================="
 echo "Deploying TinyOlly from Local Registry"
 echo "==============================================="
 echo "Version: $VERSION"
-echo "Registry: $REGISTRY"
+echo "External registry: $REGISTRY_EXTERNAL (for push)"
+echo "Internal registry: $REGISTRY_INTERNAL (for deployment)"
 echo "Namespace: $NAMESPACE"
 echo ""
 
@@ -30,9 +32,9 @@ echo "Step 1/4: Updating image references"
 echo "---------------------------------------------------"
 
 DEPLOYMENTS=(
-    "tinyolly-ui:$REGISTRY/tinyolly/ui:$VERSION"
-    "tinyolly-otlp-receiver:$REGISTRY/tinyolly/otlp-receiver:$VERSION"
-    "tinyolly-opamp-server:$REGISTRY/tinyolly/opamp-server:$VERSION"
+    "tinyolly-ui:$REGISTRY_INTERNAL/tinyolly/ui:$VERSION"
+    "tinyolly-otlp-receiver:$REGISTRY_INTERNAL/tinyolly/otlp-receiver:$VERSION"
+    "tinyolly-opamp-server:$REGISTRY_INTERNAL/tinyolly/opamp-server:$VERSION"
 )
 
 for DEPLOYMENT_IMAGE in "${DEPLOYMENTS[@]}"; do
@@ -90,7 +92,7 @@ echo "  OpAMP: http://localhost:4320"
 echo ""
 echo "Useful commands:"
 echo "  kubectl logs -f deployment/tinyolly-ui -n $NAMESPACE"
-echo "  kubectl exec -n $NAMESPACE deployment/tinyolly-redis -- redis-cli -p 6579 FLUSHDB"
+echo "  kubectl exec -n $NAMESPACE deployment/tinyolly-redis -- redis-cli -p 6379 FLUSHDB"
 echo ""
 echo "Note: If ImagePullBackOff occurs, ensure cluster can access registry.tinyolly.test:49443"
 echo "For Kind clusters, add registry to /etc/containerd/config.toml on Kind nodes"

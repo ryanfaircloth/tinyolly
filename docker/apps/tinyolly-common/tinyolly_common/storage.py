@@ -52,7 +52,7 @@ logger = logging.getLogger(__name__)
 
 # Default configuration
 REDIS_HOST = os.getenv('REDIS_HOST', 'localhost')
-REDIS_PORT = int(os.getenv('REDIS_PORT_NUMBER', os.getenv('REDIS_PORT_OVERRIDE', '6579')))
+REDIS_PORT = int(os.getenv('REDIS_PORT_NUMBER', os.getenv('REDIS_PORT_OVERRIDE', '6379')))
 TTL_SECONDS = int(os.getenv('REDIS_TTL', 1800))  # 30 minutes default
 MAX_METRIC_CARDINALITY = int(os.getenv('MAX_METRIC_CARDINALITY', 1000))
 COMPRESSION_THRESHOLD = int(os.getenv('COMPRESSION_THRESHOLD_BYTES', 512))  # Compress if larger than this

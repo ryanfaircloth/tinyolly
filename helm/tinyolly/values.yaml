@@ -30,18 +30,60 @@ redis:
   # -- Redis port
   port: 6379
 
-# OpenTelemetry Collector configuration (assumes existing deployment)
+# OpenTelemetry Collector configuration
 otelCollector:
-  # -- OTel Collector endpoint for OTLP export
-  endpoint: http://otel-collector:4318
-  # -- OTel Collector protocol
-  protocol: http/protobuf
-  # -- OTel Collector traces endpoint
-  tracesEndpoint: http://otel-collector:4318/v1/traces
-  # -- OTel Collector metrics endpoint
-  metricsEndpoint: http://otel-collector:4318/v1/metrics
-  # -- OTel Collector logs endpoint
-  logsEndpoint: http://otel-collector:4318/v1/logs
+  # -- Enable OpenTelemetryCollector Custom Resource (managed by OpenTelemetry Operator)
+  enabled: false
+  
+  # -- Deployment mode: deployment, daemonset, or statefulset
+  mode: deployment
+  
+  # -- Number of replicas (only applies when mode is deployment)
+  replicas: 1
+  
+  # -- Pod annotations
+  podAnnotations: {}
+  
+  # -- Service account name (if not set, Operator creates one)
+  serviceAccount: ""
+  
+  # -- Resource limits and requests for the collector
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+  
+  # -- OTel Collector service name (when enabled via CR, Operator creates {fullname}-otel-collector-collector)
+  serviceName: tinyolly-otel-collector-collector
+  # -- OTel Collector port
+  port: 4318
+
+# OpenTelemetry Instrumentation configuration
+instrumentation:
+  # -- Enable TinyOlly Instrumentation Custom Resource (managed by OpenTelemetry Operator)
+  enabled: false
+  
+  # Python auto-instrumentation configuration
+  python:
+    # Image for Python auto-instrumentation
+    image:
+      repository: ghcr.io/open-telemetry/opentelemetry-operator/autoinstrumentation-python
+      tag: 0.60b0
+    
+    # -- Log level for Python instrumentation
+    logLevel: INFO
+    
+    # -- Resource limits and requests for instrumentation init container
+    resources:
+      limits:
+        cpu: 500m
+        memory: 256Mi
+      requests:
+        cpu: 50m
+        memory: 64Mi
 
 # TinyOlly UI component
 ui:
@@ -145,8 +187,6 @@ ui:
       value: kubernetes
     - name: OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED
       value: "true"
-    - name: OTELCOL_DEFAULT_CONFIG
-      value: /app/otelcol-config.yaml
   
   # -- Additional environment variables (key-value pairs)
   extraEnv: {}

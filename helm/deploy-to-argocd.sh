@@ -97,6 +97,12 @@ if kubectl get application tinyolly -n argocd &>/dev/null; then
                   \"repository\": \"$INTERNAL_REGISTRY/tinyolly/otlp-receiver\",
                   \"tag\": \"$IMAGE_VERSION\"
                 }
+              },
+              \"otelCollector\": {
+                \"enabled\": true
+              },
+              \"instrumentation\": {
+                \"enabled\": true
               }
             }
           }

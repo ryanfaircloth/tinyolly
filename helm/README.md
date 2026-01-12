@@ -57,7 +57,7 @@ helm install tinyolly ./tinyolly \
 |-----------|-------------|---------|
 | `replicaCount` | Number of replicas for each component | `1` |
 | `redis.host` | Redis hostname | `tinyolly-redis` |
-| `redis.port` | Redis port | `6579` |
+| `redis.port` | Redis port | `6379` |
 | `ui.enabled` | Enable UI component | `true` |
 | `ui.service.type` | UI service type | `LoadBalancer` |
 | `ui.service.port` | UI service port | `5002` |

@@ -182,6 +182,12 @@ otlpReceiver:
   image:
     repository: $INTERNAL_REGISTRY/tinyolly/otlp-receiver
     tag: $VERSION
+
+otelCollector:
+  enabled: true
+
+instrumentation:
+  enabled: true
 EOF
 
 echo "✓ Created values-local-dev.yaml with updated image tags"

@@ -15,10 +15,13 @@ spec:
       {{- include "tinyolly.opampServer.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.opampServer.podAnnotations }}
       annotations:
+        {{- if .Values.instrumentation.enabled }}
+        instrumentation.opentelemetry.io/inject-python: "{{ .Release.Namespace }}/{{ include "tinyolly.fullname" . }}-python"
+        {{- end }}
+        {{- with .Values.opampServer.podAnnotations }}
         {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- end }}
       labels:
         {{- include "tinyolly.opampServer.selectorLabels" . | nindent 8 }}
     spec:
@@ -49,12 +52,6 @@ spec:
         env:
         - name: OTEL_SERVICE_NAME
           value: "tinyolly-opamp-server"
-        - name: OTEL_EXPORTER_OTLP_ENDPOINT
-          value: {{ .Values.otelCollector.endpoint | quote }}
-        - name: OTEL_EXPORTER_OTLP_PROTOCOL
-          value: {{ .Values.otelCollector.protocol | quote }}
-        - name: OTEL_EXPORTER_OTLP_LOGS_ENDPOINT
-          value: {{ .Values.otelCollector.logsEndpoint | quote }}
         {{- range .Values.opampServer.env }}
         - name: {{ .name }}
           value: {{ .value | quote }}
@@ -63,11 +60,8 @@ spec:
         - name: {{ $key }}
           value: {{ $value | quote }}
         {{- end }}
-        volumeMounts:
-        - name: otel-collector-config-vol
-          mountPath: /etc/otel-collector-config.yaml
-          subPath: otel-collector-config.yaml
         {{- with .Values.opampServer.volumeMounts }}
+        volumeMounts:
           {{- toYaml . | nindent 8 }}
         {{- end }}
         {{- with .Values.opampServer.resources }}
@@ -82,11 +76,8 @@ spec:
         readinessProbe:
           {{- toYaml . | nindent 10 }}
         {{- end }}
-      volumes:
-      - name: otel-collector-config-vol
-        configMap:
-          name: otel-collector-config
       {{- with .Values.opampServer.volumes }}
+      volumes:
         {{- toYaml . | nindent 6 }}
       {{- end }}
       {{- with .Values.opampServer.nodeSelector }}

@@ -2,19 +2,8 @@
 FROM tinyolly/python-base:latest
 
 ARG APP_DIR=tinyolly-ui
-# OTel Collector version for config validation
-ARG OTELCOL_VERSION=0.141.0
 
 WORKDIR /app
-
-# Download otelcol-contrib binary for config validation (not running as collector)
-# Using a specific version to ensure stability
-RUN ARCH=$(dpkg --print-architecture) && \
-    echo "Downloading otelcol-contrib for architecture: ${ARCH}" && \
-    curl -fLo /tmp/otelcol.tar.gz "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/v${OTELCOL_VERSION}/otelcol-contrib_${OTELCOL_VERSION}_linux_${ARCH}.tar.gz" && \
-    tar -xzf /tmp/otelcol.tar.gz -C /usr/local/bin otelcol-contrib && \
-    chmod +x /usr/local/bin/otelcol-contrib && \
-    rm /tmp/otelcol.tar.gz
 
 # Install app-specific dependencies
 COPY apps/${APP_DIR}/requirements.txt .
@@ -36,5 +25,5 @@ USER tinyolly
 # Expose port
 EXPOSE 5002
 
-# Run the application with OpenTelemetry auto-instrumentation
-CMD ["opentelemetry-instrument", "uvicorn", "tinyolly-ui:app", "--host", "0.0.0.0", "--port", "5002"]
+# Run the application - OTel instrumentation will be injected by the operator
+CMD ["uvicorn", "tinyolly-ui:app", "--host", "0.0.0.0", "--port", "5002"]
