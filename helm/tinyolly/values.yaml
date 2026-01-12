@@ -30,41 +30,127 @@ redis:
   # -- Redis port
   port: 6379
 
-# OpenTelemetry Collector configuration
+# DEPRECATED: Use gatewayCollector instead - this basic collector is redundant
+# The gateway collector provides all the same features plus tail sampling,
+# Envoy service name extraction, and spanmetrics generation.
+# NOTE: OTel Operator creates service as {name}-collector, e.g., gateway-collector
 otelCollector:
-  # -- Enable OpenTelemetryCollector Custom Resource (managed by OpenTelemetry Operator)
+  enabled: false
+  serviceName: gateway-collector
+  port: 4318
+  # When enabled, the OTel Operator creates service: gateway-collector.opentelemetry-operator-system.svc.cluster.local
+
+# Agent Collector configuration (daemonset for node-level log collection)
+agentCollector:
+  # -- Enable Agent OpenTelemetryCollector Custom Resource
   enabled: false
   
-  # -- Deployment mode: deployment, daemonset, or statefulset
-  mode: deployment
+  # -- Namespace for agent collector (should match OpenTelemetry Operator namespace)
+  namespace: opentelemetry-operator-system
   
-  # -- Number of replicas (only applies when mode is deployment)
+  # -- Full collector configuration (receivers, processors, exporters, service)
+  # This should be a complete OTel Collector config YAML structure
+  config: {}
+  # Example config structure (commented out):
+  # config:
+  #   receivers:
+  #     otlp:
+  #       protocols:
+  #         grpc:
+  #           endpoint: 0.0.0.0:4317
+  #   processors:
+  #     batch: {}
+  #   exporters:
+  #     loadbalancing/gateway:
+  #       resolver:
+  #         dns:
+  #           hostname: gateway-collector-headless.opentelemetry-operator-system.svc.cluster.local
+  #           port: "4317"
+  #   service:
+  #     pipelines:
+  #       traces:
+  #         receivers: [otlp]
+  #         processors: [batch]
+  #         exporters: [loadbalancing/gateway]
+
+# Gateway Collector configuration (deployment for centralized processing)
+# This is the main TinyOlly collector - it receives from the agent collector,
+# performs tail sampling, Envoy service name extraction, generates RED metrics,
+# and forwards to TinyOlly's OTLP receiver.
+gatewayCollector:
+  # -- Enable Gateway OpenTelemetryCollector Custom Resource
+  enabled: false
+  
+  # -- Namespace for gateway collector (should match OpenTelemetry Operator namespace)
+  namespace: opentelemetry-operator-system
+  
+  # -- Number of replicas for gateway deployment
   replicas: 1
   
   # -- Pod annotations
   podAnnotations: {}
   
-  # -- Service account name (if not set, Operator creates one)
-  serviceAccount: ""
-  
-  # -- Resource limits and requests for the collector
+  # -- Resource limits and requests for the gateway collector
   resources:
     limits:
-      cpu: 500m
-      memory: 512Mi
+      cpu: 1000m
+      memory: 1Gi
     requests:
-      cpu: 100m
-      memory: 128Mi
+      cpu: 200m
+      memory: 256Mi
   
-  # -- OTel Collector service name (when enabled via CR, Operator creates {fullname}-otel-collector-collector)
-  serviceName: tinyolly-otel-collector-collector
-  # -- OTel Collector port
-  port: 4318
+  # -- Full collector configuration (receivers, processors, exporters, service)
+  # This should be a complete OTel Collector config YAML structure
+  config: {}
+  # Example config structure (commented out):
+  # config:
+  #   receivers:
+  #     otlp:
+  #       protocols:
+  #         grpc:
+  #           endpoint: 0.0.0.0:4317
+  #   processors:
+  #     batch: {}
+  #   exporters:
+  #     otlp:
+  #       endpoint: tinyolly-otlp-receiver.tinyolly.svc.cluster.local:4343
+  #       tls:
+  #         insecure: true
+  #   service:
+  #     pipelines:
+  #       traces:
+  #         receivers: [otlp]
+  #         processors: [batch]
+  #         exporters: [otlp]
 
 # OpenTelemetry Instrumentation configuration
 instrumentation:
   # -- Enable TinyOlly Instrumentation Custom Resource (managed by OpenTelemetry Operator)
   enabled: false
+  
+  # -- Name of the Instrumentation CR
+  name: python-instrumentation
+  
+  # -- Namespace for the Instrumentation CR (defaults to release namespace if not set)
+  namespace: opentelemetry-operator-system
+  
+  # -- Exporter configuration
+  exporter:
+    # -- Endpoint for the collector (OTel Operator creates service as agent-collector)
+    endpoint: http://agent-collector.opentelemetry-operator-system.svc.cluster.local:4318
+  
+  # -- Propagators for context propagation
+  propagators:
+    - tracecontext
+    - baggage
+  
+  # -- Resource attributes configuration
+  resource:
+    # -- Add Kubernetes UID attributes
+    addK8sUIDAttributes: true
+    # -- Additional resource attributes
+    attributes:
+      deployment.environment: "development"
   
   # Python auto-instrumentation configuration
   python:
@@ -73,8 +159,22 @@ instrumentation:
       repository: ghcr.io/open-telemetry/opentelemetry-operator/autoinstrumentation-python
       tag: 0.60b0
     
-    # -- Log level for Python instrumentation
-    logLevel: INFO
+    # -- Environment variables for Python instrumentation
+    env:
+      - name: OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED
+        value: "true"
+      - name: OTEL_PYTHON_LOGGING_INJECTION_ENABLED
+        value: "true"
+      - name: OTEL_PYTHON_LOG_LEVEL
+        value: "INFO"
+      - name: OTEL_PYTHON_LOG_CORRELATION
+        value: "true"
+      - name: OTEL_INSTRUMENTATION_HTTP_CAPTURE_HEADERS_SERVER_REQUEST
+        value: "content-.*,x-.*"
+      - name: OTEL_INSTRUMENTATION_HTTP_CAPTURE_HEADERS_SERVER_RESPONSE
+        value: "content-.*,x-.*"
+      - name: OTEL_PYTHON_EXCLUDED_URLS
+        value: "/health,/metrics,ready"
     
     # -- Resource limits and requests for instrumentation init container
     resources:

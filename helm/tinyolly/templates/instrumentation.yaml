@@ -2,7 +2,8 @@
 apiVersion: opentelemetry.io/v1alpha1
 kind: Instrumentation
 metadata:
-  name: {{ include "tinyolly.fullname" . }}-python
+  name: {{ .Values.instrumentation.name | default "python-instrumentation" }}
+  namespace: {{ .Values.instrumentation.namespace | default .Release.Namespace }}
   labels:
     {{- include "tinyolly.labels" . | nindent 4 }}
     app.kubernetes.io/component: instrumentation
@@ -11,44 +12,37 @@ metadata:
     {{- toYaml . | nindent 4 }}
   {{- end }}
 spec:
-  # Export to our OpenTelemetryCollector service (no namespace needed - same namespace)
+  # Collector endpoint where telemetry will be exported
   exporter:
-    endpoint: http://{{ include "tinyolly.fullname" . }}-otel-collector-collector:{{ .Values.otelCollector.port }}
+    endpoint: {{ .Values.instrumentation.exporter.endpoint | default (printf "http://agent-collector.%s.svc.cluster.local:4318" .Values.instrumentation.namespace) }}
   
-  # Propagators for context propagation
+  # Propagators configuration
   propagators:
-    - tracecontext
-    - baggage
+    {{- toYaml .Values.instrumentation.propagators | nindent 4 }}
   
-  # Python-specific configuration
+  # Resource attributes applied to all telemetry
+  {{- if .Values.instrumentation.resource }}
+  resource:
+    {{- if .Values.instrumentation.resource.addK8sUIDAttributes }}
+    addK8sUIDAttributes: {{ .Values.instrumentation.resource.addK8sUIDAttributes }}
+    {{- end }}
+    {{- if .Values.instrumentation.resource.attributes }}
+    attributes:
+      {{- toYaml .Values.instrumentation.resource.attributes | nindent 6 }}
+    {{- end }}
+  {{- end }}
+  
+  # Python auto-instrumentation configuration
   python:
+    {{- if .Values.instrumentation.python.image }}
     image: {{ .Values.instrumentation.python.image.repository }}:{{ .Values.instrumentation.python.image.tag }}
+    {{- end }}
+    {{- if .Values.instrumentation.python.env }}
     env:
-      - name: OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED
-        value: "true"
-      - name: OTEL_PYTHON_LOGGING_INJECTION_ENABLED
-        value: "true"
-      - name: OTEL_PYTHON_LOG_LEVEL
-        value: {{ .Values.instrumentation.python.logLevel }}
-      - name: OTEL_PYTHON_LOG_CORRELATION
-        value: "true"
-      - name: OTEL_INSTRUMENTATION_HTTP_CAPTURE_HEADERS_SERVER_REQUEST
-        value: "content-.*,x-.*"
-      - name: OTEL_INSTRUMENTATION_HTTP_CAPTURE_HEADERS_SERVER_RESPONSE
-        value: "content-.*,x-.*"
-      - name: OTEL_PYTHON_EXCLUDED_URLS
-        value: "/health,/metrics,/ready"
-      # Override the protocol-specific endpoints to use correct hostname
-      - name: OTEL_EXPORTER_OTLP_TRACES_ENDPOINT
-        value: http://{{ include "tinyolly.fullname" . }}-otel-collector-collector:{{ .Values.otelCollector.port }}/v1/traces
-      - name: OTEL_EXPORTER_OTLP_METRICS_ENDPOINT
-        value: http://{{ include "tinyolly.fullname" . }}-otel-collector-collector:{{ .Values.otelCollector.port }}/v1/metrics
-      - name: OTEL_EXPORTER_OTLP_LOGS_ENDPOINT
-        value: http://{{ include "tinyolly.fullname" . }}-otel-collector-collector:{{ .Values.otelCollector.port }}/v1/logs
+      {{- toYaml .Values.instrumentation.python.env | nindent 6 }}
+    {{- end }}
+    {{- if .Values.instrumentation.python.resources }}
     resourceRequirements:
       {{- toYaml .Values.instrumentation.python.resources | nindent 6 }}
-  
-  # Resource attributes
-  resource:
-    addK8sUIDAttributes: true
+    {{- end }}
 {{- end }}
