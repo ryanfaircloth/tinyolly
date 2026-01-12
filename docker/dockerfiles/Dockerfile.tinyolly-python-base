@@ -1,26 +1,14 @@
 # TinyOlly Python Base Image
-# Contains shared OS dependencies and the tinyolly-common package
+# Contains the tinyolly-common package and minimal dependencies
+# SSL/TLS certificates managed by Python's certifi package
 
 FROM python:3.14-slim
 
 WORKDIR /app
 
-# Install bash and bash-completion for better shell experience
-# Install curl and ca-certificates for general utility
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    bash \
-    bash-completion \
-    curl \
-    ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
-
-# Set bash as default shell and enable completion
-SHELL ["/bin/bash", "-c"]
-RUN echo 'if [ -f /etc/bash_completion ]; then . /etc/bash_completion; fi' >> /etc/bash.bashrc
-
 # Create non-root user
 RUN groupadd -g 1000 tinyolly && \
-    useradd -u 1000 -g tinyolly -m -s /bin/bash tinyolly && \
+    useradd -u 1000 -g tinyolly -m -s /bin/sh tinyolly && \
     mkdir -p /app && \
     chown -R tinyolly:tinyolly /app
 
