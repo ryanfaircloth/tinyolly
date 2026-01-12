@@ -65,7 +65,12 @@ spec:
                             nodePort: ${https_nodeport}
                             port: 9443
                             protocol: TCP
-                            targetPort: 9443      
+                            targetPort: 9443
+                          - name: mgmt-https-port
+                            nodePort: ${mgmt_https_nodeport}
+                            port: 49443
+                            protocol: TCP
+                            targetPort: 49443      
               telemetry:
                 metrics:
                   sinks:
@@ -105,29 +110,7 @@ spec:
                         - type: OpenTelemetry
                           openTelemetry:
                             host: agent-collector.opentelemetry-operator-system.svc.cluster.local
-                            port: 4317                        
-          - 
-            apiVersion: gateway.envoyproxy.io/v1alpha1
-            kind: EnvoyProxy
-            metadata:
-              name: management-gateway
-              namespace: envoy-gateway-system
-            spec:
-              provider:
-                type: Kubernetes
-                kubernetes:
-                  envoyService:
-                    type: NodePort
-                    patch:
-                      value:
-                        spec:
-                          ports:
-                          - name: mgmt-https-port
-                            nodePort: ${mgmt_https_nodeport}
-                            port: 49443
-                            protocol: TCP
-                            targetPort: 49443
-              telemetry: {}
+                            port: 4317
           - 
             apiVersion: gateway.networking.k8s.io/v1
             kind: GatewayClass
@@ -143,25 +126,11 @@ spec:
                 namespace: envoy-gateway-system
           -
             apiVersion: gateway.networking.k8s.io/v1
-            kind: GatewayClass
-            metadata:
-              name: management-gateway-class
-              namespace: envoy-gateway-system
-            spec:
-              controllerName: gateway.envoyproxy.io/gatewayclass-controller
-              parametersRef:
-                group: gateway.envoyproxy.io
-                kind: EnvoyProxy
-                name: management-gateway
-                namespace: envoy-gateway-system
-          -
-            apiVersion: gateway.networking.k8s.io/v1
             kind: Gateway
             metadata:
-              name: management-gateway
-              namespace: envoy-gateway-system
+              name: cluster-gateway
             spec:
-              gatewayClassName: management-gateway-class
+              gatewayClassName: cluster-gateway-class
               listeners:
               - name: mgmt-https-listener
                 protocol: HTTPS
@@ -175,14 +144,6 @@ spec:
                 allowedRoutes:
                   namespaces:
                     from: All
-          -
-            apiVersion: gateway.networking.k8s.io/v1
-            kind: Gateway
-            metadata:
-              name: cluster-gateway
-            spec:
-              gatewayClassName: cluster-gateway-class
-              listeners:
               - name: kafka-listener
                 protocol: TLS
                 port: 9094

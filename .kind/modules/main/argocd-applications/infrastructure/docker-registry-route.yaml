@@ -24,8 +24,9 @@ spec:
               namespace: registry
             spec:
               parentRefs:
-                - name: management-gateway
+                - name: cluster-gateway
                   namespace: envoy-gateway-system
+                  sectionName: mgmt-https-listener
               hostnames:
                 - registry.${gateway_dns_suffix}
               rules:

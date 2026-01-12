@@ -23,7 +23,7 @@ server:
     hostnames:
       - argocd.${gateway_dns_suffix}
     parentRefs:
-      - name: management-gateway
+      - name: cluster-gateway
         namespace: envoy-gateway-system
         sectionName: mgmt-https-listener
 
