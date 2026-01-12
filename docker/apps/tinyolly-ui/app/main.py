@@ -32,19 +32,41 @@
 
 import uvloop
 import asyncio
-from fastapi import FastAPI
+from typing import Any
+from fastapi import FastAPI, Request, Response
 from fastapi.responses import ORJSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from starlette.types import Scope
 
 from .core.logging import setup_logging
 from .core.telemetry import setup_telemetry
 from .core.middleware import setup_middleware
 from .routers import ingest, query, services, admin, system, opamp
 from .routers.system import set_templates
+from .config import settings
 
 # Install uvloop policy for faster event loop
 asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
+
+
+class CachedStaticFiles(StaticFiles):
+    """StaticFiles with proper cache-control headers for cache busting"""
+    
+    async def __call__(self, scope: Scope, receive: Any, send: Any) -> None:
+        """Add cache headers before serving static files"""
+        if scope["type"] == "http":
+            # Create a wrapper to inject headers
+            async def send_wrapper(message: Any) -> None:
+                if message["type"] == "http.response.start":
+                    headers = list(message.get("headers", []))
+                    # Add cache headers for versioned URLs (1 year cache)
+                    headers.append((b"cache-control", b"public, max-age=31536000, immutable"))
+                    message["headers"] = headers
+                await send(message)
+            await super().__call__(scope, receive, send_wrapper)
+        else:
+            await super().__call__(scope, receive, send)
 
 # Setup logging
 setup_logging()
@@ -128,11 +150,20 @@ compatibility with OTLP exporters and OpenTelemetry SDKs.
     # Setup middleware
     setup_middleware(app)
 
-    # Mount static files
-    app.mount("/static", StaticFiles(directory="static"), name="static")
+    # Mount static files with cache headers
+    app.mount("/static", CachedStaticFiles(directory="static"), name="static")
 
-    # Setup templates
+    # Setup templates with custom context
     templates = Jinja2Templates(directory="templates")
+    
+    # Add static_url helper function to all templates
+    def static_url(path: str) -> str:
+        """Generate versioned static file URL for cache busting"""
+        return f"/static/{path}?v={settings.static_version}"
+    
+    templates.env.globals['static_url'] = static_url
+    templates.env.globals['static_version'] = settings.static_version
+    
     set_templates(templates)
 
     # Register routers
