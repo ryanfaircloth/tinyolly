@@ -77,7 +77,7 @@ spec:
                 opentelemetry.io/service-name: "kafka-ui"
             spec:
               parentRefs:
-                - name: management-gateway
+                - name: cluster-gateway
                   namespace: envoy-gateway-system
                   sectionName: mgmt-https-listener
               hostnames:
