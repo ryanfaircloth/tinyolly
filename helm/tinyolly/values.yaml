@@ -248,7 +248,7 @@ ui:
   
   image:
     # -- UI image repository
-    repository: ghcr.io/ryanfaircloth/ui
+    repository: ghcr.io/ryanfaircloth/tinyolly/ui
     # -- UI image tag
     tag: latest
     # -- UI image pull policy (overrides global)
@@ -369,7 +369,7 @@ opampServer:
   
   image:
     # -- OpAMP Server image repository
-    repository: ghcr.io/ryanfaircloth/opamp-server
+    repository: ghcr.io/ryanfaircloth/tinyolly/opamp-server
     # -- OpAMP Server image tag
     tag: latest
     # -- OpAMP Server image pull policy (overrides global)
@@ -472,7 +472,7 @@ otlpReceiver:
   
   image:
     # -- OTLP Receiver image repository
-    repository: ghcr.io/ryanfaircloth/otlp-receiver
+    repository: ghcr.io/ryanfaircloth/tinyolly/otlp-receiver
     # -- OTLP Receiver image tag
     tag: latest
     # -- OTLP Receiver image pull policy (overrides global)

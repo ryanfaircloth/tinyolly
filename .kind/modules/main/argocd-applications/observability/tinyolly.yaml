@@ -20,12 +20,12 @@ spec:
   source:
     repoURL: 'docker-registry.registry.svc.cluster.local:5000/tinyolly/charts'
     chart: tinyolly
-    targetRevision: 0.1.1-v2.1.26-no-kafkaui
+    targetRevision: 0.1.1-v2.1.36-destroy-cy
     helm:
       valuesObject:
         ui:
           image:
-            repository: docker-registry.registry.svc.cluster.local:5000/tinyolly/ui
+            repository: ghcr.io/ryanfaircloth/tinyolly/ui
             tag: latest
           
           resources:
@@ -44,7 +44,7 @@ spec:
         
         opampServer:
           image:
-            repository: docker-registry.registry.svc.cluster.local:5000/tinyolly/opamp-server
+            repository: ghcr.io/ryanfaircloth/tinyolly/opamp-server
             tag: latest
           
           resources:
@@ -52,7 +52,7 @@ spec:
         
         otlpReceiver:
           image:
-            repository: docker-registry.registry.svc.cluster.local:5000/tinyolly/otlp-receiver
+            repository: ghcr.io/ryanfaircloth/tinyolly/otlp-receiver
             tag: latest
           
           resources:

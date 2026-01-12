@@ -75,15 +75,39 @@ cd docker
 ./04-rebuild-ui.sh              # Rebuild UI only (local changes)
 ```
 
-### Kubernetes Builds (Minikube/Kind)
+### Kubernetes Builds (KIND Cluster with Terraform)
+
+**Primary workflow** for local Kubernetes development:
 
 ```bash
-cd k8s
-./02-deploy-tinyolly.sh         # Deploy to cluster
-./04-rebuild+deploy-ui.sh       # Rebuild UI, restart pod
-./05-rebuild-local-changes.sh <version>  # Rebuild base + UI for tinyolly-common changes
-./06-rebuild-all-local.sh <version>      # Rebuild ALL images (base, UI, OTLP receiver, OpAMP server)
-./07-deploy-local-images.sh <version>    # Deploy specific version to cluster
+# Create/update cluster infrastructure (from repo root)
+make up                         # Bootstrap KIND cluster + ArgoCD via Terraform
+
+# Build and deploy TinyOlly (from repo root or helm/)
+cd helm
+./build-and-push-local.sh v2.1.x-description  # Build images + Helm chart, push to local registry
+```
+
+**How `build-and-push-local.sh` works**:
+1. Builds all 4 container images (python-base, UI, OTLP receiver, OpAMP server)
+2. Pushes images to `registry.tinyolly.test:49443` (external registry endpoint)
+3. Updates `Chart.yaml` version to `0.1.1-<your-version-tag>`
+4. Packages and pushes Helm chart to OCI registry
+5. Creates `values-local-dev.yaml` with image references using **internal registry** (`docker-registry.registry.svc.cluster.local:5000`)
+
+**ArgoCD deployment**:
+- ArgoCD Application defined in `.kind/modules/main/argocd-applications/observability/tinyolly.yaml`
+- Automatically syncs Helm chart from local OCI registry
+- Must update `targetRevision` in ArgoCD Application to deploy new chart version:
+
+```bash
+# Option 1: Update via terraform (preferred)
+cd .kind
+terraform apply -replace='kubectl_manifest.observability_applications["observability/tinyolly.yaml"]' -auto-approve
+
+# Option 2: Patch directly
+kubectl -n argocd patch application tinyolly --type merge \
+  -p '{"spec":{"source":{"targetRevision":"0.1.1-v2.1.x-description"}}}'
 ```
 
 **Critical Build & Registry Pattern**:
@@ -91,52 +115,87 @@ cd k8s
 **REGISTRY ENDPOINTS** (same physical registry, different access points):
 
 - **External (desktop → registry)**: `registry.tinyolly.test:49443` - Use for `podman push --tls-verify=false`
-- **NodePort (desktop → cluster)**: `localhost:30500` - Use for `podman push --tls-verify=false`
+- **NodePort (desktop → cluster)**: `localhost:30500` - Alternative push endpoint (same registry)
 - **Internal (cluster → registry)**: `docker-registry.registry.svc.cluster.local:5000` - Use in Kubernetes deployments
 
-**BUILD & DEPLOY WORKFLOW**:
+**BUILD & DEPLOY WORKFLOW** (automated by `build-and-push-local.sh`):
 
-1. Build images using `06-rebuild-all-local.sh <version>` - builds and pushes to `registry.tinyolly.test:49443`
-2. Images are automatically available at NodePort `localhost:30500` (same registry)
-3. Deploy using `07-deploy-local-images.sh <version>` - sets deployment to use `docker-registry.registry.svc.cluster.local:5000/<image>:<version>`
-4. Kubernetes pulls images from internal service DNS
+1. Script builds images and pushes to **external endpoint** (`registry.tinyolly.test:49443`)
+2. Images automatically available via NodePort (`localhost:30500`)
+3. Script generates Helm `values-local-dev.yaml` using **internal endpoint** for image pulls
+4. Helm chart packaged and pushed to OCI registry at `registry.tinyolly.test:49443/tinyolly/charts`
+5. ArgoCD pulls chart from registry, deploys to cluster using internal DNS for image pulls
 
 **DO NOT**:
 
 - Mix registry endpoints in same command
 - Push to `registry.tinyolly.test:49443` and deploy with same address (cluster can't resolve it)
 - Manually tag/push to multiple endpoints (build scripts handle this)
+- **DEPRECATED**: Old `k8s/` scripts (`05-rebuild-local-changes.sh`, `06-rebuild-all-local.sh`, `07-deploy-local-images.sh`) are obsolete - use `helm/build-and-push-local.sh` instead
 
 **CORRECT PATTERN**:
 
 ```bash
-cd k8s
-./06-rebuild-all-local.sh v2.1.9-perms     # Builds + pushes to registry.tinyolly.test:49443
-./07-deploy-local-images.sh v2.1.9-perms   # Deploys using docker-registry.registry.svc.cluster.local:5000
+# From repo root
+make up                         # Create/update cluster
+
+# Build and deploy
+cd helm
+./build-and-push-local.sh v2.1.x-fix  # Builds, pushes, packages chart
+
+# Update ArgoCD to use new chart version
+cd ../.kind
+terraform apply -replace='kubectl_manifest.observability_applications["observability/tinyolly.yaml"]' -auto-approve
 ```
 
 **MANUAL PATTERN** (if scripts fail):
 
 ```bash
-# Build and push to external endpoint
-podman build -t registry.tinyolly.test:49443/tinyolly/ui:v2.1.9 .
+# Build and push to external endpoint (from docker/apps)
+cd docker/apps
+podman build -f ../dockerfiles/Dockerfile.tinyolly-ui -t registry.tinyolly.test:49443/tinyolly/ui:v2.1.9 .
 podman push --tls-verify=false registry.tinyolly.test:49443/tinyolly/ui:v2.1.9
 
-# OR push to NodePort
-podman tag registry.tinyolly.test:49443/tinyolly/ui:v2.1.9 localhost:30500/tinyolly/ui:v2.1.9
-podman push --tls-verify=false localhost:30500/tinyolly/ui:v2.1.9
-
-# Deploy using INTERNAL endpoint
-kubectl set image deployment/tinyolly-ui \
-  tinyolly-ui=docker-registry.registry.svc.cluster.local:5000/tinyolly/ui:v2.1.9 -n tinyolly
+# Update ArgoCD Application spec with new image tag
+kubectl -n argocd patch application tinyolly --type merge \
+  -p '{"spec":{"source":{"helm":{"valuesObject":{"ui":{"image":{"tag":"v2.1.9"}}}}}}}'
 ```
 
 ### Testing Changes
 
-- **Clear cache after deployment**: `kubectl exec -n tinyolly deployment/tinyolly-redis -- redis-cli -p 6379 FLUSHDB`
+- **Clear cache after deployment**: `kubectl exec -n tinyolly tinyolly-redis-0 -- redis-cli -p 6379 FLUSHDB`
 - **Check logs**: `kubectl logs -n tinyolly deployment/tinyolly-ui -f`
 - **Verify image**: `podman images | grep registry.tinyolly.test:49443/tinyolly/ui`
-- **Check ArgoCD sync**: `kubectl -n argocd get application docker-registry -o yaml`
+- **Check ArgoCD sync**: `kubectl -n argocd get application tinyolly -o jsonpath='{.status.sync.status}'`
+- **Force ArgoCD refresh**: `kubectl -n argocd patch application tinyolly -p '{"metadata":{"annotations":{"argocd.argoproj.io/refresh":"hard"}}}' --type merge`
+- **Wait for pods to restart**: `sleep 20 && kubectl get po -n tinyolly`
+
+### Terraform Bootstrap Pattern
+
+The cluster uses a **two-phase bootstrap** to handle CRD dependencies:
+
+**Phase 1 (Bootstrap mode)**: `TF_VAR_bootstrap=true`
+- Creates KIND cluster with local registry
+- Installs ArgoCD via Helm
+- Deploys infrastructure apps (Envoy Gateway, OTel Operator, Redis Operator, etc.)
+- **Skips HTTPRoutes** - Gateway API CRDs not yet installed
+
+**Phase 2 (Normal mode)**: `TF_VAR_bootstrap=false`
+- Waits for Gateway API CRDs to be established
+- Deploys HTTPRoutes for ingress
+- Re-runs terraform to apply full configuration
+
+**Automation**: `make up` handles this automatically by checking if cluster exists:
+- New cluster: runs both phases
+- Existing cluster: runs normal mode only
+
+**Manual bootstrap** (if `make up` fails):
+```bash
+cd .kind
+export TF_VAR_bootstrap=true && terraform apply -auto-approve
+sleep 30  # Wait for CRDs
+export TF_VAR_bootstrap=false && terraform apply -auto-approve
+```
 
 ## Development Patterns
 
@@ -191,9 +250,13 @@ kubectl set image deployment/tinyolly-ui \
 ### ArgoCD GitOps
 
 - **Infrastructure apps**: `.kind/modules/main/argocd-applications/infrastructure/`
+- **Observability apps**: `.kind/modules/main/argocd-applications/observability/`
 - **Application pattern**: Separate Applications for Helm charts and HTTPRoutes
 - **Example**: `docker-registry.yaml` (Helm) + `docker-registry-route.yaml` (raw HTTPRoute)
 - **No Flux**: All deployments use ArgoCD native Helm support, not Flux HelmRelease CRDs
+- **Sync waves**: Applications use `argocd.argoproj.io/sync-wave` annotation for ordered deployment
+- **TinyOlly chart source**: `docker-registry.registry.svc.cluster.local:5000/tinyolly/charts` (OCI registry)
+- **Update pattern**: Change `targetRevision` in Application manifest, then `terraform apply -replace`
 
 ## Common Tasks
 
@@ -235,7 +298,3 @@ TinyOlly uses **OpAMP** (OpenTelemetry Agent Management Protocol) for remote OTe
 3. **TTL everything**: All Redis keys must have TTL to prevent memory leaks
 4. **Cache service graphs**: Don't rebuild on every API call (use `SERVICE_GRAPH_CACHE_TTL`)
 5. **Index by timestamp**: Use sorted sets for time-based queries
-
-## Current Work Context
-
-Working on branch `fix/issue-7-apm-kafka-consumer-direction` to fix service graph edge direction for Kafka consumers (CONSUMER spans should reverse edge direction).

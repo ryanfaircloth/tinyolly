@@ -42,7 +42,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR/../../docker"
 
 VERSION=${1:-"latest"}
-CONTAINER_REGISTRY=${CONTAINER_REGISTRY:-"tinyolly"}  # Default to Docker Hub (tinyolly), can be overridden with ghcr.io/ryanfaircloth
+CONTAINER_REGISTRY=${CONTAINER_REGISTRY:-"ghcr.io/ryanfaircloth/tinyolly"}  # Default to GHCR with org path
 
 echo "=========================================="
 echo "TinyOlly Core - Push to Container Registry"
