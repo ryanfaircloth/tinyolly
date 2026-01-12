@@ -154,6 +154,10 @@ export async function loadMetrics() {
 }
 
 export async function loadServiceMap() {
+    // Show loading indicator
+    const loadingEl = document.getElementById('map-loading');
+    if (loadingEl) loadingEl.style.display = 'flex';
+    
     try {
         const response = await fetch('/api/service-map?limit=500');
         let graph = await response.json();
@@ -193,6 +197,8 @@ export async function loadServiceMap() {
         renderServiceMap(graph);
     } catch (error) {
         console.error('Error loading service map:', error);
+        // Hide loading on error
+        if (loadingEl) loadingEl.style.display = 'none';
     }
 }
 

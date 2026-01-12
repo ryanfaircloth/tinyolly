@@ -46,6 +46,12 @@ export function renderServiceMap(graph) {
         return;
     }
 
+    // Destroy existing Cytoscape instance if it exists
+    if (cy) {
+        cy.destroy();
+        cy = null;
+    }
+
     // Hide loading spinner
     const loadingEl = document.getElementById('map-loading');
     if (loadingEl) loadingEl.style.display = 'none';
