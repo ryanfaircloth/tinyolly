@@ -56,10 +56,6 @@ fi
 echo "✓ Images pulled successfully"
 echo ""
 
-# This prevents stale remote configs from persisting across restarts
-echo "Clearing cached collector config..."
-docker volume rm tinyolly-otel-supervisor-data 2>/dev/null || true
-
 # Clear Redis data from previous runs
 # This removes stale traces, metrics, and logs for a clean start
 echo "Clearing Redis data..."

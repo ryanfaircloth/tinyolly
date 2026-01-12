@@ -127,19 +127,6 @@ docker buildx build --platform $PLATFORMS \
 echo "✓ Built $CONTAINER_REGISTRY/opamp-server:$VERSION"
 echo ""
 
-# Image 5: OTel Supervisor (independent)
-echo "----------------------------------------"
-echo "Building otel-supervisor..."
-echo "----------------------------------------"
-docker buildx build --platform $PLATFORMS \
-  --no-cache \
-  -f dockerfiles/Dockerfile.otel-supervisor \
-  -t $CONTAINER_REGISTRY/otel-supervisor:latest \
-  -t $CONTAINER_REGISTRY/otel-supervisor:$VERSION \
-  $BUILD_ACTION .
-echo "✓ Built $CONTAINER_REGISTRY/otel-supervisor:$VERSION"
-echo ""
-
 echo "=========================================="
 echo "✓ All core images built locally!"
 echo "=========================================="
@@ -149,7 +136,6 @@ echo "  - $CONTAINER_REGISTRY/python-base:$VERSION"
 echo "  - $CONTAINER_REGISTRY/otlp-receiver:$VERSION"
 echo "  - $CONTAINER_REGISTRY/ui:$VERSION"
 echo "  - $CONTAINER_REGISTRY/opamp-server:$VERSION"
-echo "  - $CONTAINER_REGISTRY/otel-supervisor:$VERSION"
 echo ""
 echo "Next step - push to registry:"
 echo "  ./03-push-core.sh $VERSION"

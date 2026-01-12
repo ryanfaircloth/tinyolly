@@ -57,7 +57,6 @@ IMAGES=(
   "otlp-receiver"
   "ui"
   "opamp-server"
-  "otel-supervisor"
 )
 
 for IMAGE in "${IMAGES[@]}"; do
@@ -77,7 +76,6 @@ echo "  - $CONTAINER_REGISTRY/python-base:$VERSION"
 echo "  - $CONTAINER_REGISTRY/otlp-receiver:$VERSION"
 echo "  - $CONTAINER_REGISTRY/ui:$VERSION"
 echo "  - $CONTAINER_REGISTRY/opamp-server:$VERSION"
-echo "  - $CONTAINER_REGISTRY/otel-supervisor:$VERSION"
 echo ""
 echo "Verify: docker pull $CONTAINER_REGISTRY/ui:$VERSION"
 echo ""

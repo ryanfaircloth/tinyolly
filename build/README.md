@@ -110,7 +110,6 @@ See [helm/README.md](../helm/README.md) for complete documentation.
 | `ghcr.io/ryanfaircloth/ui` | Web UI |
 | `ghcr.io/ryanfaircloth/otlp-receiver` | OTLP receiver service |
 | `ghcr.io/ryanfaircloth/opamp-server` | OpAMP configuration server |
-| `ghcr.io/ryanfaircloth/otel-supervisor` | OTel Collector supervisor |
 
 ### Demo Images
 

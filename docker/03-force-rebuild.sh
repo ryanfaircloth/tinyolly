@@ -60,23 +60,19 @@ echo "Step 2: Clearing Redis data..."
 docker exec tinyolly-redis redis-cli -p 6379 FLUSHALL 2>/dev/null || true
 
 echo ""
-echo "Step 3: Clearing cached collector config..."
-docker volume rm tinyolly-otel-supervisor-data 2>/dev/null || true
-
-echo ""
-echo "Step 4: Removing TinyOlly images..."
+echo "Step 3: Removing TinyOlly images..."
 docker-compose -f docker-compose-tinyolly-core.yml down --rmi all
 
 echo ""
-echo "Step 5: Cleaning Docker build cache..."
+echo "Step 4: Cleaning Docker build cache..."
 docker builder prune -f
 
 echo ""
-echo "Step 6: Rebuilding from scratch (no cache)..."
+echo "Step 5: Rebuilding from scratch (no cache)..."
 docker-compose -f docker-compose-tinyolly-core.yml build --no-cache
 
 echo ""
-echo "Step 7: Starting services..."
+echo "Step 6: Starting services..."
 docker-compose -f docker-compose-tinyolly-core.yml up -d
 
 EXIT_CODE=$?
