@@ -164,7 +164,9 @@ export async function loadServiceMap() {
         }
         if (graph.edges) {
             graph.edges = graph.edges.filter(edge => {
-                return edge.source !== 'tinyolly-ui' && edge.target !== 'tinyolly-ui';
+                // Filter edges where either source or target is a TinyOlly service
+                const tinyollyServices = ['tinyolly-ui', 'tinyolly-otlp-receiver', 'tinyolly-opamp-server'];
+                return !tinyollyServices.includes(edge.source) && !tinyollyServices.includes(edge.target);
             });
         }
 

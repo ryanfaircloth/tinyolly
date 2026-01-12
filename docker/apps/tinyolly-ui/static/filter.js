@@ -101,7 +101,17 @@ export function shouldHideTinyOlly() {
 }
 
 /**
- * Filter function to exclude tinyolly-ui service
+ * Check if a service name is a TinyOlly internal service
+ */
+function isTinyOllyService(serviceName) {
+    if (!serviceName) return false;
+    return serviceName === 'tinyolly-ui' || 
+           serviceName === 'tinyolly-otlp-receiver' || 
+           serviceName === 'tinyolly-opamp-server';
+}
+
+/**
+ * Filter function to exclude TinyOlly internal services
  */
 export function filterTinyOllyData(item) {
     if (!hideTinyOlly) return true;
@@ -117,49 +127,49 @@ export function filterTinyOllyData(item) {
                        )) ||
                        (item.resource && item.resource['service.name']);
 
-    // Filter out tinyolly-ui
-    return serviceName !== 'tinyolly-ui';
+    // Filter out TinyOlly internal services
+    return !isTinyOllyService(serviceName);
 }
 
 /**
- * Filter traces - exclude if service is tinyolly-ui
+ * Filter traces - exclude if service is a TinyOlly internal service
  */
 export function filterTinyOllyTrace(trace) {
     if (!hideTinyOlly) return true;
 
     // API returns service_name field for traces
     const serviceName = trace.service_name || trace.serviceName || trace.root_service || trace.rootService;
-    return serviceName !== 'tinyolly-ui';
+    return !isTinyOllyService(serviceName);
 }
 
 /**
- * Filter metrics - exclude if only from tinyolly-ui service
+ * Filter metrics - exclude if only from TinyOlly internal services
  */
 export function filterTinyOllyMetric(metric) {
     if (!hideTinyOlly) return true;
 
     // Check services array (from metrics list endpoint)
     if (metric.services && Array.isArray(metric.services)) {
-        // If only service is tinyolly-ui, filter it out
-        if (metric.services.length === 1 && metric.services[0] === 'tinyolly-ui') {
+        // If only service is a TinyOlly service, filter it out
+        if (metric.services.length === 1 && isTinyOllyService(metric.services[0])) {
             return false;
         }
-        // If tinyolly-ui is one of multiple services, keep the metric
+        // If TinyOlly service is one of multiple services, keep the metric
         return true;
     }
 
     // Check in resources object (for single metric detail)
     if (metric.resources) {
         const serviceName = metric.resources['service.name'];
-        if (serviceName === 'tinyolly-ui') return false;
+        if (isTinyOllyService(serviceName)) return false;
     }
 
     // Check in series (for metric detail view)
     if (metric.series && Array.isArray(metric.series)) {
-        // Filter out entire metric if all series are from tinyolly-ui
+        // Filter out entire metric if all series are from TinyOlly services
         const nonTinyOllySeries = metric.series.filter(s => {
             const serviceName = s.resources && s.resources['service.name'];
-            return serviceName !== 'tinyolly-ui';
+            return !isTinyOllyService(serviceName);
         });
         return nonTinyOllySeries.length > 0;
     }
@@ -168,13 +178,13 @@ export function filterTinyOllyMetric(metric) {
 }
 
 /**
- * Filter metric series - exclude series from tinyolly-ui
+ * Filter metric series - exclude series from TinyOlly internal services
  */
 export function filterTinyOllyMetricSeries(series) {
     if (!hideTinyOlly) return series;
 
     return series.filter(s => {
         const serviceName = s.resources && s.resources['service.name'];
-        return serviceName !== 'tinyolly-ui';
+        return !isTinyOllyService(serviceName);
     });
 }
