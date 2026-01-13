@@ -49,7 +49,7 @@ helm install tinyolly-demos . \
 
 ```bash
 # From repo root
-cd helm
+cd charts
 ./build-and-push-local.sh v2.1.x-demo-test
 
 # Install with local images
@@ -118,7 +118,7 @@ After deployment:
 For the custom demo, a traffic generation script is included to create realistic observability data:
 
 ```bash
-# Run from helm/tinyolly-demos directory
+# Run from charts/tinyolly-demos directory
 ./generate-custom-demo-traffic.sh
 ```
 

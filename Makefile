@@ -17,12 +17,12 @@ CLUSTER_NAME := tinyolly
 ## Create KIND cluster with local registry
 up:
 	@if [ ! -f .kind/terraform.tfstate ]; then \
-		pushd .kind && terraform init && popd; \
+		cd $(CURDIR)/.kind && terraform init; \
 	fi
 	@# Check if cluster exists to determine bootstrap mode
 	@if ! kind get clusters 2>/dev/null | grep -q "^$(CLUSTER_NAME)$$"; then \
 		echo "🚀 Bootstrap mode: Creating new cluster..."; \
-		export TF_VAR_bootstrap=true && pushd .kind && terraform apply -auto-approve && popd; \
+		cd $(CURDIR)/.kind && export TF_VAR_bootstrap=true && terraform apply -auto-approve; \
 		echo ""; \
 		echo "⏳ Waiting for ArgoCD to sync infrastructure apps..."; \
 		sleep 30; \
@@ -38,10 +38,10 @@ up:
 		done; \
 		echo ""; \
 		echo "🔄 Running second pass to enable HTTPRoutes..."; \
-		export TF_VAR_bootstrap=false && pushd .kind && terraform apply -auto-approve && popd; \
+		cd $(CURDIR)/.kind && export TF_VAR_bootstrap=false && terraform apply -auto-approve; \
 	else \
 		echo "♻️  Updating existing cluster..."; \
-		export TF_VAR_bootstrap=false && pushd .kind && terraform apply -auto-approve && popd; \
+		cd $(CURDIR)/.kind && export TF_VAR_bootstrap=false && terraform apply -auto-approve; \
 	fi
 	@echo ""
 	@echo "🎉 TinyOlly cluster deployment complete!"
@@ -70,10 +70,11 @@ clean:
 ## Deploy custom demo applications (demo-frontend + demo-backend)
 demos:
 	@echo "🚀 Deploying custom demo applications..."
-	@export TF_VAR_bootstrap=false && \
+	@cd $(CURDIR)/.kind && \
+		export TF_VAR_bootstrap=false && \
 		export TF_VAR_custom_demo_enabled=true && \
 		export TF_VAR_otel_demo_enabled=false && \
-		pushd .kind && terraform apply -auto-approve && popd
+		terraform apply -auto-approve
 	@echo ""
 	@echo "✅ Custom demos deployed!"
 	@echo "   Access: https://demo-frontend.tinyolly.test:49443"
@@ -82,10 +83,11 @@ demos:
 ## Deploy OpenTelemetry Demo (astronomy shop)
 demos-otel:
 	@echo "🚀 Deploying OpenTelemetry Demo..."
-	@export TF_VAR_bootstrap=false && \
+	@cd $(CURDIR)/.kind && \
+		export TF_VAR_bootstrap=false && \
 		export TF_VAR_custom_demo_enabled=false && \
 		export TF_VAR_otel_demo_enabled=true && \
-		pushd .kind && terraform apply -auto-approve && popd
+		terraform apply -auto-approve
 	@echo ""
 	@echo "✅ OTel Demo deployed!"
 	@echo "   Access: https://otel-demo.tinyolly.test:49443"
@@ -94,10 +96,11 @@ demos-otel:
 ## Deploy both custom and OpenTelemetry demos
 demos-all:
 	@echo "🚀 Deploying all demo applications..."
-	@export TF_VAR_bootstrap=false && \
+	@cd $(CURDIR)/.kind && \
+		export TF_VAR_bootstrap=false && \
 		export TF_VAR_custom_demo_enabled=true && \
 		export TF_VAR_otel_demo_enabled=true && \
-		pushd .kind && terraform apply -auto-approve && popd
+		terraform apply -auto-approve
 	@echo ""
 	@echo "✅ All demos deployed!"
 	@echo "   Custom Demo: https://demo-frontend.tinyolly.test:49443"

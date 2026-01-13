@@ -54,7 +54,7 @@ This pulls pre-built images from Docker Hub and starts:
 In a new terminal:
 
 ```bash
-cd docker-demo
+cd apps/demo
 ./01-deploy-demo.sh
 ```
 
@@ -184,7 +184,7 @@ TinyOlly will automatically capture and display your telemetry!
 
 Stop demo apps (keeps TinyOlly running):
 ```bash
-cd docker-demo
+cd apps/demo
 ./02-cleanup-demo.sh
 ```
 
@@ -210,14 +210,14 @@ cd docker
 ### UI shows "No traces/logs/metrics"
 - Wait 30 seconds after starting demo apps
 - Check containers are running: `docker ps`
-- Check demo app logs: `docker compose -f docker-demo/docker-compose-demo.yml logs`
+- Check demo app logs: `docker compose -f apps/demo/docker-compose-demo.yml logs`
 
 ### Port conflicts
 - TinyOlly uses ports 4317, 4318, 4320, 4321, 4343, 5005, 6379, 19291
 - Stop conflicting services or modify ports in `docker-compose-tinyolly-core.yml`
 
 ### Demo apps not generating traffic
-- Restart demo: `cd docker-demo && ./02-cleanup-demo.sh && ./01-deploy-demo.sh`
-- Check logs: `docker compose -f docker-demo/docker-compose-demo.yml logs demo-frontend`
+- Restart demo: `cd apps/demo && ./02-cleanup-demo.sh && ./01-deploy-demo.sh`
+- Check logs: `docker compose -f apps/demo/docker-compose-demo.yml logs demo-frontend`
 
 For more help, [open an issue on GitHub](https://github.com/tinyolly/tinyolly/issues).

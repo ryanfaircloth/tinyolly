@@ -156,10 +156,10 @@ Requests occur every 3-8 seconds with random intervals.
 
 ```bash
 # Install demos chart
-helm install tinyolly-demos helm/tinyolly-demos \
+helm install tinyolly-demos charts/tinyolly-demos \
   --namespace tinyolly-demos \
   --create-namespace \
-  --values helm/tinyolly-demos/values-local-dev.yaml
+  --values charts/tinyolly-demos/values-local-dev.yaml
 ```
 
 ### ArgoCD Deployment (Recommended)
@@ -226,7 +226,7 @@ Open TinyOlly UI at `https://tinyolly.tinyolly.test` to see:
 
 ```bash
 # Build and push to local registry
-cd helm
+cd charts
 ./build-and-push-local.sh v2.1.x-custom-demo
 
 # Images will be built and pushed:
@@ -238,9 +238,9 @@ cd helm
 
 Demo source code is located in:
 
-- `docker-demo/frontend.py` - Frontend Flask application
-- `docker-demo/backend.py` - Backend Flask application
-- `docker-demo/requirements.txt` - Python dependencies
+- `apps/demo/frontend.py` - Frontend Flask application
+- `apps/demo/backend.py` - Backend Flask application
+- `apps/demo/requirements.txt` - Python dependencies
 
 Dockerfiles:
 
@@ -294,8 +294,8 @@ A traffic generation script is provided to continuously send requests to the cus
 ### Usage
 
 ```bash
-# From the helm/tinyolly-demos directory
-cd helm/tinyolly-demos
+# From the charts/tinyolly-demos directory
+cd charts/tinyolly-demos
 ./generate-custom-demo-traffic.sh
 ```
 

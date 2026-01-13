@@ -49,43 +49,42 @@ echo "📦 PART 1: Building Container Images"
 echo "=========================================="
 echo ""
 
-# Navigate to docker directory (build context)
-cd "$SCRIPT_DIR/../docker"
+# Navigate to repo root
+cd "$SCRIPT_DIR/.."
 
-echo "Step 1/2: Building tinyolly (unified UI + OTLP receiver)"
+echo "Step 1/3: Building tinyolly (unified UI + OTLP receiver)"
 echo "-----------------------------------------------------------"
 $CONTAINER_CMD build \
-  -f dockerfiles/Dockerfile.tinyolly \
+  -f apps/tinyolly/Dockerfile \
   -t tinyolly/tinyolly:latest \
   -t tinyolly/tinyolly:$VERSION \
   -t $EXTERNAL_REGISTRY/tinyolly/tinyolly:latest \
   -t $EXTERNAL_REGISTRY/tinyolly/tinyolly:$VERSION \
-  .
+  apps/tinyolly/
 echo "✓ TinyOlly image built"
 echo ""
 
-echo "Step 2/4: Building OpAMP Server"
+echo "Step 2/3: Building OpAMP Server"
 echo "-----------------------------------------------------------"
 $CONTAINER_CMD build \
-  -f dockerfiles/Dockerfile.tinyolly-opamp-server \
-  --build-arg APP_DIR=tinyolly-opamp-server \
+  -f apps/opamp-server/Dockerfile \
   -t tinyolly/opamp-server:latest \
   -t tinyolly/opamp-server:$VERSION \
   -t $EXTERNAL_REGISTRY/tinyolly/opamp-server:latest \
   -t $EXTERNAL_REGISTRY/tinyolly/opamp-server:$VERSION \
-  .
+  apps/opamp-server/
 echo "✓ OpAMP Server image built"
 echo ""
 
 echo "Step 3/3: Building Unified Demo Image"
 echo "-----------------------------------------------------------"
 $CONTAINER_CMD build \
-  -f dockerfiles/Dockerfile.demo \
+  -f apps/demo/Dockerfile \
   -t tinyolly/demo:latest \
   -t tinyolly/demo:$VERSION \
   -t $EXTERNAL_REGISTRY/tinyolly/demo:latest \
   -t $EXTERNAL_REGISTRY/tinyolly/demo:$VERSION \
-  "$SCRIPT_DIR/../docker-demo"
+  apps/demo/
 echo "✓ Unified Demo image built"
 echo ""
 

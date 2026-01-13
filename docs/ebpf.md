@@ -21,7 +21,7 @@ cd docker
 ./01-start-core.sh
 
 # Deploy eBPF demo (pulls pre-built images from Docker Hub)
-cd ../docker-demo-ebpf
+cd ../apps/demo-ebpf
 ./01-deploy-ebpf-demo.sh
 ```
 
@@ -32,7 +32,7 @@ Access the UI at `http://localhost:5005`
 ```bash
 # Start TinyOlly core first
 minikube start
-cd helm
+cd charts
 ./install.sh
 
 # Deploy eBPF demo (pulls pre-built images from Docker Hub)

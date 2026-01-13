@@ -40,7 +40,7 @@ set -e
 # To push, run: ./03-push-core.sh [version]
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$SCRIPT_DIR/../../docker"
+cd "$SCRIPT_DIR/../.."  # Navigate to repo root
 
 VERSION=${1:-"latest"}
 CONTAINER_REGISTRY=${CONTAINER_REGISTRY:-"ghcr.io/ryanfaircloth/tinyolly"}  # Default to GHCR with org path
@@ -79,10 +79,10 @@ echo "Building tinyolly..."
 echo "----------------------------------------"
 docker buildx build --platform $PLATFORMS \
   --no-cache \
-  -f dockerfiles/Dockerfile.tinyolly \
+  -f apps/tinyolly/Dockerfile \
   -t $CONTAINER_REGISTRY/tinyolly:latest \
   -t $CONTAINER_REGISTRY/tinyolly:$VERSION \
-  $BUILD_ACTION .
+  $BUILD_ACTION apps/tinyolly/
 echo "✓ Built $CONTAINER_REGISTRY/tinyolly:$VERSION"
 echo ""
 
@@ -92,10 +92,10 @@ echo "Building opamp-server..."
 echo "----------------------------------------"
 docker buildx build --platform $PLATFORMS \
   --no-cache \
-  -f dockerfiles/Dockerfile.tinyolly-opamp-server \
+  -f apps/opamp-server/Dockerfile \
   -t $CONTAINER_REGISTRY/opamp-server:latest \
   -t $CONTAINER_REGISTRY/opamp-server:$VERSION \
-  $BUILD_ACTION .
+  $BUILD_ACTION apps/opamp-server/
 echo "✓ Built $CONTAINER_REGISTRY/opamp-server:$VERSION"
 echo ""
 

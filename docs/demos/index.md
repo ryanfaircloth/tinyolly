@@ -89,12 +89,12 @@ All demos can be deployed via:
 
 ```bash
 # Custom Demo
-helm install tinyolly-demos helm/tinyolly-demos \
+helm install tinyolly-demos charts/tinyolly-demos \
   --namespace tinyolly-demos \
   --create-namespace
 
 # OTel Demo
-helm install tinyolly-demos helm/tinyolly-demos \
+helm install tinyolly-demos charts/tinyolly-demos \
   --set customDemo.enabled=false \
   --set otelDemo.enabled=true
 ```

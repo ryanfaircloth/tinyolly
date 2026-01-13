@@ -111,7 +111,7 @@ The load generator creates realistic user flows:
 
 ```bash
 # Install OTel Demo via tinyolly-demos chart
-helm install tinyolly-demos helm/tinyolly-demos \
+helm install tinyolly-demos charts/tinyolly-demos \
   --namespace tinyolly-demos \
   --create-namespace \
   --set customDemo.enabled=false \
@@ -337,10 +337,10 @@ dependencies:
     repository: https://open-telemetry.github.io/opentelemetry-helm-charts
 ```
 
-To update to a newer version, modify `helm/tinyolly-demos/Chart.yaml` and run:
+To update to a newer version, modify `charts/tinyolly-demos/Chart.yaml` and run:
 
 ```bash
-cd helm/tinyolly-demos
+cd charts/tinyolly-demos
 helm dependency update
 ```
 

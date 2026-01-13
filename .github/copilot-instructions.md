@@ -24,14 +24,12 @@ OTel SDK → Collector (4317/4318) → OTLP Receiver (4343) → Redis (6379) ←
                                                          OpAMP Server (4320/4321)
 ```
 
-### Shared Code: `tinyolly-common`
+### Shared Code
 
-The `docker/apps/tinyolly-common` package contains shared utilities:
+Shared utilities are in `apps/tinyolly/common/`:
 
 - **storage.py**: Redis operations with ZSTD compression, msgpack serialization
 - **otlp_utils.py**: Centralized OTLP attribute parsing (use `get_attr_value()`, `parse_attributes()`)
-
-**Critical**: Changes to `tinyolly-common` require rebuilding the **python-base** image first, then dependent services. See [Build Workflow](#build-workflow).
 
 ## Key Conventions
 
@@ -48,7 +46,7 @@ The `docker/apps/tinyolly-common` package contains shared utilities:
 
 - **PRODUCER spans** (kind=4): Edge direction is `source → target` (normal)
 - **CONSUMER spans** (kind=5): Edge direction is **reversed** `target ← source` for messaging systems
-- See [storage.py](docker/apps/tinyolly-common/tinyolly_common/storage.py) `build_service_graph()` for implementation
+- See [storage.py](apps/tinyolly/common/storage.py) `build_service_graph()` for implementation
 
 ### Code Organization (tinyolly-ui)
 
@@ -83,12 +81,13 @@ cd docker
 # Create/update cluster infrastructure (from repo root)
 make up                         # Bootstrap KIND cluster + ArgoCD via Terraform
 
-# Build and deploy TinyOlly (from repo root or helm/)
-cd helm
+# Build and deploy TinyOlly (from repo root or charts/)
+cd charts
 ./build-and-push-local.sh v2.1.x-description  # Build images + Helm chart, push to local registry
 ```
 
 **How `build-and-push-local.sh` works**:
+
 1. Builds all 4 container images (python-base, UI, OTLP receiver, OpAMP server)
 2. Pushes images to `registry.tinyolly.test:49443` (external registry endpoint)
 3. Updates `Chart.yaml` version to `0.1.1-<your-version-tag>`
@@ -96,6 +95,7 @@ cd helm
 5. Creates `values-local-dev.yaml` with image references using **internal registry** (`docker-registry.registry.svc.cluster.local:5000`)
 
 **ArgoCD deployment**:
+
 - ArgoCD Application defined in `.kind/modules/main/argocd-applications/observability/tinyolly.yaml`
 - Automatically syncs Helm chart from local OCI registry
 - Must update `targetRevision` in ArgoCD Application to deploy new chart version:
@@ -131,7 +131,7 @@ kubectl -n argocd patch application tinyolly --type merge \
 - Mix registry endpoints in same command
 - Push to `registry.tinyolly.test:49443` and deploy with same address (cluster can't resolve it)
 - Manually tag/push to multiple endpoints (build scripts handle this)
-- **DEPRECATED**: Old `k8s/` scripts (`05-rebuild-local-changes.sh`, `06-rebuild-all-local.sh`, `07-deploy-local-images.sh`) are obsolete - use `helm/build-and-push-local.sh` instead
+- **DEPRECATED**: Old `k8s/` scripts (`05-rebuild-local-changes.sh`, `06-rebuild-all-local.sh`, `07-deploy-local-images.sh`) are obsolete - use `charts/build-and-push-local.sh` instead
 
 **CORRECT PATTERN**:
 
@@ -140,7 +140,7 @@ kubectl -n argocd patch application tinyolly --type merge \
 make up                         # Create/update cluster
 
 # Build and deploy
-cd helm
+cd charts
 ./build-and-push-local.sh v2.1.x-fix  # Builds, pushes, packages chart
 
 # Update ArgoCD to use new chart version
@@ -175,21 +175,25 @@ kubectl -n argocd patch application tinyolly --type merge \
 The cluster uses a **two-phase bootstrap** to handle CRD dependencies:
 
 **Phase 1 (Bootstrap mode)**: `TF_VAR_bootstrap=true`
+
 - Creates KIND cluster with local registry
 - Installs ArgoCD via Helm
 - Deploys infrastructure apps (Envoy Gateway, OTel Operator, Redis Operator, etc.)
 - **Skips HTTPRoutes** - Gateway API CRDs not yet installed
 
 **Phase 2 (Normal mode)**: `TF_VAR_bootstrap=false`
+
 - Waits for Gateway API CRDs to be established
 - Deploys HTTPRoutes for ingress
 - Re-runs terraform to apply full configuration
 
 **Automation**: `make up` handles this automatically by checking if cluster exists:
+
 - New cluster: runs both phases
 - Existing cluster: runs normal mode only
 
 **Manual bootstrap** (if `make up` fails):
+
 ```bash
 cd .kind
 export TF_VAR_bootstrap=true && terraform apply -auto-approve

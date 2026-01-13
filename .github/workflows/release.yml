@@ -31,7 +31,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push all images
-        run: bash ./build/dockerhub/02-build-all.sh ${{ github.ref_name }}
+        run: bash ./scripts/build/02-build-all.sh ${{ github.ref_name }}
         env:
           CONTAINER_REGISTRY: ghcr.io/ryanfaircloth/tinyolly
           DOCKER_BUILD_PUSH: "true"
@@ -63,7 +63,7 @@ jobs:
 
       - name: Update Chart version and image tags
         run: |
-          cd helm/tinyolly
+          cd charts/tinyolly
 
           # Extract version without 'v' prefix for chart version
           VERSION="${{ github.ref_name }}"
@@ -141,8 +141,8 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
           git add .kind/modules/main/argocd-applications/observability/tinyolly.yaml
-          git add helm/tinyolly/Chart.yaml
-          git add helm/tinyolly/values.yaml
+          git add charts/tinyolly/Chart.yaml
+          git add charts/tinyolly/values.yaml
 
           if git diff --staged --quiet; then
             echo "No changes to commit"

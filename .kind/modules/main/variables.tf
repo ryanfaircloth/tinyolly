@@ -1,8 +1,3 @@
-variable "strimzi_cluster_instance_version" {
-  description = "Version of the tinyolly-instance Helm chart"
-  type        = string
-  default     = "*"
-}
 variable "endpoint" {
   description = "Kubernetes API server endpoint"
   type        = string

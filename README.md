@@ -198,7 +198,7 @@ service:
   extensions: [opamp]
 ```
 
-The default configuration template (located at `docker/otelcol-configs/config.yaml`) shows a complete example with OTLP receivers, OpAMP extension, batch processing, and spanmetrics connector. Your collector will connect to the OpAMP server and receive configuration updates through the TinyOlly UI.
+The default configuration template (located at `config/otelcol/config.yaml`) shows a complete example with OTLP receivers, OpAMP extension, batch processing, and spanmetrics connector. Your collector will connect to the OpAMP server and receive configuration updates through the TinyOlly UI.
 
 **Stop:** `./02-stop-core.sh`
 
@@ -207,7 +207,7 @@ The default configuration template (located at `docker/otelcol-configs/config.ya
 ### 1. Deploy TinyOlly Core
 
 ```bash
-cd helm
+cd charts
 ./install.sh  # Installs to Kubernetes using Helm
 ```
 
@@ -232,7 +232,7 @@ cd k8s-demo
 ./02-deploy.sh  # Automatically builds images if needed
 ```
 
-**Manual image build (optional):** `cd helm && ./build-and-push-local.sh v2.1.x-demo`
+**Manual image build (optional):** `cd charts && ./build-and-push-local.sh v2.1.x-demo`
 **Cleanup:** `./03-cleanup.sh`
 
 ### 3. eBPF Zero-Code Tracing Demo (Optional)

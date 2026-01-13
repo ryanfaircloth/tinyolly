@@ -108,7 +108,7 @@ otelCollector:
 ### Package the Chart
 
 ```bash
-cd helm
+cd charts
 ./package.sh
 ```
 

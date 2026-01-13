@@ -7,17 +7,17 @@ FROM python:3.14-slim
 WORKDIR /app
 
 # Install application dependencies
-COPY apps/tinyolly/requirements.txt .
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
-COPY --chown=1000:1000 apps/tinyolly/main.py .
-COPY --chown=1000:1000 apps/tinyolly/models.py .
-COPY --chown=1000:1000 apps/tinyolly/common/ common/
-COPY --chown=1000:1000 apps/tinyolly/app/ app/
-COPY --chown=1000:1000 apps/tinyolly/receiver/ receiver/
-COPY --chown=1000:1000 apps/tinyolly/templates/ templates/
-COPY --chown=1000:1000 apps/tinyolly/static/ static/
+COPY --chown=1000:1000 main.py .
+COPY --chown=1000:1000 models.py .
+COPY --chown=1000:1000 common/ common/
+COPY --chown=1000:1000 app/ app/
+COPY --chown=1000:1000 receiver/ receiver/
+COPY --chown=1000:1000 templates/ templates/
+COPY --chown=1000:1000 static/ static/
 
 # Expose ports (both UI and receiver)
 EXPOSE 5002

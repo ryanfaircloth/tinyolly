@@ -7,10 +7,10 @@ WORKDIR /app
 RUN apk add --no-cache git
 
 # Copy go mod files
-COPY apps/tinyolly-opamp-server/go.mod ./
+COPY go.mod ./
 
 # Copy source code (needed for go mod tidy to resolve imports)
-COPY apps/tinyolly-opamp-server/*.go ./
+COPY *.go ./
 
 # Download dependencies and generate go.sum
 RUN go mod download && go mod tidy

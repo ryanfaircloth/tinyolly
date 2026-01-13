@@ -23,12 +23,12 @@ build/
     └── 03-push-ai-demo.sh         # Step 3: Push AI demo image
 ```
 
-**Note**: For local Kubernetes development with KIND, use `helm/build-and-push-local.sh` instead. See [helm/README.md](../helm/README.md) for details.
+**Note**: For local Kubernetes development with KIND, use `charts/build-and-push-local.sh` instead. See [charts/README.md](../charts/README.md) for details.
 
 ## Quick Start - GitHub Container Registry (GHCR)
 
 ```bash
-cd build/dockerhub
+cd scripts/build
 
 # Step 1: Login to GHCR (for manual builds)
 # For CI/CD, authentication is automatic via GITHUB_TOKEN
@@ -60,7 +60,7 @@ For local Kubernetes development, use the Helm-based workflow:
 make up
 
 # Build and push images + Helm chart to local registry
-cd helm
+cd charts
 ./build-and-push-local.sh v2.1.x-feature
 
 # Deploy to ArgoCD
@@ -68,7 +68,7 @@ cd ../.kind
 terraform apply -replace='kubectl_manifest.observability_applications["observability/tinyolly.yaml"]' -auto-approve
 ```
 
-See [helm/README.md](../helm/README.md) for complete documentation.
+See [charts/README.md](../charts/README.md) for complete documentation.
 
 ## Scripts Reference
 
@@ -171,12 +171,12 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build images
-        run: ./build/dockerhub/02-build-all.sh ${{ github.ref_name }}
+        run: ./scripts/build/02-build-all.sh ${{ github.ref_name }}
         env:
           CONTAINER_REGISTRY: ghcr.io/ryanfaircloth
 
       - name: Push images
-        run: ./build/dockerhub/03-push-all.sh ${{ github.ref_name }}
+        run: ./scripts/build/03-push-all.sh ${{ github.ref_name }}
         env:
           CONTAINER_REGISTRY: ghcr.io/ryanfaircloth
 ```
@@ -211,7 +211,7 @@ For local manual pushes, create a Personal Access Token (PAT):
 ## Manual Release Checklist
 
 ```bash
-cd build/dockerhub
+cd scripts/build
 
 # Step 1: Login to GHCR
 echo $GITHUB_TOKEN | docker login ghcr.io -u $GITHUB_USER --password-stdin

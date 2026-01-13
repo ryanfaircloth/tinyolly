@@ -40,14 +40,23 @@ set -e
 # To push, run: ./03-push-demo.sh [version]
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$SCRIPT_DIR/../../docker-demo"
+cd "$SCRIPT_DIR/../.."  # Navigate to repo root
 
 VERSION=${1:-"latest"}
-CONTAINER_REGISTRY=${CONTAINER_REGISTRY:-"tinyolly"}
+CONTAINER_REGISTRY=${CONTAINER_REGISTRY:-"ghcr.io/ryanfaircloth/tinyolly"}
 PLATFORMS="linux/amd64,linux/arm64"
+DOCKER_BUILD_PUSH=${DOCKER_BUILD_PUSH:-"false"}
+
+if [ "$DOCKER_BUILD_PUSH" = "true" ]; then
+  BUILD_ACTION="--push"
+  ACTION_DESC="Build and Push"
+else
+  BUILD_ACTION="--load"
+  ACTION_DESC="Build (No Push)"
+fi
 
 echo "=========================================="
-echo "TinyOlly Demo - Build (No Push)"
+echo "TinyOlly Demo - $ACTION_DESC"
 echo "=========================================="
 echo "Registry: $CONTAINER_REGISTRY"
 echo "Version: $VERSION"
@@ -61,39 +70,25 @@ docker buildx create --name tinyolly-builder --use 2>/dev/null || docker buildx 
 docker buildx inspect --bootstrap
 echo ""
 
-# Build demo-frontend
+# Build unified demo image
 echo "----------------------------------------"
-echo "Building demo-frontend..."
-echo "----------------------------------------"
-docker buildx build --platform $PLATFORMS \
-  --no-cache \
-  -f Dockerfile \
-  -t $CONTAINER_REGISTRY/demo-frontend:latest \
-  -t $CONTAINER_REGISTRY/demo-frontend:$VERSION \
-  $BUILD_ACTION .
-echo "✓ Built $CONTAINER_REGISTRY/demo-frontend:$VERSION"
-echo ""
-
-# Build demo-backend
-echo "----------------------------------------"
-echo "Building demo-backend..."
+echo "Building demo (unified frontend+backend)..."
 echo "----------------------------------------"
 docker buildx build --platform $PLATFORMS \
   --no-cache \
-  -f Dockerfile.backend \
-  -t $CONTAINER_REGISTRY/demo-backend:latest \
-  -t $CONTAINER_REGISTRY/demo-backend:$VERSION \
-  $BUILD_ACTION .
-echo "✓ Built $CONTAINER_REGISTRY/demo-backend:$VERSION"
+  -f apps/demo/Dockerfile \
+  -t $CONTAINER_REGISTRY/demo:latest \
+  -t $CONTAINER_REGISTRY/demo:$VERSION \
+  $BUILD_ACTION apps/demo/
+echo "✓ Built $CONTAINER_REGISTRY/demo:$VERSION"
 echo ""
 
 echo "=========================================="
-echo "✓ Demo images built locally!"
+echo "✓ Demo image built locally!"
 echo "=========================================="
 echo ""
 echo "Built images:"
-echo "  - $CONTAINER_REGISTRY/demo-frontend:$VERSION"
-echo "  - $CONTAINER_REGISTRY/demo-backend:$VERSION"
+echo "  - $CONTAINER_REGISTRY/demo:$VERSION"
 echo ""
 echo "Next step - push to registry:"
 echo "  ./03-push-demo.sh $VERSION"

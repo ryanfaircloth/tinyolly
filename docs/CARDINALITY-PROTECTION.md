@@ -20,7 +20,7 @@ TinyOlly includes built-in protection against metric cardinality explosion with 
 
 ### Kubernetes Deployment
 
-Update Helm values in `helm/tinyolly/values.yaml`:
+Update Helm values in `charts/tinyolly/values.yaml`:
 
 ```yaml
 otlpReceiver:
@@ -31,7 +31,7 @@ otlpReceiver:
 
 Then upgrade the deployment:
 ```bash
-cd helm
+cd charts
 helm upgrade tinyolly ./tinyolly -n tinyolly
 ```
 

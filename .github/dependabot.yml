@@ -5,7 +5,89 @@
 
 version: 2
 updates:
-  - package-ecosystem: "pip" # See documentation for possible values
-    directory: "/" # Location of package manifests
+  # Main TinyOlly app (Python)
+  - package-ecosystem: "pip"
+    directory: "/apps/tinyolly"
     schedule:
-      interval: "daily"
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "tinyolly"
+
+  # OpAMP server (Go)
+  - package-ecosystem: "gomod"
+    directory: "/apps/opamp-server"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "opamp-server"
+
+  # Demo app (Python)
+  - package-ecosystem: "pip"
+    directory: "/apps/demo"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "demo"
+
+  # AI Agent demo (Python)
+  - package-ecosystem: "pip"
+    directory: "/apps/ai-agent-demo"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "ai-agent"
+
+  # Documentation (Python)
+  - package-ecosystem: "pip"
+    directory: "/docs"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "documentation"
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    labels:
+      - "dependencies"
+      - "github-actions"
+
+  # Docker base images
+  - package-ecosystem: "docker"
+    directory: "/apps/tinyolly"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "docker"
+
+  - package-ecosystem: "docker"
+    directory: "/apps/opamp-server"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "docker"
+
+  - package-ecosystem: "docker"
+    directory: "/apps/demo"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "docker"
+
+  - package-ecosystem: "docker"
+    directory: "/apps/ai-agent-demo"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "docker"

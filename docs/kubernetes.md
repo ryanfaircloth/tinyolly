@@ -32,14 +32,14 @@ git clone https://github.com/tinyolly/tinyolly
     Deploy using Helm (images will be pulled from Docker Hub automatically):
 
     ```bash
-    cd helm
+    cd charts
     ./install.sh
     ```
 
     !!! note "Local Development Build (Optional)"
         To build and deploy custom images for local development:
         ```bash
-        cd helm
+        cd charts
         ./build-and-push-local.sh <version>
         ```
 
