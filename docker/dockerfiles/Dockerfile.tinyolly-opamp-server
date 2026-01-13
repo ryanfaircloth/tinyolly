@@ -18,8 +18,8 @@ RUN go mod download && go mod tidy
 # Build the binary
 RUN CGO_ENABLED=0 GOOS=linux go build -o /tinyolly-opamp-server .
 
-# Runtime stage - using distroless for minimal attack surface
-FROM gcr.io/distroless/static-debian12:nonroot
+# Runtime stage
+FROM alpine:3.23
 
 COPY --from=builder /tinyolly-opamp-server /tinyolly-opamp-server
 
@@ -28,4 +28,4 @@ EXPOSE 4320
 # HTTP REST API port
 EXPOSE 4321
 
-ENTRYPOINT ["/tinyolly-opamp-server"]
+CMD ["/tinyolly-opamp-server"]
