@@ -26,3 +26,6 @@ terraform.tfstate.backup
 *.tgz
 .kind/tinyolly-config
 helm/values-local-dev.yaml
+
+# MkDocs generated site
+site/
