@@ -16,7 +16,8 @@ spec:
   template:
     metadata:
       annotations:
-        {{- if .Values.instrumentation.enabled }}
+        {{- if and .Values.instrumentation.enabled .Values.instrumentation.selfObservability }}
+        # Self-observability: TinyOlly UI instruments itself (demo mode)
         instrumentation.opentelemetry.io/inject-python: "{{ .Release.Namespace }}/{{ .Values.instrumentation.name }}"
         {{- end }}
         {{- with .Values.ui.podAnnotations }}

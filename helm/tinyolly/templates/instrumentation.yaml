@@ -19,6 +19,12 @@ spec:
   propagators:
     {{- toYaml .Values.instrumentation.propagators | nindent 4 }}
   
+  # Sampler configuration - always sample at SDK level, let gateway do tail_sampling
+  {{- if .Values.instrumentation.sampler }}
+  sampler:
+    {{- toYaml .Values.instrumentation.sampler | nindent 4 }}
+  {{- end }}
+  
   # Resource attributes applied to all telemetry
   {{- if .Values.instrumentation.resource }}
   resource:

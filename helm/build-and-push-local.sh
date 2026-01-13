@@ -64,7 +64,7 @@ $CONTAINER_CMD build \
 echo "✓ TinyOlly image built"
 echo ""
 
-echo "Step 2/2: Building OpAMP Server"
+echo "Step 2/4: Building OpAMP Server"
 echo "-----------------------------------------------------------"
 $CONTAINER_CMD build \
   -f dockerfiles/Dockerfile.tinyolly-opamp-server \
@@ -75,6 +75,18 @@ $CONTAINER_CMD build \
   -t $EXTERNAL_REGISTRY/tinyolly/opamp-server:$VERSION \
   .
 echo "✓ OpAMP Server image built"
+echo ""
+
+echo "Step 3/3: Building Unified Demo Image"
+echo "-----------------------------------------------------------"
+$CONTAINER_CMD build \
+  -f dockerfiles/Dockerfile.demo \
+  -t tinyolly/demo:latest \
+  -t tinyolly/demo:$VERSION \
+  -t $EXTERNAL_REGISTRY/tinyolly/demo:latest \
+  -t $EXTERNAL_REGISTRY/tinyolly/demo:$VERSION \
+  "$SCRIPT_DIR/../docker-demo"
+echo "✓ Unified Demo image built"
 echo ""
 
 echo "📤 Pushing Container Images to Registry"
@@ -91,6 +103,12 @@ echo "Pushing OpAMP Server..."
 $CONTAINER_CMD push $PUSH_FLAGS $EXTERNAL_REGISTRY/tinyolly/opamp-server:latest
 $CONTAINER_CMD push $PUSH_FLAGS $EXTERNAL_REGISTRY/tinyolly/opamp-server:$VERSION
 echo "✓ OpAMP Server pushed"
+echo ""
+
+echo "Pushing Unified Demo..."
+$CONTAINER_CMD push $PUSH_FLAGS $EXTERNAL_REGISTRY/tinyolly/demo:latest
+$CONTAINER_CMD push $PUSH_FLAGS $EXTERNAL_REGISTRY/tinyolly/demo:$VERSION
+echo "✓ Unified Demo pushed"
 echo ""
 
 # ==========================================

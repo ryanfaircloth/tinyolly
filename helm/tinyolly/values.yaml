@@ -59,8 +59,8 @@ agentCollector:
             endpoint: 0.0.0.0:4318
     processors:
       batch:
-        timeout: 1s
-        send_batch_size: 1024
+        timeout: 5s
+        send_batch_size: 256
     exporters:
       loadbalancing/gateway:
         resolver:
@@ -106,11 +106,11 @@ gatewayCollector:
   # -- Resource limits and requests for the gateway collector
   resources:
     limits:
-      cpu: 1000m
+
       memory: 1Gi
     requests:
       cpu: 200m
-      memory: 256Mi
+      memory: 512Mi
   
   # -- Full collector configuration
   config:
@@ -123,8 +123,52 @@ gatewayCollector:
             endpoint: 0.0.0.0:4318
     processors:
       batch:
-        timeout: 1s
-        send_batch_size: 1024
+        timeout: 5s
+        send_batch_size: 256
+      tail_sampling:
+        # Wait to see all spans before deciding
+        decision_wait: 10s
+        num_traces: 50000
+        expected_new_traces_per_sec: 100
+        policies:
+          # Keep ALL error traces (all services)
+          - name: errors
+            type: status_code
+            status_code:
+              status_codes: [ERROR]
+          # Keep ALL HTTP 4xx/5xx (all services)
+          - name: http-errors
+            type: string_attribute
+            string_attribute:
+              key: http.status_code
+              values: ["4[0-9]{2}", "5[0-9]{2}"]
+              enabled_regex_matching: true
+          # Keep ALL demo service traces (no sampling)
+          - name: keep-demos
+            type: string_attribute
+            string_attribute:
+              key: service.name
+              values: ["demo-.*", "otel-demo-.*"]
+              enabled_regex_matching: true
+          # Sample TinyOlly success traces at 5% (only TinyOlly services)
+          - name: sample-tinyolly-success
+            type: and
+            and:
+              and_sub_policy:
+                - name: tinyolly-services
+                  type: string_attribute
+                  string_attribute:
+                    key: service.name
+                    values: ["tinyolly-.*"]
+                    enabled_regex_matching: true
+                - name: not-error
+                  type: status_code
+                  status_code:
+                    status_codes: [OK, UNSET]
+                - name: probabilistic
+                  type: probabilistic
+                  probabilistic:
+                    sampling_percentage: 5.0
     exporters:
       otlp/to:
         endpoint: tinyolly-otlp-receiver.tinyolly.svc.cluster.local:4343
@@ -134,7 +178,7 @@ gatewayCollector:
       pipelines:
         traces:
           receivers: [otlp]
-          processors: [batch]
+          processors: [tail_sampling, batch]
           exporters: [otlp/to]
         metrics:
           receivers: [otlp]
@@ -162,6 +206,10 @@ instrumentation:
   # -- Enable TinyOlly Instrumentation Custom Resource (managed by OpenTelemetry Operator)
   enabled: true
   
+  # -- Enable self-observability: instrument TinyOlly UI and OTLP receiver
+  # Use sampling configuration to control overhead while maintaining error visibility
+  selfObservability: true
+  
   # -- Name of the Instrumentation CR
   name: python-instrumentation
   
@@ -174,6 +222,11 @@ instrumentation:
   propagators:
     - tracecontext
     - baggage
+  
+  # -- Sampler configuration - always sample at SDK, let gateway do tail_sampling
+  sampler:
+    # Always on sampler - create all traces, gateway collector does tail_sampling
+    type: always_on
   
   # -- Resource attributes configuration
   resource:
@@ -311,10 +364,9 @@ ui:
   # -- Resource limits and requests
   resources:
     limits:
-      cpu: 1000m
       memory: 1Gi
     requests:
-      cpu: 100m
+      cpu: 200m
       memory: 256Mi
   
   # -- Liveness probe configuration
@@ -518,9 +570,10 @@ otlpReceiver:
   
   # -- Resource limits and requests
   resources:
-    limits: {}
+    limits:
+      memory: 512Mi
     requests:
-      cpu: 100m
+      cpu: 200m
       memory: 256Mi
   
   # -- Liveness probe configuration

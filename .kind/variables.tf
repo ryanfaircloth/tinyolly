@@ -15,3 +15,28 @@ variable "bootstrap" {
   type        = bool
   default     = false
 }
+
+# Demo application settings
+variable "custom_demo_frontend_image" {
+  description = "Custom demo frontend image repository (unified demo image)"
+  type        = string
+  default     = "docker-registry.registry.svc.cluster.local:5000/tinyolly/demo"
+}
+
+variable "custom_demo_frontend_tag" {
+  description = "Custom demo frontend image tag"
+  type        = string
+  default     = "latest"
+}
+
+variable "custom_demo_backend_image" {
+  description = "Custom demo backend image repository (unified demo image)"
+  type        = string
+  default     = "docker-registry.registry.svc.cluster.local:5000/tinyolly/demo"
+}
+
+variable "custom_demo_backend_tag" {
+  description = "Custom demo backend image tag"
+  type        = string
+  default     = "latest"
+}

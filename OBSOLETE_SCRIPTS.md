@@ -49,6 +49,65 @@ cd build/local
 
 # NEW (KIND + Helm + ArgoCD)
 cd helm
+./build-and-push-local.sh v2.1.x-test
+```
+
+### Old K8s Demo Scripts
+- `k8s-demo/02-deploy.sh` - **OBSOLETE**
+- `k8s-demo/03-cleanup.sh` - **OBSOLETE**
+- `k8s-demo/04-rebuild-demo.sh` - **OBSOLETE**
+- `k8s-demo/generate-traffic.sh` - **OBSOLETE**
+- `k8s-otel-demo/01-deploy-otel-demo-helm.sh` - **OBSOLETE**
+- `k8s-otel-demo/02-cleanup-otel-demo-helm.sh` - **OBSOLETE**
+
+**Reason**: Replaced by unified `helm/tinyolly-demos` Helm chart which:
+- Deploys both custom demo and OTel Demo via single chart
+- Integrates with ArgoCD for GitOps
+- Supports HTTPRoutes for ingress
+- Provides enable/disable flags per demo
+- Includes local registry support
+
+**Migration Path**:
+```bash
+# OLD (Custom Demo)
+cd k8s-demo
+./02-deploy.sh
+
+# NEW (Helm)
+cd helm
+./build-and-push-local.sh v2.1.x-demo  # Build images
+# Then deploy via ArgoCD or directly:
+helm install tinyolly-demos ./tinyolly-demos \
+  --namespace tinyolly-demos --create-namespace
+
+# Or via Terraform
+cd .kind
+terraform apply -var="custom_demo_enabled=true"
+```
+
+**Migration Path for OTel Demo**:
+```bash
+# OLD (OTel Demo)
+cd k8s-otel-demo
+./01-deploy-otel-demo-helm.sh
+
+# NEW (Helm)
+helm install tinyolly-demos helm/tinyolly-demos \
+  --set customDemo.enabled=false \
+  --set otelDemo.enabled=true
+
+# Or via Terraform
+cd .kind
+terraform apply -var="otel_demo_enabled=true" -var="custom_demo_enabled=false"
+```
+
+### Old K8s Core Scripts
+- `k8s/05-rebuild-local-changes.sh` - **OBSOLETE**
+- `k8s/06-rebuild-all-local.sh` - **OBSOLETE**
+- `k8s/07-deploy-local-images.sh` - **OBSOLETE**
+
+**Reason**: Replaced by `helm/build-and-push-local.sh`
+cd helm
 ./build-and-push-local.sh v2.1.x-description
 cd ../.kind
 terraform apply -replace='kubectl_manifest.observability_applications["observability/tinyolly.yaml"]' -auto-approve

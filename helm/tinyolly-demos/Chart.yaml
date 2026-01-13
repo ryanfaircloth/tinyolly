@@ -1,0 +1,21 @@
+apiVersion: v2
+name: tinyolly-demos
+description: Demo applications for TinyOlly observability platform
+type: application
+version: 0.1.5
+appVersion: "latest"
+keywords:
+  - observability
+  - opentelemetry
+  - demo
+  - tracing
+home: https://github.com/tinyolly/tinyolly
+sources:
+  - https://github.com/tinyolly/tinyolly
+maintainers:
+  - name: TinyOlly Team
+    email: maintainers@tinyolly.io
+annotations:
+  org.opencontainers.image.title: "TinyOlly Demos"
+  org.opencontainers.image.description: "Demo applications for TinyOlly"
+  org.opencontainers.image.source: "https://github.com/tinyolly/tinyolly"

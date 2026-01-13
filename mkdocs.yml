@@ -61,9 +61,14 @@ nav:
       - Docker: docker.md
       - Kubernetes: kubernetes.md
       - OpenTelemetry Collector: otel-collector.md
-  - Demos:
+  - Demo Applications:
+      - Overview: demos/index.md
+      - Custom Demo: demos/custom-demo.md
+      - OpenTelemetry Demo: demos/otel-demo.md
+  - Advanced Demos:
       - eBPF Zero-Code Tracing: ebpf.md
       - AI Agent with Ollama: ai-agent.md
+  - Metrics: metrics.md
   - API Reference:
       - REST API & Examples: api.md
   - Advanced:

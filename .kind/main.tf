@@ -18,3 +18,14 @@ module "main" {
   mgmt_https_nodeport              = module.kind_cluster.mgmt_https_nodeport
   bootstrap                        = var.bootstrap
 }
+
+module "tinyolly" {
+  source                     = "./modules/tinyolly"
+  gateway_dns_suffix         = var.gateway_dns_suffix
+  custom_demo_frontend_image = var.custom_demo_frontend_image
+  custom_demo_frontend_tag   = var.custom_demo_frontend_tag
+  custom_demo_backend_image  = var.custom_demo_backend_image
+  custom_demo_backend_tag    = var.custom_demo_backend_tag
+
+  depends_on = [module.main]
+}

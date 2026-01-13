@@ -31,7 +31,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-# Generate traffic to demo applications
+# Generate traffic to custom demo applications (demo-frontend and demo-backend)
 
 # Colors for output
 GREEN='\033[0;32m'
@@ -40,26 +40,27 @@ BLUE='\033[0;34m'
 CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
-# Demo app URL
-FRONTEND_URL="http://localhost:5001"
+# Demo app URL - uses HTTPRoute FQDN
+FRONTEND_URL="https://demo-frontend.tinyolly.test:49443"
 
 echo -e "${BLUE}========================================${NC}"
-echo -e "${BLUE}TinyOlly Demo Traffic Generator${NC}"
+echo -e "${BLUE}TinyOlly Custom Demo Traffic Generator${NC}"
 echo -e "${BLUE}========================================${NC}"
 echo ""
 
 # Check if frontend is accessible
-if ! curl -s -o /dev/null -w "%{http_code}" "$FRONTEND_URL/" | grep -q "200"; then
+if ! curl -s -k -o /dev/null -w "%{http_code}" "$FRONTEND_URL/" | grep -q "200"; then
     echo -e "${YELLOW}⚠ Frontend not accessible at ${FRONTEND_URL}${NC}"
     echo -e "${YELLOW}Make sure:${NC}"
-    echo -e "  1. Demo apps are deployed: ${CYAN}./deploy.sh${NC}"
-    echo -e "  2. Minikube tunnel is running: ${CYAN}minikube tunnel${NC}"
+    echo -e "  1. Custom demo is deployed via Helm/ArgoCD"
+    echo -e "  2. HTTPRoute is configured: ${CYAN}kubectl get httproute demo-frontend -n tinyolly-demos${NC}"
+    echo -e "  3. Envoy Gateway is running: ${CYAN}kubectl get gateway cluster-gateway -n envoy-gateway-system${NC}"
     echo ""
     echo -e "${YELLOW}Attempting to generate traffic anyway...${NC}"
     echo ""
 fi
 
-echo -e "${CYAN}Generating traffic to demo application...${NC}"
+echo -e "${CYAN}Generating traffic to custom demo application...${NC}"
 echo -e "${YELLOW}Press Ctrl+C to stop${NC}"
 echo ""
 
@@ -74,22 +75,22 @@ while true; do
         # 10% - Error endpoint
         ENDPOINT="/error"
         echo -e "${YELLOW}[$REQUEST_COUNT] Calling ${ENDPOINT}${NC}"
-        curl -s "$FRONTEND_URL$ENDPOINT" > /dev/null
+        curl -s -k "$FRONTEND_URL$ENDPOINT" > /dev/null
     elif [ $RAND -lt 30 ]; then
         # 20% - Calculate endpoint
         ENDPOINT="/calculate"
         echo -e "${GREEN}[$REQUEST_COUNT] Calling ${ENDPOINT}${NC}"
-        curl -s "$FRONTEND_URL$ENDPOINT" > /dev/null
+        curl -s -k "$FRONTEND_URL$ENDPOINT" > /dev/null
     elif [ $RAND -lt 50 ]; then
         # 20% - Hello endpoint
         ENDPOINT="/hello"
         echo -e "${GREEN}[$REQUEST_COUNT] Calling ${ENDPOINT}${NC}"
-        curl -s "$FRONTEND_URL$ENDPOINT" > /dev/null
+        curl -s -k "$FRONTEND_URL$ENDPOINT" > /dev/null
     else
         # 50% - Process order (complex multi-service trace)
         ENDPOINT="/process-order"
         echo -e "${CYAN}[$REQUEST_COUNT] Calling ${ENDPOINT} (distributed trace)${NC}"
-        RESPONSE=$(curl -s "$FRONTEND_URL$ENDPOINT")
+        RESPONSE=$(curl -s -k "$FRONTEND_URL$ENDPOINT")
         
         # Show order status
         if echo "$RESPONSE" | grep -q '"status":"success"'; then
@@ -106,4 +107,3 @@ while true; do
     DELAY=$(awk -v min=0.5 -v max=2.0 'BEGIN{srand(); print min+rand()*(max-min)}')
     sleep $DELAY
 done
-
