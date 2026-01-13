@@ -6,11 +6,8 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Auto-discover and install all applicable instrumentation libraries
-RUN opentelemetry-bootstrap -a install
-
 COPY agent.py .
 
-# Use opentelemetry-instrument to wrap the application
-# All configuration via environment variables - true zero-code!
-CMD ["opentelemetry-instrument", "python", "-u", "agent.py"]
+# Run directly - instrumentation is initialized in code
+# Works with both manual setup and OTel operator injection
+CMD ["python", "-u", "agent.py"]

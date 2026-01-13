@@ -28,17 +28,21 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# AI Agent Demo - Zero-Code Auto-Instrumentation
-# NO OpenTelemetry imports needed - opentelemetry-instrument handles everything!
+# AI Agent Demo - Standalone Script with Manual Tracing
+# Creates root spans since there's no incoming HTTP requests
 
 import time
 import random
 import os
 import logging
 from ollama import Client
+from opentelemetry import trace
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# Get tracer for creating manual spans (operator configures the provider)
+tracer = trace.get_tracer(__name__)
 
 OLLAMA_HOST = os.getenv("OLLAMA_HOST", "http://ollama:11434")
 client = Client(host=OLLAMA_HOST)
@@ -54,19 +58,22 @@ PROMPTS = [
 
 
 def run_agent_workflow():
-    prompt_text = random.choice(PROMPTS)
-    logger.info(f"Calling Ollama with prompt: {prompt_text}")
+    # Create root span for this workflow iteration
+    with tracer.start_as_current_span("agent_workflow") as span:
+        prompt_text = random.choice(PROMPTS)
+        span.set_attribute("prompt", prompt_text)
+        logger.info(f"Calling Ollama with prompt: {prompt_text}")
 
-    # This call is AUTO-INSTRUMENTED by opentelemetry-instrumentation-ollama
-    # Spans with gen_ai.* attributes are created automatically!
-    response = client.chat(
-        model="tinyllama",
-        messages=[{"role": "user", "content": prompt_text}]
-    )
+        # This call is AUTO-INSTRUMENTED - child span created automatically
+        response = client.chat(
+            model="tinyllama",
+            messages=[{"role": "user", "content": prompt_text}]
+        )
 
-    content = response["message"]["content"]
-    logger.info(f"Got response: {content[:100]}...")
-    return content
+        content = response["message"]["content"]
+        span.set_attribute("response_length", len(content))
+        logger.info(f"Got response: {content[:100]}...")
+        return content
 
 
 if __name__ == "__main__":

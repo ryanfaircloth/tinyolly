@@ -1,9 +1,6 @@
-# Application dependency
+# Application dependencies
 ollama
 
-# OpenTelemetry zero-code instrumentation
-opentelemetry-distro
-opentelemetry-exporter-otlp
-
-# GenAI instrumentation (auto-installed by bootstrap, but explicit for clarity)
+# OTel packages for manual span creation (operator provides the rest)
+opentelemetry-api
 opentelemetry-instrumentation-ollama

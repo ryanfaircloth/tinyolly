@@ -27,3 +27,15 @@ variable "custom_demo_backend_tag" {
   type        = string
   default     = "latest"
 }
+
+variable "ai_agent_image" {
+  description = "AI agent demo image"
+  type        = string
+  default     = "docker-registry.registry.svc.cluster.local:5000/tinyolly/ai-agent-demo"
+}
+
+variable "ai_agent_tag" {
+  description = "AI agent demo tag"
+  type        = string
+  default     = "latest"
+}

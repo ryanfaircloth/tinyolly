@@ -148,9 +148,21 @@ gatewayCollector:
             type: string_attribute
             string_attribute:
               key: service.name
-              values: ["demo-.*", "otel-demo-.*"]
+              values: ["demo-.*", "otel-demo-.*", "ai-agent.*"]
               enabled_regex_matching: true
-          # Sample TinyOlly success traces at 5% (only TinyOlly services)
+          # Keep ALL non-TinyOlly service traces (all external apps/demos)
+          - name: keep-non-tinyolly
+            type: and
+            and:
+              and_sub_policy:
+                - name: not-tinyolly
+                  type: string_attribute
+                  string_attribute:
+                    key: service.name
+                    values: ["tinyolly-.*"]
+                    enabled_regex_matching: true
+                    invert_match: true
+          # Sample TinyOlly success traces at 5% (only TinyOlly internal services)
           - name: sample-tinyolly-success
             type: and
             and:

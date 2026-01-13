@@ -76,25 +76,12 @@ export async function loadAISessions() {
         const listResponse = await fetch('/api/traces?limit=50');
         const traceList = await listResponse.json();
 
-        // Filter to AI traces
-        const aiTraceIds = traceList
-            .filter(t => t.service_name === 'ai-agent-demo' ||
-                        (t.root_span_name && t.root_span_name.includes('ollama')))
-            .map(t => t.trace_id);
-
-        if (aiTraceIds.length === 0) {
-            aiSessions = [];
-            renderAISessions();
-            updateAIMetrics();
-            return;
-        }
-
         // Fetch full details (limit to 20 for perf)
         const traceDetails = await Promise.all(
-            aiTraceIds.slice(0, 20).map(id => fetchTraceDetail(id))
+            traceList.slice(0, 20).map(t => fetchTraceDetail(t.trace_id))
         );
 
-        // Filter traces with gen_ai attributes
+        // Filter to traces with gen_ai attributes only
         aiSessions = traceDetails.filter(trace => {
             if (!trace || !trace.spans) return false;
             return trace.spans.some(hasGenAiAttrs);
