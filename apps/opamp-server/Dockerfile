@@ -7,13 +7,13 @@ WORKDIR /app
 RUN apk add --no-cache git
 
 # Copy go mod files
-COPY go.mod ./
+COPY go.mod go.sum ./
 
-# Copy source code (needed for go mod tidy to resolve imports)
+# Download dependencies
+RUN go mod download
+
+# Copy source code
 COPY *.go ./
-
-# Download dependencies and generate go.sum
-RUN go mod download && go mod tidy
 
 # Build the binary
 RUN CGO_ENABLED=0 GOOS=linux go build -o /tinyolly-opamp-server .
