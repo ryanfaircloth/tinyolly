@@ -41,9 +41,9 @@
         "Dockerfile"
       ]
     },
-    "apps/ai-agent-demo": {
-      "component": "ai-agent-demo",
-      "package-name": "ai-agent-demo",
+    "apps/demo-otel-agent": {
+      "component": "demo-otel-agent",
+      "package-name": "demo-otel-agent",
       "release-type": "python",
       "include-component-in-tag": true,
       "changelog-path": "CHANGELOG.md",
@@ -69,9 +69,9 @@
       "release-type": "helm",
       "changelog-path": "CHANGELOG.md"
     },
-    "charts/tinyolly-ai-agent": {
-      "component": "helm-ai-agent",
-      "package-name": "helm-tinyolly-ai-agent",
+    "charts/tinyolly-demo-otel-agent": {
+      "component": "helm-demo-otel-agent",
+      "package-name": "helm-tinyolly-demo-otel-agent",
       "include-component-in-tag": true,
       "release-type": "helm",
       "changelog-path": "CHANGELOG.md"

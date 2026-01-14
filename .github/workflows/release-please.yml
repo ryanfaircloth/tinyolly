@@ -44,10 +44,10 @@ jobs:
             path: apps/demo
             dockerfile: apps/demo/Dockerfile
             image: ghcr.io/tinyolly/demo
-          - component: ai-agent-demo
-            path: apps/ai-agent-demo
-            dockerfile: apps/ai-agent-demo/Dockerfile
-            image: ghcr.io/tinyolly/ai-agent-demo
+          - component: demo-otel-agent
+            path: apps/demo-otel-agent
+            dockerfile: apps/demo-otel-agent/Dockerfile
+            image: ghcr.io/tinyolly/demo-otel-agent
     steps:
       - uses: actions/checkout@v4
 
@@ -99,7 +99,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        chart: [tinyolly, tinyolly-demos, tinyolly-ai-agent]
+        chart: [tinyolly, tinyolly-demos, tinyolly-demo-otel-agent]
     steps:
       - uses: actions/checkout@v4
 
@@ -151,10 +151,10 @@ jobs:
             fi
           fi
           
-          # For ai-agent chart, update ai-agent-demo image tag
-          if [ "${{ matrix.chart }}" = "tinyolly-ai-agent" ]; then
-            if [ -f "../../apps/ai-agent-demo/VERSION" ]; then
-              AI_VERSION=$(cat ../../apps/ai-agent-demo/VERSION)
+          # For demo-otel-agent chart, update demo-otel-agent image tag
+          if [ "${{ matrix.chart }}" = "tinyolly-demo-otel-agent" ]; then
+            if [ -f "../../apps/demo-otel-agent/VERSION" ]; then
+              AI_VERSION=$(cat ../../apps/demo-otel-agent/VERSION)
               yq eval -i ".aiAgent.image.tag = \"v${AI_VERSION}\"" values.yaml
             fi
           fi

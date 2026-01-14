@@ -85,7 +85,7 @@ updates:
       - "docker"
 
   - package-ecosystem: "docker"
-    directory: "/apps/ai-agent-demo"
+    directory: "/apps/demo-otel-agent"
     schedule:
       interval: "weekly"
     labels:

@@ -54,11 +54,11 @@ case "$CHART_NAME" in
         fi
         ;;
         
-    "tinyolly-ai-agent")
-        if [ -f "$REPO_ROOT/apps/ai-agent-demo/VERSION" ]; then
-            AI_VERSION=$(cat "$REPO_ROOT/apps/ai-agent-demo/VERSION")
-            echo "  ai-agent-demo: v$AI_VERSION"
-            sed -i.bak "s|tag: .*# ai-agent|tag: \"v${AI_VERSION}\" # ai-agent|" "$CHART_PATH/values.yaml"
+    "tinyolly-demo-otel-agent")
+        if [ -f "$REPO_ROOT/apps/demo-otel-agent/VERSION" ]; then
+            AI_VERSION=$(cat "$REPO_ROOT/apps/demo-otel-agent/VERSION")
+            echo "  demo-otel-agent: v$AI_VERSION"
+            sed -i.bak "s|tag: .*# demo-otel-agent|tag: \"v${AI_VERSION}\" # demo-otel-agent|" "$CHART_PATH/values.yaml"
             sed -i.bak "s|^appVersion: .*|appVersion: \"v${AI_VERSION}\"|" "$CHART_PATH/Chart.yaml"
         fi
         ;;

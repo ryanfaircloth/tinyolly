@@ -15,10 +15,10 @@ Release-please is now configured for TinyOlly's monorepo with automated semantic
 - ✅ `apps/tinyolly/VERSION` → 2.2.2
 - ✅ `apps/opamp-server/VERSION` → 1.0.0
 - ✅ `apps/demo/VERSION` → 0.5.0
-- ✅ `apps/ai-agent-demo/VERSION` → 0.3.0
-- ✅ `charts/tinyolly/Chart.yaml` → v0.1.1 / appVersion v2.2.2
+- ✅ `apps/demo-otel-agent/VERSION` → 0.3.0
+- ✅ `charts/tinyolly/Chart.yaml` → v0.1.1 / appVersion v30.0.1
 - ✅ `charts/tinyolly-demos/Chart.yaml` → v0.1.5 / appVersion v0.5.0
-- ✅ `charts/tinyolly-ai-agent/Chart.yaml` → v0.1.0 / appVersion v0.3.0
+- ✅ `charts/tinyolly-demo-otel-agent/Chart.yaml` → v0.1.0 / appVersion v0.3.0
 
 ### Documentation & Scripts
 - ✅ `docs/release-process.md` - Complete usage guide
@@ -53,10 +53,10 @@ git push origin main
 | tinyolly | Python | 2.2.2 | `tinyolly-v2.2.2` |
 | opamp-server | Go | 1.0.0 | `opamp-server-v1.0.0` |
 | demo | Python | 0.5.0 | `demo-v0.5.0` |
-| ai-agent-demo | Python | 0.3.0 | `ai-agent-demo-v0.3.0` |
+| demo-otel-agent | Python | 0.3.0 | `demo-otel-agent-v0.3.0` |
 | helm-tinyolly | Helm | 0.1.1 | `helm-tinyolly-v0.1.1` |
 | helm-demos | Helm | 0.1.5 | `helm-demos-v0.1.5` |
-| helm-ai-agent | Helm | 0.1.0 | `helm-ai-agent-v0.1.0` |
+| helm-demo-otel-agent | Helm | 0.1.0 | `helm-demo-otel-agent-v0.1.0` |
 
 ## Conventional Commit Examples
 

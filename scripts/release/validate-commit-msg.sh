@@ -32,7 +32,7 @@ if ! echo "$COMMIT_MSG" | head -n1 | grep -qE "$PATTERN"; then
     echo "  docs: update API documentation"
     echo ""
     echo "Types: feat, fix, docs, style, refactor, perf, test, build, ci, chore, revert"
-    echo "Scopes: tinyolly, opamp, demo, ai-agent, helm/tinyolly, helm/demos, helm/ai-agent"
+    echo "Scopes: tinyolly, opamp, demo, demo-otel-agent, helm/tinyolly, helm/demos, helm/demo-otel-agent"
     echo ""
     echo "Your message:"
     echo "  $COMMIT_MSG"

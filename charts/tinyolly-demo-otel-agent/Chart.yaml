@@ -1,5 +1,5 @@
 apiVersion: v2
-name: tinyolly-ai-agent
+name: tinyolly-demo-otel-agent
 description: AI Agent demo with Ollama for TinyOlly observability platform
 type: application
 version: 0.1.0
