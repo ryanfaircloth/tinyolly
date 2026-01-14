@@ -13,7 +13,7 @@
         "Dockerfile",
         {
           "type": "generic",
-          "path": "../.kind/modules/main/argocd-applications/observability/tinyolly.yaml",
+          "path": ".kind/modules/main/argocd-applications/observability/tinyolly.yaml",
           "glob": false
         }
       ]
@@ -34,7 +34,7 @@
         "Dockerfile",
         {
           "type": "generic",
-          "path": "../.kind/modules/main/argocd-applications/observability/tinyolly.yaml",
+          "path": ".kind/modules/main/argocd-applications/observability/tinyolly.yaml",
           "glob": false
         }
       ]
@@ -51,7 +51,7 @@
         "Dockerfile",
         {
           "type": "generic",
-          "path": "../.kind/modules/tinyolly/argocd-applications/observability/tinyolly-demos.yaml",
+          "path": ".kind/modules/tinyolly/argocd-applications/observability/tinyolly-demos.yaml",
           "glob": false
         }
       ]
@@ -68,7 +68,7 @@
         "Dockerfile",
         {
           "type": "generic",
-          "path": "../.kind/modules/tinyolly/argocd-applications/observability/tinyolly-demo-otel-agent.yaml",
+          "path": ".kind/modules/tinyolly/argocd-applications/observability/tinyolly-demo-otel-agent.yaml",
           "glob": false
         }
       ]
