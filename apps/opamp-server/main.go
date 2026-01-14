@@ -34,6 +34,8 @@
 
 package main
 
+var version = "1.0.0"
+
 import (
 	"context"
 	"encoding/hex"

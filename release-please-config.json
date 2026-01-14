@@ -1,0 +1,137 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "packages": {
+    "apps/tinyolly": {
+      "component": "tinyolly",
+      "package-name": "tinyolly",
+      "release-type": "python",
+      "changelog-path": "CHANGELOG.md",
+      "include-component-in-tag": false,
+      "extra-files": [
+        "app/__init__.py",
+        "VERSION",
+        "Dockerfile"
+      ]
+    },
+    "apps/opamp-server": {
+      "component": "opamp-server",
+      "package-name": "opamp-server",
+      "release-type": "simple",
+      "include-component-in-tag": true,
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "generic",
+          "path": "main.go",
+          "glob": false
+        },
+        "VERSION",
+        "Dockerfile"
+      ]
+    },
+    "apps/demo": {
+      "component": "demo",
+      "package-name": "demo",
+      "release-type": "python",
+      "include-component-in-tag": true,
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        "__init__.py",
+        "VERSION",
+        "Dockerfile"
+      ]
+    },
+    "apps/ai-agent-demo": {
+      "component": "ai-agent-demo",
+      "package-name": "ai-agent-demo",
+      "release-type": "python",
+      "include-component-in-tag": true,
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        "__init__.py",
+        "VERSION",
+        "Dockerfile"
+      ]
+    },
+    "charts/tinyolly": {
+      "component": "helm-tinyolly",
+      "package-name": "helm-tinyolly",
+      "include-component-in-tag": true,
+      "release-type": "helm",
+      "changelog-path": "CHANGELOG.md",
+      "bump-minor-pre-major": true,
+      "bump-patch-for-minor-pre-major": true
+    },
+    "charts/tinyolly-demos": {
+      "component": "helm-demos",
+      "package-name": "helm-tinyolly-demos",
+      "include-component-in-tag": true,
+      "release-type": "helm",
+      "changelog-path": "CHANGELOG.md"
+    },
+    "charts/tinyolly-ai-agent": {
+      "component": "helm-ai-agent",
+      "package-name": "helm-tinyolly-ai-agent",
+      "include-component-in-tag": true,
+      "release-type": "helm",
+      "changelog-path": "CHANGELOG.md"
+    }
+  },
+  "bootstrap-sha": "main",
+  "release-search-depth": 100,
+  "separate-pull-requests": false,
+  "group-pull-request-title-pattern": "chore: release ${version}",
+  "changelog-sections": [
+    {
+      "type": "feat",
+      "section": "Features"
+    },
+    {
+      "type": "fix",
+      "section": "Bug Fixes"
+    },
+    {
+      "type": "perf",
+      "section": "Performance Improvements"
+    },
+    {
+      "type": "revert",
+      "section": "Reverts"
+    },
+    {
+      "type": "docs",
+      "section": "Documentation",
+      "hidden": false
+    },
+    {
+      "type": "style",
+      "section": "Styles",
+      "hidden": true
+    },
+    {
+      "type": "chore",
+      "section": "Miscellaneous Chores",
+      "hidden": true
+    },
+    {
+      "type": "refactor",
+      "section": "Code Refactoring",
+      "hidden": false
+    },
+    {
+      "type": "test",
+      "section": "Tests",
+      "hidden": true
+    },
+    {
+      "type": "build",
+      "section": "Build System",
+      "hidden": true
+    },
+    {
+      "type": "ci",
+      "section": "Continuous Integration",
+      "hidden": true
+    }
+  ]
+}

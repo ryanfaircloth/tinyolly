@@ -2,8 +2,8 @@ apiVersion: v2
 name: tinyolly
 description: A lightweight, desktop-first OpenTelemetry observability platform for local development
 type: application
-version: 0.1.1-v2.2.2-genai-filter
-appVersion: "latest"
+version: 0.1.1
+appVersion: "v30.0.1"
 keywords:
   - observability
   - opentelemetry

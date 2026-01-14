@@ -30,6 +30,8 @@
 
 """TinyOlly UI Application Package"""
 
+__version__ = "30.0.1"
+
 from .main import app
 
 __all__ = ["app"]
