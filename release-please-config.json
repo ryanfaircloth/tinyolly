@@ -82,7 +82,7 @@
         "Dockerfile",
         {
           "type": "generic",
-          "path": ".kind/modules/tinyolly/argocd-applications/observability/tinyolly-demos.yaml",
+          "path": ".kind/modules/ollyscale/argocd-applications/observability/ollyscale-demos.yaml",
           "glob": false
         },
         {
@@ -104,7 +104,7 @@
         "Dockerfile",
         {
           "type": "generic",
-          "path": ".kind/modules/tinyolly/argocd-applications/observability/tinyolly-demo-otel-agent.yaml",
+          "path": ".kind/modules/ollyscale/argocd-applications/observability/ollyscale-otel-agent.yaml",
           "glob": false
         },
         {
