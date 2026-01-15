@@ -2,7 +2,7 @@
 
 ## What Was Implemented
 
-Release-please is now configured for TinyOlly's monorepo with automated semantic versioning and coordinated releases.
+Release-please is now configured for ollyScale's monorepo with automated semantic versioning and coordinated releases.
 
 ## Files Created/Modified
 
@@ -14,11 +14,11 @@ Release-please is now configured for TinyOlly's monorepo with automated semantic
 
 ### Version Tracking Files
 
-- ✅ `apps/tinyolly/VERSION` → 2.2.2
+- ✅ `apps/ollyscale/VERSION` → 2.2.2
 - ✅ `.release-please-manifest.json` - Single source of truth for all versions
-- ✅ `charts/tinyolly/Chart.yaml` → appVersion synced from manifest
-- ✅ `charts/tinyolly-demos/Chart.yaml` → appVersion synced from manifest
-- ✅ `charts/tinyolly-demo-otel-agent/Chart.yaml` → appVersion synced from manifest
+- ✅ `charts/ollyscale/Chart.yaml` → appVersion synced from manifest
+- ✅ `charts/ollyscale-demos/Chart.yaml` → appVersion synced from manifest
+- ✅ `charts/ollyscale-otel-agent/Chart.yaml` → appVersion synced from manifest
 
 ### Documentation & Scripts
 
@@ -32,7 +32,7 @@ Release-please is now configured for TinyOlly's monorepo with automated semantic
 
 ```bash
 # Make changes and commit with conventional commits
-git commit -m "feat(tinyolly): add new feature"
+git commit -m "feat(ollyscale): add new feature"
 git push origin main
 ```
 
@@ -54,31 +54,31 @@ git push origin main
 
 | Component            | Type   | Version | Tag Format                    |
 | -------------------- | ------ | ------- | ----------------------------- |
-| tinyolly             | Python | 2.2.2   | `tinyolly-v2.2.2`             |
+| ollyscale             | Python | 2.2.2   | `ollyscale-v2.2.2`             |
 | opamp-server         | Go     | 1.0.0   | `opamp-server-v1.0.0`         |
 | demo                 | Python | 0.5.0   | `demo-v0.5.0`                 |
 | demo-otel-agent      | Python | 0.3.0   | `demo-otel-agent-v0.3.0`      |
-| helm-tinyolly        | Helm   | 0.1.1   | `helm-tinyolly-v0.1.1`        |
+| helm-ollyscale        | Helm   | 0.1.1   | `helm-ollyscale-v0.1.1`        |
 | helm-demos           | Helm   | 0.1.5   | `helm-demos-v0.1.5`           |
-| helm-demo-otel-agent | Helm   | 0.1.0   | `helm-demo-otel-agent-v0.1.0` |
+| helm-otel-agent | Helm   | 0.1.0   | `helm-otel-agent-v0.1.0` |
 
 ## Conventional Commit Examples
 
 ```bash
 # Container releases
-feat(tinyolly): add GenAI span filtering        # tinyolly 2.2.2 → 2.3.0
+feat(ollyscale): add GenAI span filtering        # ollyscale 2.2.2 → 2.3.0
 fix(opamp): handle nil pointer                   # opamp 1.0.0 → 1.0.1
 perf(demo): optimize query performance           # demo 0.5.0 → 0.5.1
 
 # Helm chart releases
-feat(helm/tinyolly): add ingress annotations     # helm-tinyolly 0.1.1 → 0.2.0
+feat(helm/ollyscale): add ingress annotations     # helm-ollyscale 0.1.1 → 0.2.0
 fix(helm/demos): correct service port            # helm-demos 0.1.5 → 0.1.6
 
 # Breaking changes
 feat(ai-agent)!: migrate to Ollama 2.0          # ai-agent 0.3.0 → 1.0.0
 
 # Multi-component (triggers coordinated release)
-feat(tinyolly,opamp): add mutual TLS            # Both bump, chart bumps once
+feat(ollyscale,opamp): add mutual TLS            # Both bump, chart bumps once
 
 # No release
 docs: update README                              # No version bump
@@ -90,15 +90,15 @@ ci: fix workflow syntax                          # No version bump
 When container images are released, their dependent Helm charts **automatically update**:
 
 ```
-feat(tinyolly): new feature
+feat(ollyscale): new feature
 feat(opamp): new feature
   ↓
-tinyolly: 2.2.2 → 2.3.0
+ollyscale: 2.2.2 → 2.3.0
 opamp-server: 1.0.0 → 1.1.0
   ↓
-helm-tinyolly: 0.1.1 → 0.2.0 (SINGLE release)
+helm-ollyscale: 0.1.1 → 0.2.0 (SINGLE release)
   - values.yaml updated with both new image versions
-  - appVersion set to v2.3.0 (tinyolly version)
+  - appVersion set to v2.3.0 (ollyscale version)
 ```
 
 ## GitHub Workflow
@@ -113,13 +113,13 @@ helm-tinyolly: 0.1.1 → 0.2.0 (SINGLE release)
 
 1. **Container builds** - Parallel builds for changed components
    - Multi-arch (amd64/arm64)
-   - Pushed to `ghcr.io/tinyolly/*`
+   - Pushed to `ghcr.io/ryanfaircloth/ollyscale/*`
    - Tagged with version + `:latest`
 
 2. **Helm charts** - Sequential after container builds
    - Updates values.yaml with new image versions
    - Packages chart
-   - Pushes to `oci://ghcr.io/tinyolly/charts`
+   - Pushes to `oci://ghcr.io/ryanfaircloth/ollyscale/charts`
 
 3. **GitHub Releases** - Created for each component
    - Release notes from CHANGELOG
@@ -197,4 +197,4 @@ git push origin test-release-please
 - [Release Please Docs](https://github.com/googleapis/release-please)
 - [Conventional Commits](https://www.conventionalcommits.org/)
 - [Semantic Versioning](https://semver.org/)
-- [TinyOlly Release Process](./release-process.md) - Detailed guide
+- [ollyScale Release Process](./release-process.md) - Detailed guide

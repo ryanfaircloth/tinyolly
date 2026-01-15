@@ -1,6 +1,6 @@
-# TinyOlly Release Process
+# ollyScale Release Process
 
-TinyOlly uses [release-please](https://github.com/googleapis/release-please) for automated releases in our monorepo.
+ollyScale uses [release-please](https://github.com/googleapis/release-please) for automated releases in our monorepo.
 
 ## How It Works
 
@@ -38,14 +38,14 @@ TinyOlly uses [release-please](https://github.com/googleapis/release-please) for
 
 **Container Components:**
 
-- `tinyolly` - Core platform (apps/tinyolly)
+- `ollyscale` - Core platform (apps/ollyscale)
 - `opamp` - OpAMP server (apps/opamp-server)
 - `demo` - Demo application (apps/demo)
 - `ai-agent` - AI agent demo (apps/ai-agent-demo)
 
 **Helm Charts:**
 
-- `helm/tinyolly` - Main platform chart
+- `helm/ollyscale` - Main platform chart
 - `helm/demos` - Demos chart
 - `helm/ai-agent` - AI agent chart
 
@@ -59,8 +59,8 @@ TinyOlly uses [release-please](https://github.com/googleapis/release-please) for
 ### Container Changes
 
 ```bash
-# New feature in tinyolly (minor bump: 2.2.2 → 2.3.0)
-feat(tinyolly): add GenAI span filtering
+# New feature in ollyscale (minor bump: 2.2.2 → 2.3.0)
+feat(ollyscale): add GenAI span filtering
 
 # Bug fix in opamp-server (patch bump: 1.0.0 → 1.0.1)
 fix(opamp): handle nil pointer in config validation
@@ -78,13 +78,13 @@ BREAKING CHANGE: Ollama 1.x no longer supported
 
 ```bash
 # New chart feature (minor bump)
-feat(helm/tinyolly): add PVC for persistent storage
+feat(helm/ollyscale): add PVC for persistent storage
 
 # Chart bug fix (patch bump)
 fix(helm/demos): correct service port configuration
 
 # Chart breaking change (major bump)
-feat(helm/tinyolly)!: require Kubernetes 1.28+
+feat(helm/ollyscale)!: require Kubernetes 1.28+
 
 BREAKING CHANGE: Dropped support for Kubernetes < 1.28
 ```
@@ -93,10 +93,10 @@ BREAKING CHANGE: Dropped support for Kubernetes < 1.28
 
 ```bash
 # Affects both containers and triggers chart update
-feat(tinyolly,opamp): add mutual TLS authentication
+feat(ollyscale,opamp): add mutual TLS authentication
 
 # Multiple charts
-docs(helm/tinyolly,helm/demos): update README with examples
+docs(helm/ollyscale,helm/demos): update README with examples
 ```
 
 ### No Release Examples
@@ -109,7 +109,7 @@ docs: update API documentation
 ci: add workflow for dependency updates
 
 # Test changes
-test(tinyolly): add integration tests for filtering
+test(ollyscale): add integration tests for filtering
 
 # Build changes
 build: update base Python image to 3.12
@@ -133,13 +133,13 @@ build: update base Python image to 3.12
 Title: chore: release main
 
 Components to be released:
-- tinyolly: 2.2.2 → 2.3.0
+- ollyscale: 2.2.2 → 2.3.0
 - opamp-server: 1.0.0 → 1.0.1
-- helm-tinyolly: 0.1.1 → 0.2.0
+- helm-ollyscale: 0.1.1 → 0.2.0
 
 Changes:
-- Updated apps/tinyolly/VERSION
-- Updated apps/tinyolly/CHANGELOG.md
+- Updated apps/ollyscale/VERSION
+- Updated apps/ollyscale/CHANGELOG.md
 - Updated apps/opamp-server/VERSION
 - Updated apps/opamp-server/CHANGELOG.md
 - Updated charts/tinyolly/Chart.yaml
@@ -218,7 +218,7 @@ vim .release-please-manifest.json
 
 # Change version for component:
 {
-  "apps/tinyolly": "2.3.0",  # Bump this
+  "apps/ollyscale": "2.3.0",  # Bump this
   ...
 }
 
@@ -240,9 +240,9 @@ feat(tinyolly): add TLS support
 feat(opamp): add TLS configuration endpoint
 
 # Result: Single release PR with:
-# - tinyolly: 2.2.2 → 2.3.0
+# - ollyscale: 2.2.2 → 2.3.0
 # - opamp-server: 1.0.0 → 1.1.0
-# - helm-tinyolly: 0.1.1 → 0.2.0 (dependency bump)
+# - helm-ollyscale: 0.1.1 → 0.2.0 (dependency bump)
 ```
 
 Release-please automatically:
