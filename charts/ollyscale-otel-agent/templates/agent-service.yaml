@@ -4,11 +4,11 @@ metadata:
   name: ai-agent
   namespace: {{ .Values.global.namespace }}
   labels:
-    {{- include "tinyolly-ai-agent.agent.labels" . | nindent 4 }}
+    {{- include "ollyscale-otel-agent.agent.labels" . | nindent 4 }}
 spec:
   type: {{ .Values.agent.service.type }}
   selector:
-    {{- include "tinyolly-ai-agent.agent.selectorLabels" . | nindent 4 }}
+    {{- include "ollyscale-otel-agent.agent.selectorLabels" . | nindent 4 }}
   ports:
     - protocol: TCP
       port: {{ .Values.agent.service.port }}

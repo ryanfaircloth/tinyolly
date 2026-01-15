@@ -4,11 +4,11 @@ metadata:
   name: ollama
   namespace: {{ .Values.global.namespace }}
   labels:
-    {{- include "tinyolly-ai-agent.ollama.labels" . | nindent 4 }}
+    {{- include "ollyscale-otel-agent.ollama.labels" . | nindent 4 }}
 spec:
   type: {{ .Values.ollama.service.type }}
   selector:
-    {{- include "tinyolly-ai-agent.ollama.selectorLabels" . | nindent 4 }}
+    {{- include "ollyscale-otel-agent.ollama.selectorLabels" . | nindent 4 }}
   ports:
     - protocol: TCP
       port: {{ .Values.ollama.service.port }}

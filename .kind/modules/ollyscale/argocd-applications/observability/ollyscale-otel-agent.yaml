@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: tinyolly-demo-otel-agent
+  name: ollyscale-otel-agent
   namespace: argocd
   annotations:
     argocd.argoproj.io/sync-wave: "61"
@@ -10,13 +10,13 @@ metadata:
 spec:
   project: observability
   source:
-    repoURL: "oci://ghcr.io/tinyolly/charts"
-    chart: tinyolly-demo-otel-agent
+    repoURL: "oci://ghcr.io/ryanfaircloth/ollyscale/charts"
+    chart: ollyscale-otel-agent
     targetRevision: 0.1.0
     helm:
       valuesObject:
         global:
-          namespace: tinyolly-demo-otel-agent
+          namespace: ollyscale-otel-agent
 
         ollama:
           model: tinyllama
@@ -33,14 +33,14 @@ spec:
 
         agent:
           image:
-            repository: ghcr.io/tinyolly/demo-otel-agent
+            repository: ghcr.io/ryanfaircloth/ollyscale/demo-otel-agent
             tag: v0.3.0
           httpRoute:
             enabled: false
 
   destination:
     server: https://kubernetes.default.svc
-    namespace: tinyolly-demo-otel-agent
+    namespace: ollyscale-otel-agent
 
   syncPolicy:
     automated:

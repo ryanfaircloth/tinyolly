@@ -20,7 +20,7 @@ REGISTRY="${REGISTRY:-ghcr.io}"
 REGISTRY_ORG="${REGISTRY_ORG:-$GH_ORG}"
 
 # Legacy support for local KIND registry
-EXTERNAL_REGISTRY="${EXTERNAL_REGISTRY:-registry.tinyolly.test:49443}"  # For desktop build/push
+EXTERNAL_REGISTRY="${EXTERNAL_REGISTRY:-registry.ollyscale.test:49443}"  # For desktop build/push
 INTERNAL_REGISTRY="${INTERNAL_REGISTRY:-docker-registry.registry.svc.cluster.local:5000}"  # For cluster pulls
 CHART_REGISTRY="${CHART_REGISTRY:-${EXTERNAL_REGISTRY}/ollyscale/charts}"
 

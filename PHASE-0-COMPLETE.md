@@ -3,11 +3,11 @@
 ## Pre-Flight Checks ✅
 
 1. **Tagged pre-rebrand state:** `pre-ollyscale-rebrand`
-2. **Audit complete:** Found 2,052 references to "tinyolly" or "TinyOlly"
+2. **Audit complete:** Found 2,052 references to "ollyscale" or "TinyOlly"
 3. **Major areas identified:**
    - `.kind/` Terraform configurations (~50+ files)
-   - Helm charts (`charts/tinyolly*/`)
-   - Source code (`apps/tinyolly/`, `apps/tinyolly-ui/`)
+   - Helm charts (`charts/ollyscale*/`)
+   - Source code (`apps/ollyscale/`, `apps/ollyscale-ui/`)
    - Documentation (`docs/`, `README.md`, `CONTRIBUTING.md`)
    - CI/CD (`.github/`, `scripts/`, `Makefile`)
    - Docker files and configs

@@ -16,27 +16,27 @@ Previously, we used a monorepo approach where:
 Each **shipped component** has its own independent version:
 
 ```text
-apps/tinyolly              → Container: ghcr.io/ryanfaircloth/tinyolly/tinyolly:v38.0.0
-apps/tinyolly-ui           → Container: ghcr.io/ryanfaircloth/tinyolly/tinyolly-ui:v1.0.0
-apps/opamp-server          → Container: ghcr.io/ryanfaircloth/tinyolly/opamp-server:v3.0.0
-apps/demo                  → Container: ghcr.io/ryanfaircloth/tinyolly/demo:v2.0.0
-apps/demo-otel-agent       → Container: ghcr.io/ryanfaircloth/tinyolly/demo-otel-agent:v0.3.4
+apps/ollyscale              → Container: ghcr.io/ryanfaircloth/ollyscale/ollyscale:v38.0.0
+apps/ollyscale-ui           → Container: ghcr.io/ryanfaircloth/ollyscale/ollyscale-ui:v1.0.0
+apps/opamp-server          → Container: ghcr.io/ryanfaircloth/ollyscale/opamp-server:v3.0.0
+apps/demo                  → Container: ghcr.io/ryanfaircloth/ollyscale/demo:v2.0.0
+apps/demo-otel-agent       → Container: ghcr.io/ryanfaircloth/ollyscale/demo-otel-agent:v0.3.4
 
-charts/tinyolly            → Helm: oci://ghcr.io/ryanfaircloth/tinyolly/charts/tinyolly:0.3.1
-charts/tinyolly-demos      → Helm: oci://ghcr.io/ryanfaircloth/tinyolly/charts/tinyolly-demos:2.0.0
-charts/tinyolly-demo-otel-agent → Helm: oci://ghcr.io/ryanfaircloth/tinyolly/charts/tinyolly-demo-otel-agent:0.1.4
+charts/ollyscale            → Helm: oci://ghcr.io/ryanfaircloth/ollyscale/charts/ollyscale:0.3.1
+charts/ollyscale-demos      → Helm: oci://ghcr.io/ryanfaircloth/ollyscale/charts/ollyscale-demos:2.0.0
+charts/ollyscale-demo-otel-agent → Helm: oci://ghcr.io/ryanfaircloth/ollyscale/charts/ollyscale-demo-otel-agent:0.1.4
 ```
 
 ### Dependency Graph
 
 ```text
 ┌─────────────────┐
-│ apps/tinyolly   │────┐
+│ apps/ollyscale   │────┐
 │    v38.0.0      │    │
 └─────────────────┘    │
                        │
 ┌─────────────────┐    │
-│ apps/tinyolly-ui│────┼──> charts/tinyolly (v0.3.1)
+│ apps/ollyscale-ui│────┼──> charts/ollyscale (v0.3.1)
 │    v1.0.0       │    │     References all three dependencies
 └─────────────────┘    │
                        │
@@ -46,12 +46,12 @@ charts/tinyolly-demo-otel-agent → Helm: oci://ghcr.io/ryanfaircloth/tinyolly/c
 └─────────────────┘
 
 ┌─────────────────┐
-│ apps/demo       │────────> charts/tinyolly-demos (v2.0.0)
+│ apps/demo       │────────> charts/ollyscale-demos (v2.0.0)
 │    v2.0.0       │
 └─────────────────┘
 
 ┌─────────────────┐
-│ apps/demo-      │────────> charts/tinyolly-demo-otel-agent (v0.1.4)
+│ apps/demo-      │────────> charts/ollyscale-demo-otel-agent (v0.1.4)
 │ otel-agent      │
 │    v0.3.4       │
 └─────────────────┘
@@ -59,14 +59,14 @@ charts/tinyolly-demo-otel-agent → Helm: oci://ghcr.io/ryanfaircloth/tinyolly/c
 
 ### Release Workflow
 
-#### Scenario 1: Fix bug in tinyolly backend
+#### Scenario 1: Fix bug in ollyscale backend
 
 1. **Commit**: `fix(backend): resolve span parsing issue`
 2. **Release-Please Creates**:
-   - PR: `chore: release tinyolly 38.0.1`
-   - Updates: `apps/tinyolly/CHANGELOG.md`, `.release-please-manifest.json`
+   - PR: `chore: release ollyscale 38.0.1`
+   - Updates: `apps/ollyscale/CHANGELOG.md`, `.release-please-manifest.json`
 3. **When Merged**:
-   - Builds & pushes: `ghcr.io/ryanfaircloth/tinyolly/tinyolly:v38.0.1`
+   - Builds & pushes: `ghcr.io/ryanfaircloth/ollyscale/ollyscale:v38.0.1`
    - **Chart NOT auto-bumped** (chart maintainer decides when to adopt)
 
 #### Scenario 2: Add feature to opamp-server
@@ -75,7 +75,7 @@ charts/tinyolly-demo-otel-agent → Helm: oci://ghcr.io/ryanfaircloth/tinyolly/c
 2. **Release-Please Creates**:
    - PR: `chore: release opamp-server 3.1.0`
 3. **When Merged**:
-   - Builds & pushes: `ghcr.io/ryanfaircloth/tinyolly/opamp-server:v3.1.0`
+   - Builds & pushes: `ghcr.io/ryanfaircloth/ollyscale/opamp-server:v3.1.0`
    - Chart still references v3.0.0
 
 #### Scenario 3: Update chart to new dependencies
@@ -83,8 +83,8 @@ charts/tinyolly-demo-otel-agent → Helm: oci://ghcr.io/ryanfaircloth/tinyolly/c
 1. **Manual Commit**:
 
    ```yaml
-   # charts/tinyolly/values.yaml
-   tinyolly:
+   # charts/ollyscale/values.yaml
+   ollyscale:
      image:
        tag: v38.0.1  # Updated from v38.0.0
    webui:
@@ -95,22 +95,22 @@ charts/tinyolly-demo-otel-agent → Helm: oci://ghcr.io/ryanfaircloth/tinyolly/c
        tag: v3.1.0   # Updated from v3.0.0
    ```
 
-   Commit: `chore(chart): update to tinyolly v38.0.1 and opamp v3.1.0`
+   Commit: `chore(chart): update to ollyscale v38.0.1 and opamp v3.1.0`
 2. **Release-Please Creates**:
-   - PR: `chore: release helm-tinyolly 0.3.2`
+   - PR: `chore: release helm-ollyscale 0.3.2`
 3. **When Merged**:
-   - Packages & pushes chart: `tinyolly:0.3.2`
+   - Packages & pushes chart: `ollyscale:0.3.2`
 
 ### Benefits
 
-tinyolly-ui:v1.0.0` = Unchanged
+ollyscale-ui:v1.0.0` = Unchanged
 
 - `
 
 1. **Clear Risk Assessment**: Users can see exactly what changed
-   - `tinyolly:v38.0.0 → v38.0.1` = Backend patch
+   - `ollyscale:v38.0.0 → v38.0.1` = Backend patch
    - `opamp-server:v3.0.0` = Unchanged
-   - `helm-tinyolly:0.3.2` = Chart updated
+   - `helm-ollyscale:0.3.2` = Chart updated
 
 2. **Independent Release Cadence**:
    - Backend can release frequently
@@ -143,10 +143,10 @@ tinyolly-ui:v1.0.0` = Unchanged
 
 Using release-please's `linked-versions` plugin would make all related components share the same version:
 
-- `apps/tinyolly-ui:v38.1.0`  ← Same version even if unchanged
-- `apps/tinyolly:v38.1.0`
+- `apps/ollyscale-ui:v38.1.0`  ← Same version even if unchanged
+- `apps/ollyscale:v38.1.0`
 - `apps/opamp-server:v38.1.0`  ← Same version even if unchanged
-- `charts/tinyolly:v38.1.0`
+- `charts/ollyscale:v38.1.0`
 
 **Why we rejected this**: Defeats the purpose of independent versioning. Users can't tell what actually changed.
 

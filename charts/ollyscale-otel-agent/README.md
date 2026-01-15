@@ -118,6 +118,6 @@ kubectl logs -n opentelemetry-operator-system deployment/opentelemetry-operator
 ## Uninstall
 
 ```bash
-helm uninstall tinyolly-ai-agent
-kubectl delete namespace tinyolly-ai-agent
+helm uninstall ollyscale-otel-agent
+kubectl delete namespace ollyscale-otel-agent
 ```

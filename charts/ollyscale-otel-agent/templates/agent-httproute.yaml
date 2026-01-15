@@ -5,7 +5,7 @@ metadata:
   name: ai-agent
   namespace: {{ .Values.global.namespace }}
   labels:
-    {{- include "tinyolly-ai-agent.agent.labels" . | nindent 4 }}
+    {{- include "ollyscale-otel-agent.agent.labels" . | nindent 4 }}
 spec:
   parentRefs:
     {{- toYaml .Values.agent.httpRoute.parentRefs | nindent 4 }}

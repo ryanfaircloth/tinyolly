@@ -1,14 +1,14 @@
 {{/*
 Expand the name of the chart.
 */}}
-{{- define "tinyolly-ai-agent.name" -}}
+{{- define "ollyscale-otel-agent.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
 Create a default fully qualified app name.
 */}}
-{{- define "tinyolly-ai-agent.fullname" -}}
+{{- define "ollyscale-otel-agent.fullname" -}}
 {{- if .Values.fullnameOverride }}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
 {{- else }}
@@ -24,16 +24,16 @@ Create a default fully qualified app name.
 {{/*
 Create chart name and version as used by the chart label.
 */}}
-{{- define "tinyolly-ai-agent.chart" -}}
+{{- define "ollyscale-otel-agent.chart" -}}
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
 Common labels
 */}}
-{{- define "tinyolly-ai-agent.labels" -}}
-helm.sh/chart: {{ include "tinyolly-ai-agent.chart" . }}
-{{ include "tinyolly-ai-agent.selectorLabels" . }}
+{{- define "ollyscale-otel-agent.labels" -}}
+helm.sh/chart: {{ include "ollyscale-otel-agent.chart" . }}
+{{ include "ollyscale-otel-agent.selectorLabels" . }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
@@ -43,17 +43,17 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{/*
 Selector labels
 */}}
-{{- define "tinyolly-ai-agent.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "tinyolly-ai-agent.name" . }}
+{{- define "ollyscale-otel-agent.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "ollyscale-otel-agent.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
 Ollama labels
 */}}
-{{- define "tinyolly-ai-agent.ollama.labels" -}}
-helm.sh/chart: {{ include "tinyolly-ai-agent.chart" . }}
-{{ include "tinyolly-ai-agent.ollama.selectorLabels" . }}
+{{- define "ollyscale-otel-agent.ollama.labels" -}}
+helm.sh/chart: {{ include "ollyscale-otel-agent.chart" . }}
+{{ include "ollyscale-otel-agent.ollama.selectorLabels" . }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
@@ -61,8 +61,8 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 app.kubernetes.io/component: ollama
 {{- end }}
 
-{{- define "tinyolly-ai-agent.ollama.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "tinyolly-ai-agent.name" . }}
+{{- define "ollyscale-otel-agent.ollama.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "ollyscale-otel-agent.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 app.kubernetes.io/component: ollama
 app: ollama
@@ -71,9 +71,9 @@ app: ollama
 {{/*
 Agent labels
 */}}
-{{- define "tinyolly-ai-agent.agent.labels" -}}
-helm.sh/chart: {{ include "tinyolly-ai-agent.chart" . }}
-{{ include "tinyolly-ai-agent.agent.selectorLabels" . }}
+{{- define "ollyscale-otel-agent.agent.labels" -}}
+helm.sh/chart: {{ include "ollyscale-otel-agent.chart" . }}
+{{ include "ollyscale-otel-agent.agent.selectorLabels" . }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
@@ -81,8 +81,8 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 app.kubernetes.io/component: ai-agent
 {{- end }}
 
-{{- define "tinyolly-ai-agent.agent.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "tinyolly-ai-agent.name" . }}
+{{- define "ollyscale-otel-agent.agent.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "ollyscale-otel-agent.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 app.kubernetes.io/component: ai-agent
 app: ai-agent

@@ -10,7 +10,7 @@ metadata:
 spec:
   project: observability
   source:
-    repoURL: "https://github.com/tinyolly/tinyolly.git"
+    repoURL: "https://github.com/ryanfaircloth/ollyscale.git"
     path: .kind/modules/ollyscale/k8s-manifests/otel-demo
     targetRevision: main
   destination:

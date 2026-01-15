@@ -262,7 +262,7 @@ export TF_VAR_bootstrap=false && terraform apply -auto-approve
 - **Example**: `docker-registry.yaml` (Helm) + `docker-registry-route.yaml` (raw HTTPRoute)
 - **No Flux**: All deployments use ArgoCD native Helm support, not Flux HelmRelease CRDs
 - **Sync waves**: Applications use `argocd.argoproj.io/sync-wave` annotation for ordered deployment
-- **TinyOlly chart source**: `docker-registry.registry.svc.cluster.local:5000/tinyolly/charts` (OCI registry)
+- **TinyOlly chart source**: `docker-registry.registry.svc.cluster.local:5000/ollyscale/charts` (OCI registry)
 - **Update pattern**: Change `targetRevision` in Application manifest, then `terraform apply -replace`
 
 ## Common Tasks

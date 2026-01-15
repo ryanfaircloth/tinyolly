@@ -491,11 +491,11 @@ sed -i '' "s/^version: .*/version: 0.1.1-v2.1.x-tail-sampling/" charts/tinyolly/
 cat > values-local-dev.yaml <<EOF
 ui:
   image:
-    repository: docker-registry.registry.svc.cluster.local:5000/tinyolly/tinyolly
+    repository: docker-registry.registry.svc.cluster.local:5000/ollyscale/tinyolly
     tag: v2.1.x-tail-sampling
 webui:
   image:
-    repository: docker-registry.registry.svc.cluster.local:5000/tinyolly/webui
+    repository: docker-registry.registry.svc.cluster.local:5000/ollyscale/webui
     tag: v2.1.x-tail-sampling
 # ... etc
 EOF
@@ -572,7 +572,7 @@ TinyOlly uses **different registry endpoints** for build/push vs runtime deploym
 # ✅ CORRECT - internal endpoint for cluster
 ui:
   image:
-    repository: docker-registry.registry.svc.cluster.local:5000/tinyolly/tinyolly
+    repository: docker-registry.registry.svc.cluster.local:5000/ollyscale/tinyolly
     tag: v2.1.x-feature
 
 # ❌ WRONG - external endpoint, pods can't pull

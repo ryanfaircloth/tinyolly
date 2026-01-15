@@ -11,13 +11,13 @@ keywords:
   - ai
   - ollama
   - genai
-home: https://github.com/ryanfaircloth/tinyolly
+home: https://github.com/ryanfaircloth/ollyscale
 sources:
-  - https://github.com/ryanfaircloth/tinyolly
+  - https://github.com/ryanfaircloth/ollyscale
 maintainers:
   - name: ollyScale Team
     email: ryan@faircloth.dev
 annotations:
   org.opencontainers.image.title: "TinyOlly AI Agent Demo"
   org.opencontainers.image.description: "AI Agent demo with Ollama LLM for TinyOlly"
-  org.opencontainers.image.source: "https://github.com/tinyolly/tinyolly"
+  org.opencontainers.image.source: "https://github.com/ryanfaircloth/ollyscale"

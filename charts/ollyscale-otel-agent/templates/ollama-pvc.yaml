@@ -5,7 +5,7 @@ metadata:
   name: ollama-data
   namespace: {{ .Values.global.namespace }}
   labels:
-    {{- include "tinyolly-ai-agent.ollama.labels" . | nindent 4 }}
+    {{- include "ollyscale-otel-agent.ollama.labels" . | nindent 4 }}
 spec:
   accessModes:
     - {{ .Values.ollama.persistence.accessMode }}

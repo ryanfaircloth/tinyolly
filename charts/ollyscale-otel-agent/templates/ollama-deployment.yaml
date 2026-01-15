@@ -4,16 +4,16 @@ metadata:
   name: ollama
   namespace: {{ .Values.global.namespace }}
   labels:
-    {{- include "tinyolly-ai-agent.ollama.labels" . | nindent 4 }}
+    {{- include "ollyscale-otel-agent.ollama.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.ollama.replicaCount }}
   selector:
     matchLabels:
-      {{- include "tinyolly-ai-agent.ollama.selectorLabels" . | nindent 6 }}
+      {{- include "ollyscale-otel-agent.ollama.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
-        {{- include "tinyolly-ai-agent.ollama.selectorLabels" . | nindent 8 }}
+        {{- include "ollyscale-otel-agent.ollama.selectorLabels" . | nindent 8 }}
     spec:
       containers:
       - name: ollama

@@ -1,9 +1,9 @@
 site_name: TinyOlly Documentation
-site_url: https://tinyolly.github.io/tinyolly/
+site_url: https://ollyscale.github.io/ollyscale/
 site_description: BYOL (Bring Your Own Laptop) Observability Platform for OpenTelemetry
 site_author: TinyOlly
-repo_url: https://github.com/tinyolly/tinyolly
-repo_name: tinyolly/tinyolly
+repo_url: https://github.com/ollyscale/ollyscale
+repo_name: ollyscale/ollyscale
 
 theme:
   name: material
@@ -80,7 +80,7 @@ nav:
 extra:
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/tinyolly/tinyolly
+      link: https://github.com/ollyscale/ollyscale
     - icon: fontawesome/brands/github
-      link: https://github.com/tinyolly/tinyolly/issues
+      link: https://github.com/ollyscale/ollyscale/issues
       name: Issues

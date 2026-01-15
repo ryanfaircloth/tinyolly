@@ -1,11 +1,11 @@
-# Default values for tinyolly-ai-agent
+# Default values for ollyscale-otel-agent
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
 # Global settings
 global:
   # -- Namespace for AI agent demo deployment
-  namespace: tinyolly-ai-agent
+  namespace: ollyscale-otel-agent
 
 # Ollama LLM server configuration
 ollama:
@@ -70,7 +70,7 @@ agent:
 
   image:
     # -- Image repository
-    repository: docker-registry.registry.svc.cluster.local:5000/tinyolly/ai-agent-demo
+    repository: docker-registry.registry.svc.cluster.local:5000/ollyscale/ai-agent-demo
     # -- Image tag
     tag: v0.0.1
     # -- Image pull policy
