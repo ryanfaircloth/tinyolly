@@ -10,10 +10,10 @@ strategy, and CI/CD improvements for future forks.
 ### Phase 1: License Files
 
 - [x] Rename `LICENSE` to `LICENSE-BSD3-ORIGINAL` (preserve TinyOlly's original license)
-- [ ] Create `LICENSE` with AGPL-3.0
-- [ ] Create `NOTICE` file acknowledging TinyOlly origins and dual licensing
-- [ ] Create `LICENSE-HEADER-AGPL.txt` template for new/modified files
-- [ ] Create `LICENSE-HEADER-BSD3.txt` template for original TinyOlly files
+- [x] Create `LICENSE` with AGPL-3.0
+- [x] Create `NOTICE` file acknowledging TinyOlly origins and dual licensing
+- [x] Create `LICENSE-HEADER-AGPL.txt` template for new/modified files
+- [x] Create `LICENSE-HEADER-BSD3.txt` template for original TinyOlly files
 
 ### Phase 2: File Headers
 
