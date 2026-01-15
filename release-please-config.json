@@ -142,7 +142,12 @@
   "bootstrap-sha": "main",
   "release-search-depth": 100,
   "separate-pull-requests": false,
-  "group-pull-request-title-pattern": "chore: release ${version}",
+  "packages-for-group-with-name": {
+    "core": ["apps/tinyolly", "apps/tinyolly-ui", "apps/opamp-server", "charts/tinyolly"],
+    "demos": ["apps/demo", "charts/tinyolly-demos"],
+    "demo-otel-agent": ["apps/demo-otel-agent", "charts/tinyolly-demo-otel-agent"]
+  },
+  "group-pull-request-title-pattern": "chore(${groupName}): release ${version}",
   "changelog-sections": [
     {
       "type": "feat",
