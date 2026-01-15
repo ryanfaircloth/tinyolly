@@ -2,7 +2,7 @@ apiVersion: v2
 name: ollyscale
 description: Desktop-first OpenTelemetry observability platform for local development
 type: application
-version: 1.0.0-0.0.1768508085
+version: 1.0.0-0.0.1768509598
 appVersion: "v30.0.1"
 keywords:
   - observability
@@ -13,21 +13,21 @@ keywords:
   - otlp
   - ebpf
   - zero-code-instrumentation
-home: https://github.com/ryanfaircloth/tinyolly
+home: https://github.com/ryanfaircloth/ollyscale
 sources:
-  - https://github.com/ryanfaircloth/tinyolly
+  - https://github.com/ryanfaircloth/ollyscale
 maintainers:
-  - name: TinyOlly Team
-    email: maintainers@tinyolly.io
-icon: https://tinyolly.io/assets/logo.svg
+  - name: Ryan Faircloth
+    email: ryan@faircloth.dev
+icon: https://ollyscale.dev/assets/logo.svg
 annotations:
   # OCI registry annotations
-  org.opencontainers.image.title: "TinyOlly"
+  org.opencontainers.image.title: "OllyScale"
   org.opencontainers.image.description: "Lightweight OpenTelemetry observability platform"
-  org.opencontainers.image.vendor: "TinyOlly"
-  org.opencontainers.image.source: "https://github.com/tinyolly/tinyolly"
-  org.opencontainers.image.documentation: "https://tinyolly.io/docs"
-  org.opencontainers.image.licenses: "Apache-2.0"
+  org.opencontainers.image.vendor: "Ryan Faircloth"
+  org.opencontainers.image.source: "https://github.com/ryanfaircloth/ollyscale"
+  org.opencontainers.image.documentation: "https://ollyscale.dev/docs"
+  org.opencontainers.image.licenses: "AGPL-3.0"
   # Artifact Hub annotations
   artifacthub.io/links: |
     - name: Documentation

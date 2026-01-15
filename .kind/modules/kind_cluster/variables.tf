@@ -1,7 +1,7 @@
 variable "name" {
   description = "Name of the kind cluster"
   type        = string
-  default     = "ollyscale"
+  default     = "tinyolly"
 }
 
 variable "kubeconfig_path" {
