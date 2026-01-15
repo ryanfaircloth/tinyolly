@@ -118,6 +118,9 @@ export function switchTab(tabName, element, fromHistory = false) {
         // Reset to list view when switching to traces tab
         showTracesList();
     }
+    else if (tabName === 'trace-flows') {
+        import('./traceLint.js').then(module => module.loadTraceFlows());
+    }
     else if (tabName === 'metrics') loadMetrics();
     else if (tabName === 'catalog') loadServiceCatalog();
     else if (tabName === 'map') loadServiceMap();
@@ -150,6 +153,8 @@ export function startAutoRefresh() {
             });
         } else if (currentTab === 'traces' && !document.getElementById('trace-detail-view').style.display.includes('block')) {
             loadTraces();
+        } else if (currentTab === 'trace-flows' && !document.getElementById('trace-flow-detail-view').style.display.includes('block')) {
+            import('./traceLint.js').then(module => module.loadTraceFlows());
         } else if (currentTab === 'spans') {
             import('./spans.js').then(spansModule => {
                 const serviceFilter = spansModule.getServiceFilter ? spansModule.getServiceFilter() : null;
