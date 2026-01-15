@@ -106,6 +106,6 @@ async def get_stats(storage: Storage = Depends(get_storage)):
     - Total unique metrics
     - Total services
 
-    Useful for monitoring TinyOlly's data volume and health.
+    Useful for monitoring OllyScale's data volume and health.
     """
     return await storage.get_stats()

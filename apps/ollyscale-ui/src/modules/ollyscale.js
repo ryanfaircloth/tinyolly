@@ -33,7 +33,7 @@
 import { initTabs, startAutoRefresh, switchTab, toggleAutoRefresh } from './tabs.js';
 import { loadStats, loadLogs, loadSpans } from './api.js';
 import { initTheme, toggleTheme } from './theme.js';
-import { initHideTinyOllyToggle, toggleHideTinyOlly } from './filter.js';
+import { initHideOllyScaleToggle, toggleHideOllyScale } from './filter.js';
 import {
     showTraceDetail,
     showTracesList,
@@ -55,7 +55,7 @@ import { debounce } from './utils.js';
 window.switchTab = switchTab;
 window.toggleTheme = toggleTheme;
 window.toggleAutoRefresh = toggleAutoRefresh;
-window.toggleHideTinyOlly = toggleHideTinyOlly;
+window.toggleHideOllyScale = toggleHideOllyScale;
 window.showTraceDetail = showTraceDetail;
 window.showTracesList = showTracesList;
 window.toggleTraceJSON = toggleTraceJSON;
@@ -110,7 +110,7 @@ document.addEventListener('DOMContentLoaded', () => {
             metricSearch.addEventListener('keyup', debounce(filterMetrics, 300));
         }
 
-        if (localStorage.getItem('tinyolly-auto-refresh') !== 'false') {
+        if (localStorage.getItem('ollyscale-auto-refresh') !== 'false') {
             startAutoRefresh();
         }
     } catch (error) {

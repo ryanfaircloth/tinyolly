@@ -51,14 +51,14 @@ router = APIRouter(prefix="/admin", tags=["System"])
     operation_id="admin_stats",
     summary="Get detailed system statistics",
     description="""
-    Get comprehensive TinyOlly performance and health metrics:
+    Get comprehensive OllyScale performance and health metrics:
 
     - **Telemetry counts**: Traces, spans, logs, metrics
     - **Redis memory usage**: Current, peak, RSS
     - **Metric cardinality**: Current vs max, dropped count
     - **Connection stats**: Total connections, commands processed
 
-    Useful for monitoring TinyOlly's resource usage and performance.
+    Useful for monitoring OllyScale's resource usage and performance.
     """,
 )
 async def admin_stats(storage: Storage = Depends(get_storage)):

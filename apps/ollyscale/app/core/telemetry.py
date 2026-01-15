@@ -38,7 +38,7 @@ Auto-instrumented components (no manual setup needed):
 - Redis operations (opentelemetry-instrumentation-redis)
 - Logging with trace context (opentelemetry-instrumentation-logging)
 
-This module only provides domain-specific metrics for TinyOlly operations.
+This module only provides domain-specific metrics for OllyScale operations.
 """
 
 import logging
@@ -71,7 +71,7 @@ def setup_telemetry():
     - Configures exporters to send to the collector
     - Instruments FastAPI, Redis, and logging automatically
 
-    This function only defines TinyOlly-specific business metrics.
+    This function only defines OllyScale-specific business metrics.
     """
     global _telemetry_enabled  # noqa: PLW0603
 

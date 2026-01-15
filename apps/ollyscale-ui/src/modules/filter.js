@@ -31,31 +31,31 @@
  */
 
 /**
- * Filter Module - Manages hiding TinyOlly's own telemetry
+ * Filter Module - Manages hiding OllyScale's own telemetry
  */
 
-let hideTinyOlly = true;
+let hideOllyScale = true;
 
 // Load state from localStorage
 try {
-    const savedState = localStorage.getItem('tinyolly-hide-self');
-    hideTinyOlly = savedState !== null ? savedState === 'true' : true;
+    const savedState = localStorage.getItem('ollyscale-hide-self');
+    hideOllyScale = savedState !== null ? savedState === 'true' : true;
 } catch (e) {
     console.warn('LocalStorage access failed:', e);
 }
 
-export function initHideTinyOllyToggle() {
-    updateHideTinyOllyButton();
+export function initHideOllyScaleToggle() {
+    updateHideOllyScaleButton();
 }
 
-export function toggleHideTinyOlly() {
-    hideTinyOlly = !hideTinyOlly;
+export function toggleHideOllyScale() {
+    hideOllyScale = !hideOllyScale;
     try {
-        localStorage.setItem('tinyolly-hide-self', hideTinyOlly);
+        localStorage.setItem('ollyscale-hide-self', hideOllyScale);
     } catch (e) {
         console.warn('LocalStorage access failed:', e);
     }
-    updateHideTinyOllyButton();
+    updateHideOllyScaleButton();
 
     // Reload current tab data
     import('./tabs.js').then(module => {
@@ -79,44 +79,44 @@ export function toggleHideTinyOlly() {
     });
 }
 
-function updateHideTinyOllyButton() {
-    const btn = document.getElementById('hide-tinyolly-btn');
-    const text = document.getElementById('hide-tinyolly-text');
+function updateHideOllyScaleButton() {
+    const btn = document.getElementById('hide-ollyscale-btn');
+    const text = document.getElementById('hide-ollyscale-text');
 
     if (!btn || !text) return;
 
-    if (hideTinyOlly) {
-        text.textContent = 'Show TinyOlly';
-        btn.title = 'TinyOlly telemetry is hidden - click to show';
+    if (hideOllyScale) {
+        text.textContent = 'Show OllyScale';
+        btn.title = 'OllyScale telemetry is hidden - click to show';
     } else {
-        text.textContent = 'Hide TinyOlly';
-        btn.title = 'TinyOlly telemetry is visible - click to hide';
+        text.textContent = 'Hide OllyScale';
+        btn.title = 'OllyScale telemetry is visible - click to hide';
     }
 }
 
 /**
- * Check if TinyOlly telemetry should be hidden
+ * Check if OllyScale telemetry should be hidden
  */
-export function shouldHideTinyOlly() {
-    return hideTinyOlly;
+export function shouldHideOllyScale() {
+    return hideOllyScale;
 }
 
 /**
- * Check if a service name is a TinyOlly internal service
+ * Check if a service name is an OllyScale internal service
  */
-function isTinyOllyService(serviceName) {
+function isOllyScaleService(serviceName) {
     if (!serviceName) return false;
-    // Only filter the core TinyOlly services, not infrastructure like Redis
-    return serviceName === 'tinyolly-ui' ||
-           serviceName === 'tinyolly-otlp-receiver' ||
-           serviceName === 'tinyolly-opamp-server';
+    // Only filter the core OllyScale services, not infrastructure like Redis
+    return serviceName === 'ollyscale-ui' ||
+           serviceName === 'ollyscale-otlp-receiver' ||
+           serviceName === 'ollyscale-opamp-server';
 }
 
 /**
- * Filter function to exclude TinyOlly internal services
+ * Filter function to exclude OllyScale internal services
  */
-export function filterTinyOllyData(item) {
-    if (!hideTinyOlly) return true;
+export function filterOllyScaleData(item) {
+    if (!hideOllyScale) return true;
 
     // Check various service name fields
     const serviceName = item.service_name ||
@@ -131,37 +131,37 @@ export function filterTinyOllyData(item) {
                        (item.resource && item.resource['service.name']);
 
     // Filter out TinyOlly internal services
-    return !isTinyOllyService(serviceName);
+    return !isOllyScaleService(serviceName);
 }
 
 /**
  * Filter traces - exclude if service is a TinyOlly internal service
  */
-export function filterTinyOllyTrace(trace) {
+export function filterOllyScaleTrace(trace) {
     if (!hideTinyOlly) return true;
 
     // API returns service_name field for traces
     const serviceName = trace.service_name || trace.serviceName || trace.root_service || trace.rootService;
-    return !isTinyOllyService(serviceName);
+    return !isOllyScaleService(serviceName);
 }
 
 /**
  * Filter metrics - exclude if only from TinyOlly internal services
  */
-export function filterTinyOllyMetric(metric) {
+export function filterOllyScaleMetric(metric) {
     if (!hideTinyOlly) return true;
 
     // Check services array (from metrics list endpoint)
     if (metric.services && Array.isArray(metric.services)) {
         // Filter out if ALL services are TinyOlly internal services
-        const hasNonTinyOllyService = metric.services.some(service => !isTinyOllyService(service));
+        const hasNonTinyOllyService = metric.services.some(service => !isOllyScaleService(service));
         return hasNonTinyOllyService;
     }
 
     // Check in resources object (for single metric detail)
     if (metric.resources) {
         const serviceName = metric.resources['service.name'];
-        if (isTinyOllyService(serviceName)) return false;
+        if (isOllyScaleService(serviceName)) return false;
     }
 
     // Check in series (for metric detail view)
@@ -169,7 +169,7 @@ export function filterTinyOllyMetric(metric) {
         // Filter out entire metric if all series are from TinyOlly services
         const nonTinyOllySeries = metric.series.filter(s => {
             const serviceName = s.resources && s.resources['service.name'];
-            return !isTinyOllyService(serviceName);
+            return !isOllyScaleService(serviceName);
         });
         return nonTinyOllySeries.length > 0;
     }
@@ -180,11 +180,11 @@ export function filterTinyOllyMetric(metric) {
 /**
  * Filter metric series - exclude series from TinyOlly internal services
  */
-export function filterTinyOllyMetricSeries(series) {
+export function filterOllyScaleMetricSeries(series) {
     if (!hideTinyOlly) return series;
 
     return series.filter(s => {
         const serviceName = s.resources && s.resources['service.name'];
-        return !isTinyOllyService(serviceName);
+        return !isOllyScaleService(serviceName);
     });
 }

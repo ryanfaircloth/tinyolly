@@ -67,15 +67,15 @@ compatibility with OTLP exporters and OpenTelemetry SDKs.
 
 ## Note
 
-This is the API backend. The web UI is served by the tinyolly-ui nginx container.
+This is the API backend. The web UI is served by the ollyscale-ui nginx container.
         """,
         default_response_class=ORJSONResponse,
         docs_url="/docs",
         redoc_url="/redoc",
         openapi_url="/openapi.json",
         contact={
-            "name": "TinyOlly Project",
-            "url": "https://github.com/tinyolly/tinyolly",
+            "name": "OllyScale Project",
+            "url": "https://github.com/ryanfaircloth/ollyscale",
         },
         license_info={
             "name": "Apache 2.0",

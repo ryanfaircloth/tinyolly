@@ -36,7 +36,7 @@
 import { renderSpans, renderTraces, renderLogs, renderMetrics, renderServiceMap, renderStats } from './render.js';
 import { renderServiceCatalog } from './serviceCatalog.js';
 import { renderErrorState, renderLoadingState } from './utils.js';
-import { filterTinyOllyData, filterTinyOllyTrace, filterTinyOllyMetric, filterTinyOllyMetricSeries, shouldHideTinyOlly } from './filter.js';
+import { filterOllyScaleData, filterOllyScaleTrace, filterOllyScaleMetric, filterOllyScaleMetricSeries, shouldHideOllyScale } from './filter.js';
 import { loadOpampStatus, initCollector } from './collector.js';
 
 export async function loadStats() {
@@ -55,7 +55,7 @@ export async function loadTraces() {
         let traces = await response.json();
 
         // Filter out TinyOlly traces if hide toggle is active
-        traces = traces.filter(filterTinyOllyTrace);
+        traces = traces.filter(filterOllyScaleTrace);
 
         renderTraces(traces);
     } catch (error) {
@@ -96,7 +96,7 @@ export async function loadSpans(serviceName = null) {
         }
 
         // Filter out TinyOlly spans if hide toggle is active
-        spans = spans.filter(filterTinyOllyData);
+        spans = spans.filter(filterOllyScaleData);
 
         // Replace loading indicator with actual data
         renderSpans(spans);
@@ -124,7 +124,7 @@ export async function loadLogs(filterTraceId = null) {
         let logs = await response.json();
 
         // Filter out TinyOlly logs if hide toggle is active
-        logs = logs.filter(filterTinyOllyData);
+        logs = logs.filter(filterOllyScaleData);
 
         renderLogs(logs, 'logs-container');
     } catch (error) {
@@ -163,7 +163,7 @@ export async function loadServiceMap() {
         let graph = await response.json();
 
         // Filter out TinyOlly nodes and edges based on toggle state
-        if (shouldHideTinyOlly()) {
+        if (shouldHideOllyScale()) {
             const tinyollyServices = ['tinyolly-ui', 'tinyolly-otlp-receiver', 'tinyolly-opamp-server'];
 
             // First, filter edges to remove TinyOlly connections
@@ -213,7 +213,7 @@ export async function loadServiceCatalog() {
         let services = await response.json();
 
         // Filter out TinyOlly service if hide toggle is active
-        services = services.filter(filterTinyOllyData);
+        services = services.filter(filterOllyScaleData);
 
         renderServiceCatalog(services);
     } catch (error) {

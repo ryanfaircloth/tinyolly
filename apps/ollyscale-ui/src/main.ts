@@ -36,8 +36,8 @@ import './modules/serviceCatalog.js';
 import './modules/serviceMap.js';
 import './modules/aiAgents.js';
 import './modules/collector.js';
-import './modules/tinyolly.js';
+import './modules/ollyscale.js';
 
-console.log('[TinyOlly] Application initialized');
-console.log('[TinyOlly] Cytoscape version:', cytoscape.version);
-console.log('[TinyOlly] Chart.js version:', Chart.version);
+console.log('[OllyScale] Application initialized');
+console.log('[OllyScale] Cytoscape version:', cytoscape.version);
+console.log('[OllyScale] Chart.js version:', Chart.version);

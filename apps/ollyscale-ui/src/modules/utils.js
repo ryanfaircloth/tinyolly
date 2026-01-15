@@ -252,7 +252,7 @@ export function renderErrorState(message) {
     return `<div class="empty"><div class="empty-icon">⚠️</div><div>${message}</div></div>`;
 }
 
-/** Renders loading spinner with TinyOlly logo and optional message */
+/** Renders loading spinner with OllyScale logo and optional message */
 export function renderLoadingState(message = 'Loading...') {
     return `
         <div class="loading">

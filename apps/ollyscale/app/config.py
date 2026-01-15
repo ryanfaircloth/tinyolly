@@ -52,7 +52,7 @@ class Settings:
 
     # OTLP - These are only used if not auto-instrumented by the OTel Operator
     # In Kubernetes, the operator injects all OTEL_* env vars automatically
-    otel_service_name: str = os.getenv("OTEL_SERVICE_NAME", "tinyolly-ui")
+    otel_service_name: str = os.getenv("OTEL_SERVICE_NAME", "ollyscale-ui")
 
     # CORS
     cors_origins: str = os.getenv("CORS_ORIGINS", "http://localhost:*,http://127.0.0.1:*")

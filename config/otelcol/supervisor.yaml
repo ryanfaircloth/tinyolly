@@ -3,7 +3,7 @@
 # from the TinyOlly OpAMP server.
 
 server:
-  endpoint: ws://tinyolly-opamp-server:4320/v1/opamp
+  endpoint: ws://ollyscale-opamp-server:4320/v1/opamp
 
 capabilities:
   # Accept remote configuration from OpAMP server
