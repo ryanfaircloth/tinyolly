@@ -66,10 +66,21 @@ strategy, and CI/CD improvements for future forks.
 - [ ] `README.md` - Add "Origins" section, update all references
 - [ ] `CONTRIBUTING.md` - Update repository URLs, project name
 - [ ] `docs/` directory - All markdown files
-- [ ] `docs/images/` - Logo files (tinyollytitle.png, etc.)
+- [ ] `docs/images/` - Logo files (tinyollytitle.png, etc.) **→ Phase 7**
 - [ ] `mkdocs.yml` - Site name, repo URL
 - [ ] Repository description on GitHub
-- [ ] Social media preview image
+- [ ] Social media preview image **→ Phase 7**
+- [ ] Favicon and app icons **→ Phase 7**
+
+### 1a. UI/UX Improvements (Phase 7)
+
+- [ ] Design new ollyScale logo and brand identity
+- [ ] Define new color scheme and CSS variables
+- [ ] Identify and document current UX issues
+- [ ] Redesign problematic UI components
+- [ ] Update theme/styling across all pages
+- [ ] Test accessibility and responsive design
+- [ ] Update all screenshots with new UI
 
 ### 2. CI/CD & Automation Scripts
 
@@ -165,7 +176,215 @@ CONTAINER_REGISTRY="${CONTAINER_REGISTRY:-ghcr.io}"
 - [ ] `apps/demo/` - Service names, endpoints
 - [ ] `apps/demo-otel-agent/` - Configuration references
 
+### 11. GitHub Configuration
+
+- [ ] `.github/ISSUE_TEMPLATE/` - Project name references
+- [ ] `.github/PULL_REQUEST_TEMPLATE.md` - Update if exists
+- [ ] `.github/CODEOWNERS` - Update if exists
+- [ ] Repository settings (Description, Website, Topics)
+
+### 12. DNS and Ingress
+
+- [ ] HTTPRoute host patterns (*.tinyolly.test →*.ollyscale.test)
+- [ ] Certificate names and DNS references
+- [ ] `/etc/hosts` or `hostctl` entries documentation
+- [ ] Ingress annotations and labels
+
+### 13. Redis Keys and Data Migration
+
+- [ ] Review Redis key prefixes (span:, trace:, etc.)
+- [ ] Document if migration needed for existing data
+- [ ] Update storage.py if keys contain project name
+
+### 14. Git History and Tags
+
+- [ ] Tag current state: `git tag pre-ollyscale-rebrand`
+- [ ] Update git remote to new repository name
+- [ ] Plan for GitHub repo redirect setup
+
 ## Implementation Phases
+
+### Dependency Tree & Execution Order
+
+```text
+Phase 0: Pre-Flight (no dependencies)
+├─ Tag: pre-ollyscale-rebrand
+├─ Audit: grep for all tinyolly references
+└─ Review: Identify files that must keep TinyOlly
+
+Phase 1: Foundation (depends on Phase 0)
+├─ 1.1 Licensing (no dependencies)
+│   ├─ Create LICENSE (AGPL-3.0)
+│   ├─ Create NOTICE file
+│   ├─ Create LICENSE-HEADER-AGPL.txt
+│   └─ Create LICENSE-HEADER-BSD3.txt
+│   [VALIDATE & COMMIT]
+│
+└─ 1.2 Core Documentation (depends on 1.1)
+    ├─ README.md - Add origins section
+    ├─ README.md - Update references (keep TinyOlly in origins)
+    └─ CONTRIBUTING.md - Update basic references
+    [VALIDATE & COMMIT]
+
+Phase 2: Infrastructure (depends on Phase 1)
+├─ 2.1 Makefile Variables (no dependencies within phase)
+│   ├─ Add PROJECT_NAME, PROJECT_SLUG variables
+│   ├─ Add GH_ORG, GH_REPO variables
+│   ├─ Add REGISTRY, REGISTRY_ORG variables
+│   ├─ Update all targets to use variables
+│   └─ Test: make --dry-run to verify
+│   [VALIDATE & COMMIT]
+│
+├─ 2.2 Build Scripts (depends on 2.1)
+│   ├─ scripts/build/*.sh - Parameterize
+│   ├─ scripts/release/*.sh - Parameterize
+│   ├─ charts/build-and-push-local.sh - Parameterize
+│   └─ Test: Run build script with defaults
+│   [VALIDATE & COMMIT]
+│
+└─ 2.3 GitHub Workflows (depends on 2.1)
+    ├─ .github/workflows/*.yml - Add env vars
+    ├─ .github/dependabot.yml - Update paths
+    └─ Test: Validate YAML syntax
+    [VALIDATE & COMMIT]
+
+Phase 3: Kubernetes/Helm (depends on Phase 2)
+├─ 3.1 Helm Chart Renaming (critical path)
+│   ├─ Rename charts/tinyolly/ → charts/ollyscale/
+│   ├─ Update Chart.yaml (name, description, home, sources)
+│   ├─ Update values.yaml (image repos, names)
+│   ├─ Update all templates/*.yaml (labels, annotations)
+│   └─ Test: helm lint charts/ollyscale
+│   [VALIDATE & COMMIT]
+│
+├─ 3.2 Additional Charts (depends on 3.1)
+│   ├─ Rename charts/tinyolly-demos/ → charts/ollyscale-demos/
+│   ├─ Rename charts/tinyolly-demo-otel-agent/ → charts/ollyscale-otel-agent/
+│   └─ Update all Chart.yaml and values.yaml
+│   [VALIDATE & COMMIT]
+│
+└─ 3.3 Terraform/KIND (depends on 3.1, 3.2)
+    ├─ Rename .kind/modules/tinyolly/ → .kind/modules/ollyscale/
+    ├─ Update main.tf, variables.tf
+    ├─ Update argocd-applications/*.yaml
+    ├─ Update terraform.auto.tfvars
+    ├─ Test: terraform validate
+    └─ Test: terraform plan (should show renames)
+    [VALIDATE & COMMIT]
+
+Phase 4: Source Code (depends on Phase 3)
+├─ 4.1 Python Backend (parallel with 4.2, 4.3)
+│   ├─ Rename apps/tinyolly/ → apps/ollyscale/
+│   ├─ Update app/main.py (title, description)
+│   ├─ Update all imports across files
+│   ├─ Add AGPL headers to modified files
+│   ├─ Update requirements.txt if needed
+│   └─ Test: Python syntax check, imports
+│   [VALIDATE & COMMIT]
+│
+├─ 4.2 TypeScript Frontend (parallel with 4.1, 4.3)
+│   ├─ Rename apps/tinyolly-ui/ → apps/ollyscale-ui/
+│   ├─ Update package.json
+│   ├─ Update src/ imports and API endpoints
+│   ├─ Add AGPL headers to modified files
+│   └─ Test: npm run build (or lint)
+│   [VALIDATE & COMMIT]
+│
+└─ 4.3 Go OpAMP (parallel with 4.1, 4.2)
+    ├─ Update go.mod module path if needed
+    ├─ Update main.go service name
+    ├─ Add AGPL headers if modified
+    └─ Test: go build
+    [VALIDATE & COMMIT]
+
+Phase 5: Docker & Containers (depends on Phase 4)
+├─ 5.1 Dockerfiles
+│   ├─ Rename Dockerfile.tinyolly-ui → Dockerfile.ollyscale-ui
+│   ├─ Rename Dockerfile.tinyolly-otlp-receiver → Dockerfile.ollyscale-receiver
+│   ├─ Update all labels (org.opencontainers.image.*)
+│   └─ Update docker-compose.yml if exists
+│   [VALIDATE & COMMIT]
+│
+└─ 5.2 Build & Test (depends on 5.1, critical validation)
+    ├─ Test: Build all containers locally
+    ├─ Test: Tag with ollyscale names
+    ├─ Test: Push to local registry
+    └─ Document any build issues
+    [VALIDATE & COMMIT]
+
+Phase 6: Configuration Files (depends on Phase 5)
+├─ config/otelcol/ - Update comments, service names
+├─ pyproject.toml - Update if exists
+├─ release-please-config.json - Update paths
+├─ .gitignore - Update path references
+├─ renovate.json - Update labels
+└─ Test: Validate all config files
+[VALIDATE & COMMIT]
+
+Phase 7: Full Integration Test (depends on Phase 6)
+├─ 7.1 Deploy to KIND
+│   ├─ make up (should use new ollyscale configs)
+│   ├─ make deploy (build and deploy ollyscale)
+│   ├─ Verify: kubectl get po -n ollyscale
+│   ├─ Verify: All pods Running
+│   └─ Check logs for old "tinyolly" references
+│   [VALIDATE & COMMIT if issues fixed]
+│
+├─ 7.2 Functional Testing
+│   ├─ Access UI at https://ollyscale.ollyscale.test:49443
+│   ├─ Send test telemetry
+│   ├─ Verify traces, logs, metrics display
+│   ├─ Test service map generation
+│   └─ Verify OTel Demo still works
+│   [VALIDATE & COMMIT if issues fixed]
+│
+└─ 7.3 Final Cleanup
+    ├─ Search: grep -r "tinyolly" (except allowed files)
+    ├─ Update any missed references
+    ├─ Update DNS/ingress docs
+    └─ Update .github/ config
+    [VALIDATE & COMMIT]
+
+Phase 8: Visual Identity & UX (depends on Phase 7 stable)
+├─ Design new logo
+├─ Define color scheme
+├─ Update CSS/theme variables
+├─ Fix identified UX issues
+├─ Update all images/screenshots
+└─ Test visual changes
+[VALIDATE & COMMIT]
+
+Phase 9: Documentation Polish (depends on Phase 8)
+├─ Update all remaining docs
+├─ Create migration guide
+├─ Update mkdocs site
+└─ Final review
+[VALIDATE & COMMIT]
+```
+
+### Critical Path
+
+1. **Must complete in order:** Phase 0 → 1 → 2 → 3 → 4 → 5 → 6 → 7
+2. **Can parallelize:** Within Phase 2 (2.1 → 2.2 and 2.3 in parallel)
+3. **Can parallelize:** Phase 4 (4.1, 4.2, 4.3 all in parallel)
+4. **Blocker phases:** 3.1 (Helm renaming) blocks everything after
+5. **Validation gate:** Phase 7 must fully pass before Phase 8
+
+### Execution Rules
+
+1. **One task at a time:** Complete each sub-section fully
+2. **Validate before commit:** Test that changes work as expected
+3. **Commit frequently:** After each [VALIDATE & COMMIT] checkpoint
+4. **Stop if blocked:** If something fails, fix before proceeding
+5. **Document issues:** Note any problems in commit message
+6. **Ask before major decisions:** Confirm approach for complex changes
+
+### Phase 0: Pre-Flight (no dependencies)
+
+1. Tag current state: `git tag pre-ollyscale-rebrand`
+2. Review all `grep` results for tinyolly references
+3. Create list of files that MUST keep TinyOlly attribution
+4. Backup current working cluster if needed
 
 ### Phase 1: Foundation (Licensing & Core Docs)
 
@@ -211,6 +430,18 @@ CONTAINER_REGISTRY="${CONTAINER_REGISTRY:-ghcr.io}"
 2. Create migration guide for fork users
 3. Update screenshots/demos if branded
 4. Final review for missed references
+
+### Phase 7: Visual Identity & UX Improvements
+
+1. Design new ollyScale logo and branding assets
+2. Update `docs/images/` - Replace tinyollytitle.png and all logos
+3. Implement new color scheme across UI
+4. Update favicon and social media preview images
+5. Redesign problematic UI components (fix UX issues)
+6. Update CSS/theme variables for new brand colors
+7. Test visual changes across all pages
+8. Update screenshots in documentation with new UI
+9. Create brand guidelines document if needed
 
 ## Testing Strategy
 
@@ -283,6 +514,27 @@ NAMESPACE ?= observability
 4. **Clear Origins:** Always acknowledge TinyOlly in NOTICE file
 5. **License Clarity:** Dual licensing clearly documented
 
+## What Stays as "TinyOlly"
+
+**Files that MUST retain TinyOlly references:**
+
+1. `LICENSE-BSD3-ORIGINAL` - Original license file
+2. `NOTICE` - Origins and attribution section
+3. `README.md` - "Origins" section only
+4. Copyright headers in files unchanged from upstream
+5. Git commit history (immutable)
+6. Any direct quotes or attributions in documentation
+
+**Where TinyOlly becomes ollyScale:**
+
+- All active branding (UI, docs, marketing)
+- Container images and chart names
+- Kubernetes resources (namespaces, services, deployments)
+- Source code package names and imports
+- CI/CD configurations
+- DNS and ingress hostnames
+- GitHub repository name and settings
+
 ## Risk Mitigation
 
 ### Breaking Changes
@@ -299,19 +551,18 @@ NAMESPACE ?= observability
 
 ## Decision Log
 
-### Decisions Needed
-
-1. **Container naming:** Function-based (`observability-platform/*`) or branded (`ollyscale/*`)?
-2. **Kubernetes namespace:** `observability`, `ollyscale`, or keep `tinyolly`?
-3. **Helm chart names:** Rebrand or function-based?
-4. **Python package name:** If publishing to PyPI, what name?
-5. **Repository name:** Keep `tinyolly` or rename to `ollyscale` or `observability-platform`?
-
 ### Decisions Made
 
 - **License:** AGPL-3.0 for new/modified code, preserve BSD-3-Clause for original
 - **Approach:** Systematic phase-by-phase with testing between phases
 - **CI/CD:** Parameterize all org/repo/registry references
+- **Container naming:** Branded `ollyscale/*` (ollyscale/ui, ollyscale/receiver, ollyscale/opamp-server)
+- **Kubernetes namespace:** `ollyscale`
+- **Helm chart names:** Branded `ollyscale`, `ollyscale-demos`, `ollyscale-otel-agent`
+- **Repository name:** Rename from `tinyolly` to `ollyscale`
+- **Python package:** `ollyscale` (if published to PyPI)
+- **Container registry:** `ghcr.io/ryanfaircloth/ollyscale`
+- **Visual identity:** New logo, color scheme, and UX improvements in Phase 7 (after technical rebrand is stable)
 
 ## Notes
 
