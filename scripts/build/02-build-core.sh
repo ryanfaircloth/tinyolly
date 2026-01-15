@@ -73,9 +73,9 @@ echo ""
 echo "Building images in dependency order..."
 echo ""
 
-# Image 1: TinyOlly unified (UI + OTLP Receiver in one image)
+# Image 1: ollyScale unified (UI + OTLP receiver in one image)
 echo "----------------------------------------"
-echo "Building tinyolly..."
+echo "Building ollyScale backend..."
 echo "----------------------------------------"
 docker buildx build --platform $PLATFORMS \
   --no-cache \

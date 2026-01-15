@@ -1,9 +1,9 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "tinyolly.opampServer.name" . }}
+  name: {{ include "ollyscale.opampServer.name" . }}
   labels:
-    {{- include "tinyolly.opampServer.labels" . | nindent 4 }}
+    {{- include "ollyscale.opampServer.labels" . | nindent 4 }}
   {{- with .Values.commonAnnotations }}
   annotations:
     {{- toYaml . | nindent 4 }}
@@ -12,7 +12,7 @@ spec:
   replicas: {{ .Values.opampServer.replicaCount }}
   selector:
     matchLabels:
-      {{- include "tinyolly.opampServer.selectorLabels" . | nindent 6 }}
+      {{- include "ollyscale.opampServer.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       annotations:
@@ -23,25 +23,25 @@ spec:
         {{- toYaml . | nindent 8 }}
         {{- end }}
       labels:
-        {{- include "tinyolly.opampServer.selectorLabels" . | nindent 8 }}
+        {{- include "ollyscale.opampServer.selectorLabels" . | nindent 8 }}
     spec:
       {{- with .Values.image.pullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "tinyolly.opampServer.serviceAccountName" . }}
+      serviceAccountName: {{ include "ollyscale.opampServer.serviceAccountName" . }}
       {{- with .Values.opampServer.podSecurityContext }}
       securityContext:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       containers:
-      - name: tinyolly-opamp-server
+      - name: ollyscale-opamp-server
         {{- with .Values.opampServer.securityContext }}
         securityContext:
           {{- toYaml . | nindent 10 }}
         {{- end }}
         image: "{{ .Values.opampServer.image.repository }}:{{ .Values.opampServer.image.tag }}"
-        imagePullPolicy: {{ include "tinyolly.imagePullPolicy" (dict "component" .Values.opampServer.image "global" .) }}
+        imagePullPolicy: {{ include "ollyscale.imagePullPolicy" (dict "component" .Values.opampServer.image "global" .) }}
         ports:
         - name: websocket
           containerPort: {{ .Values.opampServer.service.websocketPort }}
@@ -51,7 +51,7 @@ spec:
           protocol: TCP
         env:
         - name: OTEL_SERVICE_NAME
-          value: "tinyolly-opamp-server"
+          value: "ollyscale-opamp-server"
         {{- range .Values.opampServer.env }}
         - name: {{ .name }}
           value: {{ .value | quote }}

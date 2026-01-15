@@ -1,9 +1,9 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "tinyolly.webui.name" . }}
+  name: {{ include "ollyscale.webui.name" . }}
   labels:
-    {{- include "tinyolly.webui.labels" . | nindent 4 }}
+    {{- include "ollyscale.webui.labels" . | nindent 4 }}
   {{- with .Values.commonAnnotations }}
   annotations:
     {{- toYaml . | nindent 4 }}
@@ -12,7 +12,7 @@ spec:
   replicas: {{ .Values.webui.replicaCount }}
   selector:
     matchLabels:
-      {{- include "tinyolly.webui.selectorLabels" . | nindent 6 }}
+      {{- include "ollyscale.webui.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       annotations:
@@ -20,25 +20,25 @@ spec:
         {{- toYaml . | nindent 8 }}
         {{- end }}
       labels:
-        {{- include "tinyolly.webui.selectorLabels" . | nindent 8 }}
+        {{- include "ollyscale.webui.selectorLabels" . | nindent 8 }}
     spec:
       {{- with .Values.image.pullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "tinyolly.webui.serviceAccountName" . }}
+      serviceAccountName: {{ include "ollyscale.webui.serviceAccountName" . }}
       {{- with .Values.webui.podSecurityContext }}
       securityContext:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       containers:
-      - name: tinyolly-ui
+      - name: ollyscale-ui
         {{- with .Values.webui.securityContext }}
         securityContext:
           {{- toYaml . | nindent 10 }}
         {{- end }}
         image: "{{ .Values.webui.image.repository }}:{{ .Values.webui.image.tag }}"
-        imagePullPolicy: {{ include "tinyolly.imagePullPolicy" (dict "component" .Values.webui.image "global" .) }}
+        imagePullPolicy: {{ include "ollyscale.imagePullPolicy" (dict "component" .Values.webui.image "global" .) }}
         ports:
         - name: http
           containerPort: 8000

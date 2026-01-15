@@ -1,11 +1,11 @@
-# Default values for tinyolly-demos
+# Default values for ollyscale-demos
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
 # Global settings
 global:
   # -- Namespace for demos deployment
-  namespace: tinyolly-demos
+  namespace: ollyscale-demos
 
 # Frontend configuration
 frontend:
@@ -29,11 +29,11 @@ frontend:
   # -- Environment variables
   env:
     # -- OTLP endpoint for traces
-    otelExporterOtlpEndpoint: "http://gateway-collector.tinyolly.svc.cluster.local:4317"
+    otelExporterOtlpEndpoint: "http://gateway-collector.ollyscale.svc.cluster.local:4317"
     # -- Service name for OTLP
     otelServiceName: "demo-frontend"
     # -- Prometheus remote write endpoint
-    promRemoteWriteEndpoint: "http://gateway-collector.tinyolly.svc.cluster.local:19291/api/v1/write"
+    promRemoteWriteEndpoint: "http://gateway-collector.ollyscale.svc.cluster.local:19291/api/v1/write"
 
   # -- Resource limits and requests
   resources: {}
@@ -48,7 +48,7 @@ frontend:
         namespace: envoy-gateway-system
         sectionName: mgmt-https-listener
     # -- Hostname for routing
-    hostname: demo-frontend.tinyolly.test
+    hostname: demo-frontend.ollyscale.test
 
 # Backend configuration
 backend:
@@ -72,7 +72,7 @@ backend:
   # -- Environment variables
   env:
     # -- OTLP endpoint for traces
-    otelExporterOtlpEndpoint: "http://gateway-collector.tinyolly.svc.cluster.local:4317"
+    otelExporterOtlpEndpoint: "http://gateway-collector.ollyscale.svc.cluster.local:4317"
     # -- Service name for OTLP
     otelServiceName: "demo-backend"
 

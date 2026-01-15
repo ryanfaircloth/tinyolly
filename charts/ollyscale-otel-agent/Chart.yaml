@@ -18,6 +18,6 @@ maintainers:
   - name: ollyScale Team
     email: ryan@faircloth.dev
 annotations:
-  org.opencontainers.image.title: "TinyOlly AI Agent Demo"
-  org.opencontainers.image.description: "AI Agent demo with Ollama LLM for TinyOlly"
+  org.opencontainers.image.title: "ollyScale AI Agent Demo"
+  org.opencontainers.image.description: "AI Agent demo with Ollama LLM for ollyScale"
   org.opencontainers.image.source: "https://github.com/ryanfaircloth/ollyscale"

@@ -1,4 +1,4 @@
-# TinyOlly Helm Chart
+# ollyScale Helm Chart
 
 A lightweight, desktop-first OpenTelemetry observability platform for local development.
 
@@ -22,13 +22,13 @@ A lightweight, desktop-first OpenTelemetry observability platform for local deve
 ## Installation
 
 ```bash
-# Add TinyOlly Helm repository (if published)
-helm repo add tinyolly https://charts.tinyolly.io
+# Add ollyScale Helm repository (if published)
+helm repo add ollyscale https://charts.ollyscale.io
 helm repo update
 
-# Install TinyOlly
-helm install tinyolly tinyolly/tinyolly \
-  --namespace tinyolly \
+# Install ollyScale
+helm install ollyscale ollyscale/ollyscale \
+  --namespace ollyscale \
   --create-namespace
 ```
 
@@ -86,7 +86,7 @@ ebpfAgent:
     # Service name prefix
     serviceName: "my-app"
     # Collector endpoint
-    otlpEndpoint: "http://gateway-collector.tinyolly.svc.cluster.local:4317"
+    otlpEndpoint: "http://gateway-collector.ollyscale.svc.cluster.local:4317"
 ```
 
 **eBPF Features:**
@@ -106,8 +106,8 @@ ebpfAgent:
 
 ```bash
 # Install with eBPF agent enabled
-helm install tinyolly tinyolly/tinyolly \
-  --namespace tinyolly \
+helm install ollyscale ollyscale/ollyscale \
+  --namespace ollyscale \
   --create-namespace \
   --set ebpfAgent.enabled=true \
   --set ebpfAgent.config.openPorts="5000,8080,3000"
@@ -126,7 +126,7 @@ Enable automatic instrumentation for Python and Go applications:
 
 instrumentation:
   enabled: true
-  selfObservability: true # Instrument TinyOlly itself
+  selfObservability: true # Instrument ollyScale itself
 
   python:
     image:
@@ -151,9 +151,9 @@ spec:
   template:
     metadata:
       annotations:
-        instrumentation.opentelemetry.io/inject-python: "tinyolly/python-instrumentation"
+        instrumentation.opentelemetry.io/inject-python: "ollyscale/python-instrumentation"
         # or for Go:
-        # instrumentation.opentelemetry.io/inject-go: "tinyolly/python-instrumentation"
+        # instrumentation.opentelemetry.io/inject-go: "ollyscale/python-instrumentation"
 ```
 
 ### Tail Sampling Configuration
@@ -189,7 +189,7 @@ gatewayCollector:
 
 ```text
 ┌─────────────────────────────────────────────────────────────────┐
-│                        TinyOlly Platform                         │
+│                        ollyScale Platform                         │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                   │
 │  ┌─────────────┐      ┌──────────────┐      ┌──────────────┐   │
@@ -216,7 +216,7 @@ gatewayCollector:
 │                                 │                                │
 │                                 ▼                                │
 │                        ┌──────────────────┐                      │
-│                        │    TinyOlly UI   │                      │
+│                        │    ollyScale UI   │                      │
 │                        │  (Web Interface) │                      │
 │                        └──────────────────┘                      │
 │                                                                   │
@@ -243,9 +243,9 @@ See [values.yaml](./values.yaml) for full configuration options.
 ## Upgrading
 
 ```bash
-# Upgrade TinyOlly
-helm upgrade tinyolly tinyolly/tinyolly \
-  --namespace tinyolly \
+# Upgrade ollyScale
+helm upgrade ollyscale ollyscale/ollyscale \
+  --namespace ollyscale \
   --reuse-values \
   --set gatewayCollector.replicas=2
 ```
@@ -253,7 +253,7 @@ helm upgrade tinyolly tinyolly/tinyolly \
 ## Uninstallation
 
 ```bash
-helm uninstall tinyolly --namespace tinyolly
+helm uninstall ollyscale --namespace ollyscale
 ```
 
 ## License
@@ -262,6 +262,6 @@ Apache-2.0
 
 ## Links
 
-- [Documentation](https://tinyolly.io/docs)
-- [GitHub Repository](https://github.com/tinyolly/tinyolly)
-- [eBPF Instrumentation Guide](https://tinyolly.io/docs/ebpf)
+- [Documentation](https://ollyscale.io/docs)
+- [GitHub Repository](https://github.com/ollyscale/ollyscale)
+- [eBPF Instrumentation Guide](https://ollyscale.io/docs/ebpf)

@@ -1,9 +1,9 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "tinyolly.otlpReceiver.name" . }}
+  name: {{ include "ollyscale.otlpReceiver.name" . }}
   labels:
-    {{- include "tinyolly.otlpReceiver.labels" . | nindent 4 }}
+    {{- include "ollyscale.otlpReceiver.labels" . | nindent 4 }}
   {{- with .Values.commonAnnotations }}
   annotations:
     {{- toYaml . | nindent 4 }}
@@ -12,7 +12,7 @@ spec:
   replicas: {{ .Values.otlpReceiver.replicaCount }}
   selector:
     matchLabels:
-      {{- include "tinyolly.otlpReceiver.selectorLabels" . | nindent 6 }}
+      {{- include "ollyscale.otlpReceiver.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       annotations:
@@ -24,25 +24,25 @@ spec:
         {{- toYaml . | nindent 8 }}
         {{- end }}
       labels:
-        {{- include "tinyolly.otlpReceiver.selectorLabels" . | nindent 8 }}
+        {{- include "ollyscale.otlpReceiver.selectorLabels" . | nindent 8 }}
     spec:
       {{- with .Values.image.pullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "tinyolly.otlpReceiver.serviceAccountName" . }}
+      serviceAccountName: {{ include "ollyscale.otlpReceiver.serviceAccountName" . }}
       {{- with .Values.otlpReceiver.podSecurityContext }}
       securityContext:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       containers:
-      - name: tinyolly-otlp-receiver
+      - name: ollyscale-otlp-receiver
         {{- with .Values.otlpReceiver.securityContext }}
         securityContext:
           {{- toYaml . | nindent 10 }}
         {{- end }}
         image: "{{ .Values.otlpReceiver.image.repository }}:{{ .Values.otlpReceiver.image.tag }}"
-        imagePullPolicy: {{ include "tinyolly.imagePullPolicy" (dict "component" .Values.otlpReceiver.image "global" .) }}
+        imagePullPolicy: {{ include "ollyscale.imagePullPolicy" (dict "component" .Values.otlpReceiver.image "global" .) }}
         ports:
         - name: grpc
           containerPort: {{ .Values.otlpReceiver.service.targetPort }}
@@ -53,7 +53,7 @@ spec:
         - name: REDIS_PORT
           value: {{ .Values.redis.port | quote }}
         - name: OTEL_SERVICE_NAME
-          value: "tinyolly-otlp-receiver"
+          value: "ollyscale-otlp-receiver"
         {{- range .Values.otlpReceiver.env }}
         - name: {{ .name }}
           value: {{ .value | quote }}

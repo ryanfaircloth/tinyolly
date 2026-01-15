@@ -9,13 +9,13 @@ keywords:
   - opentelemetry
   - demo
   - tracing
-home: https://github.com/ryanfaircloth/tinyolly
+home: https://github.com/ryanfaircloth/ollyscale
 sources:
-  - https://github.com/ryanfaircloth/tinyolly
+  - https://github.com/ryanfaircloth/ollyscale
 maintainers:
   - name: ollyScale Team
     email: ryan@faircloth.dev
 annotations:
   org.opencontainers.image.title: "ollyScale Demos"
   org.opencontainers.image.description: "Demo applications for ollyScale"
-  org.opencontainers.image.source: "https://github.com/tinyolly/tinyolly"
+  org.opencontainers.image.source: "https://github.com/ollyscale/ollyscale"

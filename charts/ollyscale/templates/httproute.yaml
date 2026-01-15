@@ -2,9 +2,9 @@
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
-  name: {{ include "tinyolly.fullname" . }}
+  name: {{ include "ollyscale.fullname" . }}
   labels:
-    {{- include "tinyolly.labels" . | nindent 4 }}
+    {{- include "ollyscale.labels" . | nindent 4 }}
   {{- with .Values.webui.httpRoute.annotations }}
   annotations:
     {{- toYaml . | nindent 4 }}
@@ -25,7 +25,7 @@ spec:
           type: PathPrefix
           value: /api/
       backendRefs:
-      - name: {{ include "tinyolly.frontend.fullname" . }}
+      - name: {{ include "ollyscale.frontend.fullname" . }}
         port: {{ .Values.frontend.service.port }}
     # OTLP ingest endpoints - route to frontend backend
     - matches:
@@ -33,7 +33,7 @@ spec:
           type: PathPrefix
           value: /v1/
       backendRefs:
-      - name: {{ include "tinyolly.frontend.fullname" . }}
+      - name: {{ include "ollyscale.frontend.fullname" . }}
         port: {{ .Values.frontend.service.port }}
     # OpenAPI docs - route to frontend backend
     - matches:
@@ -47,7 +47,7 @@ spec:
           type: Exact
           value: /openapi.json
       backendRefs:
-      - name: {{ include "tinyolly.frontend.fullname" . }}
+      - name: {{ include "ollyscale.frontend.fullname" . }}
         port: {{ .Values.frontend.service.port }}
     # All other paths - route to webui (static files)
     - matches:
@@ -55,6 +55,6 @@ spec:
           type: PathPrefix
           value: /
       backendRefs:
-      - name: {{ include "tinyolly.webui.fullname" . }}
+      - name: {{ include "ollyscale.webui.fullname" . }}
         port: {{ .Values.webui.service.port }}
 {{- end }}

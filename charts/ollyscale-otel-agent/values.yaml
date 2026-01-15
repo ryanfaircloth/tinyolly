@@ -106,4 +106,4 @@ agent:
         namespace: envoy-gateway-system
         sectionName: mgmt-https-listener
     # -- Hostname for routing
-    hostname: ai-agent.tinyolly.test
+    hostname: ai-agent.ollyscale.test

@@ -1,9 +1,9 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "tinyolly.frontend.name" . }}
+  name: {{ include "ollyscale.frontend.name" . }}
   labels:
-    {{- include "tinyolly.frontend.labels" . | nindent 4 }}
+    {{- include "ollyscale.frontend.labels" . | nindent 4 }}
   {{- with .Values.commonAnnotations }}
   annotations:
     {{- toYaml . | nindent 4 }}
@@ -12,37 +12,37 @@ spec:
   replicas: {{ .Values.frontend.replicaCount }}
   selector:
     matchLabels:
-      {{- include "tinyolly.frontend.selectorLabels" . | nindent 6 }}
+      {{- include "ollyscale.frontend.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       annotations:
         {{- if and .Values.instrumentation.enabled .Values.instrumentation.selfObservability }}
-        # Self-observability: TinyOlly frontend instruments itself (demo mode)
+        # Self-observability: ollyScale frontend instruments itself (demo mode)
         instrumentation.opentelemetry.io/inject-python: "{{ .Release.Namespace }}/{{ .Values.instrumentation.name }}"
         {{- end }}
         {{- with .Values.frontend.podAnnotations }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
       labels:
-        {{- include "tinyolly.frontend.selectorLabels" . | nindent 8 }}
+        {{- include "ollyscale.frontend.selectorLabels" . | nindent 8 }}
     spec:
       {{- with .Values.image.pullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "tinyolly.frontend.serviceAccountName" . }}
+      serviceAccountName: {{ include "ollyscale.frontend.serviceAccountName" . }}
       {{- with .Values.frontend.podSecurityContext }}
       securityContext:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       containers:
-      - name: tinyolly-frontend
+      - name: ollyscale-frontend
         {{- with .Values.frontend.securityContext }}
         securityContext:
           {{- toYaml . | nindent 10 }}
         {{- end }}
         image: "{{ .Values.frontend.image.repository }}:{{ .Values.frontend.image.tag }}"
-        imagePullPolicy: {{ include "tinyolly.imagePullPolicy" (dict "component" .Values.frontend.image "global" .) }}
+        imagePullPolicy: {{ include "ollyscale.imagePullPolicy" (dict "component" .Values.frontend.image "global" .) }}
         ports:
         - name: http
           containerPort: {{ .Values.frontend.service.targetPort }}
@@ -53,9 +53,9 @@ spec:
         - name: REDIS_PORT
           value: {{ .Values.redis.port | quote }}
         - name: OTEL_SERVICE_NAME
-          value: "tinyolly-frontend"
+          value: "ollyscale-frontend"
         - name: OPAMP_SERVER_URL
-          value: "http://{{ include "tinyolly.opampServer.name" . }}:{{ .Values.opampServer.service.httpPort }}"
+          value: "http://{{ include "ollyscale.opampServer.name" . }}:{{ .Values.opampServer.service.httpPort }}"
         {{- range .Values.frontend.env }}
         - name: {{ .name }}
           value: {{ .value | quote }}
@@ -85,7 +85,7 @@ spec:
       volumes:
       - name: otelcol-templates-vol
         configMap:
-          name: {{ include "tinyolly.fullname" . }}-otelcol-templates
+          name: {{ include "ollyscale.fullname" . }}-otelcol-templates
       {{- with .Values.frontend.volumes }}
         {{- toYaml . | nindent 6 }}
       {{- end }}

@@ -1,11 +1,11 @@
-# Default values for tinyolly.
+# Default values for ollyscale.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
 # Global settings
 global:
-  # -- Namespace for TinyOlly deployment
-  namespace: tinyolly
+  # -- Namespace for ollyScale deployment
+  namespace: ollyscale
 
 # -- Number of replicas for each component (can be overridden per component)
 replicaCount: 1
@@ -26,7 +26,7 @@ commonAnnotations: {}
 # Redis configuration (assumes redis-operator managed cluster)
 redis:
   # -- Redis host (should match your redis-operator cluster name)
-  host: tinyolly-redis
+  host: ollyscale-redis
   # -- Redis port
   port: 6379
 
@@ -38,7 +38,7 @@ otelCollector:
   enabled: false
   serviceName: gateway-collector
   port: 4318
-  # When enabled, the OTel Operator creates service: gateway-collector.tinyolly.svc.cluster.local
+  # When enabled, the OTel Operator creates service: gateway-collector.ollyscale.svc.cluster.local
 
 # Agent Collector configuration (daemonset for node-level log collection)
 agentCollector:
@@ -46,7 +46,7 @@ agentCollector:
   enabled: true
 
   # -- Namespace for agent collector (defaults to release namespace)
-  namespace: tinyolly
+  namespace: ollyscale
 
   # -- Full collector configuration (receivers, processors, exporters, service)
   config:
@@ -65,7 +65,7 @@ agentCollector:
       loadbalancing/gateway:
         resolver:
           dns:
-            hostname: gateway-collector-headless.tinyolly.svc.cluster.local
+            hostname: gateway-collector-headless.ollyscale.svc.cluster.local
             port: "4317"
         protocol:
           otlp:
@@ -87,15 +87,15 @@ agentCollector:
           exporters: [loadbalancing/gateway]
 
 # Gateway Collector configuration (deployment for centralized processing)
-# This is the main TinyOlly collector - it receives from the agent collector,
+# This is the main ollyScale collector - it receives from the agent collector,
 # performs tail sampling, Envoy service name extraction, generates RED metrics,
-# and forwards to TinyOlly's OTLP receiver.
+# and forwards to ollyScale's OTLP receiver.
 gatewayCollector:
   # -- Enable Gateway OpenTelemetryCollector Custom Resource
   enabled: true
 
   # -- Namespace for gateway collector (defaults to release namespace)
-  namespace: tinyolly
+  namespace: ollyscale
 
   # -- Number of replicas for gateway deployment
   replicas: 1
@@ -149,28 +149,28 @@ gatewayCollector:
               key: service.name
               values: ["demo-.*", "otel-demo-.*", "ai-agent.*"]
               enabled_regex_matching: true
-          # Keep ALL non-TinyOlly service traces (all external apps/demos)
-          - name: keep-non-tinyolly
+          # Keep ALL non-ollyScale service traces (all external apps/demos)
+          - name: keep-non-ollyscale
             type: and
             and:
               and_sub_policy:
-                - name: not-tinyolly
+                - name: not-ollyscale
                   type: string_attribute
                   string_attribute:
                     key: service.name
-                    values: ["tinyolly-.*"]
+                    values: ["ollyscale-.*"]
                     enabled_regex_matching: true
                     invert_match: true
-          # Sample TinyOlly success traces at 5% (only TinyOlly internal services)
-          - name: sample-tinyolly-success
+          # Sample ollyScale success traces at 5% (only ollyScale internal services)
+          - name: sample-ollyscale-success
             type: and
             and:
               and_sub_policy:
-                - name: tinyolly-services
+                - name: ollyscale-services
                   type: string_attribute
                   string_attribute:
                     key: service.name
-                    values: ["tinyolly-.*"]
+                    values: ["ollyscale-.*"]
                     enabled_regex_matching: true
                 - name: not-error
                   type: status_code
@@ -182,7 +182,7 @@ gatewayCollector:
                     sampling_percentage: 5.0
     exporters:
       otlp/to:
-        endpoint: tinyolly-otlp-receiver.tinyolly.svc.cluster.local:4343
+        endpoint: ollyscale-otlp-receiver.ollyscale.svc.cluster.local:4343
         tls:
           insecure: true
     service:
@@ -202,7 +202,7 @@ gatewayCollector:
   #     batch: {}
   #   exporters:
   #     otlp:
-  #       endpoint: tinyolly-otlp-receiver.tinyolly.svc.cluster.local:4343
+  #       endpoint: ollyscale-otlp-receiver.ollyscale.svc.cluster.local:4343
   #       tls:
   #         insecure: true
   #   service:
@@ -214,10 +214,10 @@ gatewayCollector:
 
 # OpenTelemetry Instrumentation configuration
 instrumentation:
-  # -- Enable TinyOlly Instrumentation Custom Resource (managed by OpenTelemetry Operator)
+  # -- Enable ollyScale Instrumentation Custom Resource (managed by OpenTelemetry Operator)
   enabled: true
 
-  # -- Enable self-observability: instrument TinyOlly UI and OTLP receiver
+  # -- Enable self-observability: instrument ollyScale UI and OTLP receiver
   # Use sampling configuration to control overhead while maintaining error visibility
   selfObservability: true
 
@@ -227,7 +227,7 @@ instrumentation:
   # -- Exporter configuration
   exporter:
     # -- Endpoint for the collector (OTel Operator creates service as agent-collector)
-    endpoint: http://agent-collector.tinyolly.svc.cluster.local:4318
+    endpoint: http://agent-collector.ollyscale.svc.cluster.local:4318
 
   # -- Propagators for context propagation
   propagators:
@@ -290,11 +290,11 @@ instrumentation:
     # -- Environment variables for Go instrumentation
     env:
       - name: OTEL_GO_AUTO_TARGET_EXE
-        value: "/app/tinyolly-opamp-server"
+        value: "/app/ollyscale-opamp-server"
       - name: OTEL_SERVICE_NAME
-        value: "tinyolly-opamp-server"
+        value: "ollyscale-opamp-server"
       - name: OTEL_EXPORTER_OTLP_ENDPOINT
-        value: "http://agent-collector.tinyolly.svc.cluster.local:4318"
+        value: "http://agent-collector.ollyscale.svc.cluster.local:4318"
 
     # -- Resource limits and requests for Go instrumentation init container
     resources:
@@ -324,7 +324,7 @@ ebpfAgent:
   enabled: false
 
   # -- Namespace for eBPF agent (defaults to release namespace)
-  namespace: tinyolly
+  namespace: ollyscale
 
   image:
     # -- eBPF agent image repository
@@ -358,7 +358,7 @@ ebpfAgent:
   # -- eBPF agent configuration
   config:
     # -- OTLP exporter endpoint (defaults to gateway collector)
-    otlpEndpoint: "http://gateway-collector.tinyolly.svc.cluster.local:4317"
+    otlpEndpoint: "http://gateway-collector.ollyscale.svc.cluster.local:4317"
     # -- Ports to instrument (comma-separated list)
     # Examples:
     #   "5000" - Flask default port
@@ -396,14 +396,14 @@ ebpfAgent:
   #                 - application
   affinity: {}
 
-# TinyOlly UI component
+# ollyScale UI component
 frontend:
   # -- Number of replicas for API backend
   replicaCount: 1
 
   image:
-    # -- API backend image repository (unified tinyolly image, runs in API mode)
-    repository: ghcr.io/ryanfaircloth/tinyolly/tinyolly
+    # -- API backend image repository (unified ollyscale image, runs in API mode)
+    repository: ghcr.io/ryanfaircloth/ollyscale/ollyscale
     # -- API backend image tag
     tag: v0.0.1
     # -- API backend image pull policy (overrides global)
@@ -495,7 +495,7 @@ webui:
 
   image:
     # -- Web UI image repository (nginx with built frontend)
-    repository: ghcr.io/ryanfaircloth/tinyolly/tinyolly-ui
+    repository: ghcr.io/ryanfaircloth/ollyscale/ollyscale-ui
     # -- Web UI image tag
     tag: v0.0.1
     # -- Web UI image pull policy (overrides global)
@@ -551,7 +551,7 @@ webui:
         namespace: envoy-gateway-system
     # -- Hosts configuration
     hosts:
-      - host: tinyolly.local.gd
+      - host: ollyscale.local.gd
         path: /
         pathType: PathPrefix
 
@@ -604,14 +604,14 @@ webui:
   # -- Affinity
   affinity: {}
 
-# TinyOlly OpAMP Server component
+# ollyScale OpAMP Server component
 opampServer:
   # -- Number of replicas for OpAMP Server
   replicaCount: 1
 
   image:
     # -- OpAMP Server image repository
-    repository: ghcr.io/ryanfaircloth/tinyolly/opamp-server
+    repository: ghcr.io/ryanfaircloth/ollyscale/opamp-server
     # -- OpAMP Server image tag
     tag: v0.0.1
     # -- OpAMP Server image pull policy (overrides global)
@@ -707,14 +707,14 @@ opampServer:
   # -- Affinity
   affinity: {}
 
-# TinyOlly OTLP Receiver component
+# ollyScale OTLP Receiver component
 otlpReceiver:
   # -- Number of replicas for OTLP Receiver
   replicaCount: 1
 
   image:
-    # -- OTLP Receiver image repository (unified tinyolly image)
-    repository: ghcr.io/ryanfaircloth/tinyolly/tinyolly
+    # -- OTLP Receiver image repository (unified ollyscale image)
+    repository: ghcr.io/ryanfaircloth/ollyscale/ollyscale
     # -- OTLP Receiver image tag
     tag: v0.0.1
     # -- OTLP Receiver image pull policy (overrides global)

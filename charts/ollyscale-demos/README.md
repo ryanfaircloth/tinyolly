@@ -1,6 +1,6 @@
-# TinyOlly Demos Helm Chart
+# ollyScale Demos Helm Chart
 
-Unified Helm chart for deploying demo applications to showcase TinyOlly's observability capabilities.
+Unified Helm chart for deploying demo applications to showcase ollyScale's observability capabilities.
 
 ## Features
 
@@ -16,8 +16,8 @@ Unified Helm chart for deploying demo applications to showcase TinyOlly's observ
 
 ```bash
 # Install with default settings (custom demo enabled)
-helm install tinyolly-demos . \
-  --namespace tinyolly-demos \
+helm install ollyscale-demos . \
+  --namespace ollyscale-demos \
   --create-namespace
 ```
 
@@ -25,8 +25,8 @@ helm install tinyolly-demos . \
 
 ```bash
 # Install OTel Demo (disable custom demo)
-helm install tinyolly-demos . \
-  --namespace tinyolly-demos \
+helm install ollyscale-demos . \
+  --namespace ollyscale-demos \
   --create-namespace \
   --set customDemo.enabled=false \
   --set otelDemo.enabled=true
@@ -36,8 +36,8 @@ helm install tinyolly-demos . \
 
 ```bash
 # Install both demos
-helm install tinyolly-demos . \
-  --namespace tinyolly-demos \
+helm install ollyscale-demos . \
+  --namespace ollyscale-demos \
   --create-namespace \
   --set customDemo.enabled=true \
   --set otelDemo.enabled=true
@@ -53,18 +53,18 @@ cd charts
 ./build-and-push-local.sh v2.1.x-demo-test
 
 # Install with local images
-helm install tinyolly-demos ./tinyolly-demos \
-  --namespace tinyolly-demos \
+helm install ollyscale-demos ./ollyscale-demos \
+  --namespace ollyscale-demos \
   --create-namespace \
-  --values ./tinyolly-demos/values-local-dev.yaml
+  --values ./ollyscale-demos/values-local-dev.yaml
 ```
 
 ### Upgrade
 
 ```bash
-helm upgrade tinyolly-demos ./tinyolly-demos \
-  --namespace tinyolly-demos \
-  --values ./tinyolly-demos/values-local-dev.yaml
+helm upgrade ollyscale-demos ./ollyscale-demos \
+  --namespace ollyscale-demos \
+  --values ./ollyscale-demos/values-local-dev.yaml
 ```
 
 ## Configuration
@@ -81,7 +81,7 @@ customDemo:
       tag: latest
     httpRoute:
       enabled: true
-      hostname: demo-frontend.tinyolly.test
+      hostname: demo-frontend.ollyscale.test
 
   backend:
     image:
@@ -96,29 +96,29 @@ otelDemo:
   enabled: true
   httpRoute:
     enabled: true
-    hostname: otel-demo.tinyolly.test
+    hostname: otel-demo.ollyscale.test
 
 opentelemetry-demo:
   default:
     env:
       - name: OTEL_EXPORTER_OTLP_ENDPOINT
-        value: "http://gateway-collector.tinyolly.svc.cluster.local:4318"
+        value: "http://gateway-collector.ollyscale.svc.cluster.local:4318"
 ```
 
 ## Access
 
 After deployment:
 
-- **Custom Demo**: <https://demo-frontend.tinyolly.test:49443>
-- **OTel Demo**: <https://otel-demo.tinyolly.test:49443>
-- **TinyOlly UI**: <https://tinyolly.tinyolly.test:49443>
+- **Custom Demo**: <https://demo-frontend.ollyscale.test:49443>
+- **OTel Demo**: <https://otel-demo.ollyscale.test:49443>
+- **ollyScale UI**: <https://ollyscale.ollyscale.test:49443>
 
 ## Traffic Generation
 
 For the custom demo, a traffic generation script is included to create realistic observability data:
 
 ```bash
-# Run from charts/tinyolly-demos directory
+# Run from charts/ollyscale-demos directory
 ./generate-custom-demo-traffic.sh
 ```
 
@@ -154,8 +154,8 @@ terraform apply \
 ## Uninstall
 
 ```bash
-helm uninstall tinyolly-demos --namespace tinyolly-demos
-kubectl delete namespace tinyolly-demos
+helm uninstall ollyscale-demos --namespace ollyscale-demos
+kubectl delete namespace ollyscale-demos
 ```
 
 ## Documentation
@@ -169,19 +169,19 @@ kubectl delete namespace tinyolly-demos
 ### Check deployment status
 
 ```bash
-kubectl get pods -n tinyolly-demos
-kubectl get httproute -n tinyolly-demos
+kubectl get pods -n ollyscale-demos
+kubectl get httproute -n ollyscale-demos
 ```
 
 ### View logs
 
 ```bash
-kubectl logs -n tinyolly-demos -l app.kubernetes.io/name=demo-frontend
+kubectl logs -n ollyscale-demos -l app.kubernetes.io/name=demo-frontend
 ```
 
 ### Test connectivity to OTel Collector
 
 ```bash
-kubectl exec -n tinyolly-demos deployment/demo-frontend -- \
-  curl -v gateway-collector.tinyolly.svc.cluster.local:4317
+kubectl exec -n ollyscale-demos deployment/demo-frontend -- \
+  curl -v gateway-collector.ollyscale.svc.cluster.local:4317
 ```

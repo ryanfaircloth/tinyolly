@@ -1,9 +1,9 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ include "tinyolly.fullname" . }}-otelcol-templates
+  name: {{ include "ollyscale.fullname" . }}-otelcol-templates
   labels:
-    {{- include "tinyolly.labels" . | nindent 4 }}
+    {{- include "ollyscale.labels" . | nindent 4 }}
 data:
   prometheus-remote-write.yaml: |
     # Configuration with Prometheus Remote Write receiver
@@ -43,7 +43,7 @@ data:
       opamp:
         server:
           ws:
-            endpoint: ws://{{ include "tinyolly.opampServer.name" . }}:4320/v1/opamp
+            endpoint: ws://{{ include "ollyscale.opampServer.name" . }}:4320/v1/opamp
 
     processors:
       batch:
@@ -68,7 +68,7 @@ data:
         verbosity: detailed
 
       otlp:
-        endpoint: "{{ include "tinyolly.otlpReceiver.name" . }}:4343"
+        endpoint: "{{ include "ollyscale.otlpReceiver.name" . }}:4343"
         tls:
           insecure: true
 
@@ -91,7 +91,7 @@ data:
           processors: [batch]
           exporters: [debug, otlp]
   incorrect.yaml: |
-    # Example of an INCORRECT configuration to test TinyOlly UI error handling
+    # Example of an INCORRECT configuration to test ollyScale UI error handling
     # This config contains intentional errors: invalid YAML syntax, missing required sections,
     # invalid processor names, and pipeline misconfigurations.
 
@@ -110,7 +110,7 @@ data:
       opamp:
         server:
           ws:
-            endpoint: ws://{{ include "tinyolly.opampServer.name" . }}:4320/v1/opamp
+            endpoint: ws://{{ include "ollyscale.opampServer.name" . }}:4320/v1/opamp
 
     processors:
       batch:
@@ -131,7 +131,7 @@ data:
       debug:
         verbosity: detailed
       otlp:
-        endpoint: "{{ include "tinyolly.otlpReceiver.name" . }}:4343"
+        endpoint: "{{ include "ollyscale.otlpReceiver.name" . }}:4343"
         tls:
           insecure: true
       # Invalid exporter - missing required configuration

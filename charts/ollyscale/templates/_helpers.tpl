@@ -1,9 +1,9 @@
 {{/*
 Common labels
 */}}
-{{- define "tinyolly.labels" -}}
-helm.sh/chart: {{ include "tinyolly.chart" . }}
-{{ include "tinyolly.selectorLabels" . }}
+{{- define "ollyscale.labels" -}}
+helm.sh/chart: {{ include "ollyscale.chart" . }}
+{{ include "ollyscale.selectorLabels" . }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
@@ -16,29 +16,29 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{/*
 Selector labels
 */}}
-{{- define "tinyolly.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "tinyolly.name" . }}
+{{- define "ollyscale.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "ollyscale.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
 Create chart name and version as used by the chart label.
 */}}
-{{- define "tinyolly.chart" -}}
+{{- define "ollyscale.chart" -}}
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
 Expand the name of the chart.
 */}}
-{{- define "tinyolly.name" -}}
+{{- define "ollyscale.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
 Create a default fully qualified app name.
 */}}
-{{- define "tinyolly.fullname" -}}
+{{- define "ollyscale.fullname" -}}
 {{- if .Values.fullnameOverride }}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
 {{- else }}
@@ -54,16 +54,16 @@ Create a default fully qualified app name.
 {{/*
 UI component name
 */}}
-{{- define "tinyolly.ui.name" -}}
-{{ include "tinyolly.fullname" . }}-ui
+{{- define "ollyscale.ui.name" -}}
+{{ include "ollyscale.fullname" . }}-ui
 {{- end }}
 
 {{/*
 UI service account name
 */}}
-{{- define "tinyolly.ui.serviceAccountName" -}}
+{{- define "ollyscale.ui.serviceAccountName" -}}
 {{- if .Values.ui.serviceAccount.create }}
-{{- default (include "tinyolly.ui.name" .) .Values.ui.serviceAccount.name }}
+{{- default (include "ollyscale.ui.name" .) .Values.ui.serviceAccount.name }}
 {{- else }}
 {{- default "default" .Values.ui.serviceAccount.name }}
 {{- end }}
@@ -72,40 +72,40 @@ UI service account name
 {{/*
 UI component labels
 */}}
-{{- define "tinyolly.ui.labels" -}}
-{{ include "tinyolly.labels" . }}
+{{- define "ollyscale.ui.labels" -}}
+{{ include "ollyscale.labels" . }}
 app.kubernetes.io/component: ui
 {{- end }}
 
 {{/*
 UI selector labels
 */}}
-{{- define "tinyolly.ui.selectorLabels" -}}
-{{ include "tinyolly.selectorLabels" . }}
+{{- define "ollyscale.ui.selectorLabels" -}}
+{{ include "ollyscale.selectorLabels" . }}
 app.kubernetes.io/component: ui
-app: tinyolly-ui
+app: ollyscale-ui
 {{- end }}
 
 {{/*
 Frontend component name (renamed from ui)
 */}}
-{{- define "tinyolly.frontend.name" -}}
-{{ include "tinyolly.fullname" . }}-frontend
+{{- define "ollyscale.frontend.name" -}}
+{{ include "ollyscale.fullname" . }}-frontend
 {{- end }}
 
 {{/*
 Frontend component fullname (for service references)
 */}}
-{{- define "tinyolly.frontend.fullname" -}}
-{{ include "tinyolly.fullname" . }}-frontend
+{{- define "ollyscale.frontend.fullname" -}}
+{{ include "ollyscale.fullname" . }}-frontend
 {{- end }}
 
 {{/*
 Frontend service account name
 */}}
-{{- define "tinyolly.frontend.serviceAccountName" -}}
+{{- define "ollyscale.frontend.serviceAccountName" -}}
 {{- if .Values.frontend.serviceAccount.create }}
-{{- default (include "tinyolly.frontend.name" .) .Values.frontend.serviceAccount.name }}
+{{- default (include "ollyscale.frontend.name" .) .Values.frontend.serviceAccount.name }}
 {{- else }}
 {{- default "default" .Values.frontend.serviceAccount.name }}
 {{- end }}
@@ -114,40 +114,40 @@ Frontend service account name
 {{/*
 Frontend component labels
 */}}
-{{- define "tinyolly.frontend.labels" -}}
-{{ include "tinyolly.labels" . }}
+{{- define "ollyscale.frontend.labels" -}}
+{{ include "ollyscale.labels" . }}
 app.kubernetes.io/component: frontend
 {{- end }}
 
 {{/*
 Frontend selector labels
 */}}
-{{- define "tinyolly.frontend.selectorLabels" -}}
-{{ include "tinyolly.selectorLabels" . }}
+{{- define "ollyscale.frontend.selectorLabels" -}}
+{{ include "ollyscale.selectorLabels" . }}
 app.kubernetes.io/component: frontend
-app: tinyolly-frontend
+app: ollyscale-frontend
 {{- end }}
 
 {{/*
 Web UI component name
 */}}
-{{- define "tinyolly.webui.name" -}}
-{{ include "tinyolly.fullname" . }}-webui
+{{- define "ollyscale.webui.name" -}}
+{{ include "ollyscale.fullname" . }}-webui
 {{- end }}
 
 {{/*
 Web UI component fullname (for service references)
 */}}
-{{- define "tinyolly.webui.fullname" -}}
-{{ include "tinyolly.fullname" . }}-webui
+{{- define "ollyscale.webui.fullname" -}}
+{{ include "ollyscale.fullname" . }}-webui
 {{- end }}
 
 {{/*
 Web UI service account name
 */}}
-{{- define "tinyolly.webui.serviceAccountName" -}}
+{{- define "ollyscale.webui.serviceAccountName" -}}
 {{- if .Values.webui.serviceAccount.create }}
-{{- default (include "tinyolly.webui.name" .) .Values.webui.serviceAccount.name }}
+{{- default (include "ollyscale.webui.name" .) .Values.webui.serviceAccount.name }}
 {{- else }}
 {{- default "default" .Values.webui.serviceAccount.name }}
 {{- end }}
@@ -156,33 +156,33 @@ Web UI service account name
 {{/*
 Web UI component labels
 */}}
-{{- define "tinyolly.webui.labels" -}}
-{{ include "tinyolly.labels" . }}
+{{- define "ollyscale.webui.labels" -}}
+{{ include "ollyscale.labels" . }}
 app.kubernetes.io/component: webui
 {{- end }}
 
 {{/*
 Web UI selector labels
 */}}
-{{- define "tinyolly.webui.selectorLabels" -}}
-{{ include "tinyolly.selectorLabels" . }}
+{{- define "ollyscale.webui.selectorLabels" -}}
+{{ include "ollyscale.selectorLabels" . }}
 app.kubernetes.io/component: webui
-app: tinyolly-webui
+app: ollyscale-webui
 {{- end }}
 
 {{/*
 OpAMP Server component name
 */}}
-{{- define "tinyolly.opampServer.name" -}}
-{{ include "tinyolly.fullname" . }}-opamp-server
+{{- define "ollyscale.opampServer.name" -}}
+{{ include "ollyscale.fullname" . }}-opamp-server
 {{- end }}
 
 {{/*
 OpAMP Server service account name
 */}}
-{{- define "tinyolly.opampServer.serviceAccountName" -}}
+{{- define "ollyscale.opampServer.serviceAccountName" -}}
 {{- if .Values.opampServer.serviceAccount.create }}
-{{- default (include "tinyolly.opampServer.name" .) .Values.opampServer.serviceAccount.name }}
+{{- default (include "ollyscale.opampServer.name" .) .Values.opampServer.serviceAccount.name }}
 {{- else }}
 {{- default "default" .Values.opampServer.serviceAccount.name }}
 {{- end }}
@@ -191,33 +191,33 @@ OpAMP Server service account name
 {{/*
 OpAMP Server component labels
 */}}
-{{- define "tinyolly.opampServer.labels" -}}
-{{ include "tinyolly.labels" . }}
+{{- define "ollyscale.opampServer.labels" -}}
+{{ include "ollyscale.labels" . }}
 app.kubernetes.io/component: opamp-server
 {{- end }}
 
 {{/*
 OpAMP Server selector labels
 */}}
-{{- define "tinyolly.opampServer.selectorLabels" -}}
-{{ include "tinyolly.selectorLabels" . }}
+{{- define "ollyscale.opampServer.selectorLabels" -}}
+{{ include "ollyscale.selectorLabels" . }}
 app.kubernetes.io/component: opamp-server
-app: tinyolly-opamp-server
+app: ollyscale-opamp-server
 {{- end }}
 
 {{/*
 OTLP Receiver component name
 */}}
-{{- define "tinyolly.otlpReceiver.name" -}}
-{{ include "tinyolly.fullname" . }}-otlp-receiver
+{{- define "ollyscale.otlpReceiver.name" -}}
+{{ include "ollyscale.fullname" . }}-otlp-receiver
 {{- end }}
 
 {{/*
 OTLP Receiver service account name
 */}}
-{{- define "tinyolly.otlpReceiver.serviceAccountName" -}}
+{{- define "ollyscale.otlpReceiver.serviceAccountName" -}}
 {{- if .Values.otlpReceiver.serviceAccount.create }}
-{{- default (include "tinyolly.otlpReceiver.name" .) .Values.otlpReceiver.serviceAccount.name }}
+{{- default (include "ollyscale.otlpReceiver.name" .) .Values.otlpReceiver.serviceAccount.name }}
 {{- else }}
 {{- default "default" .Values.otlpReceiver.serviceAccount.name }}
 {{- end }}
@@ -226,25 +226,25 @@ OTLP Receiver service account name
 {{/*
 OTLP Receiver component labels
 */}}
-{{- define "tinyolly.otlpReceiver.labels" -}}
-{{ include "tinyolly.labels" . }}
+{{- define "ollyscale.otlpReceiver.labels" -}}
+{{ include "ollyscale.labels" . }}
 app.kubernetes.io/component: otlp-receiver
 {{- end }}
 
 {{/*
 OTLP Receiver selector labels
 */}}
-{{- define "tinyolly.otlpReceiver.selectorLabels" -}}
-{{ include "tinyolly.selectorLabels" . }}
+{{- define "ollyscale.otlpReceiver.selectorLabels" -}}
+{{ include "ollyscale.selectorLabels" . }}
 app.kubernetes.io/component: otlp-receiver
-app: tinyolly-otlp-receiver
+app: ollyscale-otlp-receiver
 {{- end }}
 
 {{/*
 Image pull policy helper
-Usage: include "tinyolly.imagePullPolicy" (dict "component" .Values.ui.image "global" .)
+Usage: include "ollyscale.imagePullPolicy" (dict "component" .Values.ui.image "global" .)
 */}}
-{{- define "tinyolly.imagePullPolicy" -}}
+{{- define "ollyscale.imagePullPolicy" -}}
 {{- if .component.pullPolicy -}}
 {{- .component.pullPolicy -}}
 {{- else -}}

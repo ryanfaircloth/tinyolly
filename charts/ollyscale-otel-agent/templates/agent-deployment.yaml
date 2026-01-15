@@ -16,7 +16,7 @@ spec:
         {{- include "ollyscale-otel-agent.agent.selectorLabels" . | nindent 8 }}
       annotations:
         # OTel operator auto-instrumentation
-        instrumentation.opentelemetry.io/inject-python: "tinyolly/python-instrumentation"
+        instrumentation.opentelemetry.io/inject-python: "ollyscale/python-instrumentation"
     spec:
       containers:
       - name: ai-agent

@@ -5,7 +5,7 @@
 
 frontend:
   image:
-    repository: docker-registry.registry.svc.cluster.local:5000/ollyscale/tinyolly
+    repository: docker-registry.registry.svc.cluster.local:5000/ollyscale/ollyscale
     tag: 0.0.1768509598
   env:
     - name: MODE
@@ -13,7 +13,7 @@ frontend:
 
 webui:
   image:
-    repository: docker-registry.registry.svc.cluster.local:5000/ollyscale/tinyolly-ui
+    repository: docker-registry.registry.svc.cluster.local:5000/ollyscale/ollyscale-ui
     tag: 0.0.1768509598
 
 opampServer:
@@ -23,7 +23,7 @@ opampServer:
 
 otlpReceiver:
   image:
-    repository: docker-registry.registry.svc.cluster.local:5000/ollyscale/tinyolly
+    repository: docker-registry.registry.svc.cluster.local:5000/ollyscale/ollyscale
     tag: 0.0.1768509598
   env:
     - name: MODE

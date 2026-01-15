@@ -41,10 +41,10 @@ CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
 # Demo app URL - uses HTTPRoute FQDN
-FRONTEND_URL="https://demo-frontend.tinyolly.test:49443"
+FRONTEND_URL="https://demo-frontend.ollyscale.test:49443"
 
 echo -e "${BLUE}========================================${NC}"
-echo -e "${BLUE}TinyOlly Custom Demo Traffic Generator${NC}"
+echo -e "${BLUE}ollyScale Custom Demo Traffic Generator${NC}"
 echo -e "${BLUE}========================================${NC}"
 echo ""
 
@@ -53,7 +53,7 @@ if ! curl -s -k -o /dev/null -w "%{http_code}" "$FRONTEND_URL/" | grep -q "200";
     echo -e "${YELLOW}⚠ Frontend not accessible at ${FRONTEND_URL}${NC}"
     echo -e "${YELLOW}Make sure:${NC}"
     echo -e "  1. Custom demo is deployed via Helm/ArgoCD"
-    echo -e "  2. HTTPRoute is configured: ${CYAN}kubectl get httproute demo-frontend -n tinyolly-demos${NC}"
+    echo -e "  2. HTTPRoute is configured: ${CYAN}kubectl get httproute demo-frontend -n ollyscale-demos${NC}"
     echo -e "  3. Envoy Gateway is running: ${CYAN}kubectl get gateway cluster-gateway -n envoy-gateway-system${NC}"
     echo ""
     echo -e "${YELLOW}Attempting to generate traffic anyway...${NC}"

@@ -4,7 +4,7 @@ kind: ClusterRole
 metadata:
   name: agent
   labels:
-    {{- include "tinyolly.labels" . | nindent 4 }}
+    {{- include "ollyscale.labels" . | nindent 4 }}
     app.kubernetes.io/component: otel-agent
 rules:
   - apiGroups: [""]
