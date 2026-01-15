@@ -16,11 +16,11 @@ permissions:
 jobs:
   # Run tests and checks before creating releases
   tests:
-    if: github.ref_type == 'branch'
     uses: ./.github/workflows/test.yml
 
   release-please:
     needs: tests
+    if: always()
     runs-on: ubuntu-latest
     outputs:
       releases_created: ${{ steps.release.outputs.releases_created }}
