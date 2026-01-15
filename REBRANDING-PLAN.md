@@ -238,9 +238,9 @@ Phase 2: Infrastructure (depends on Phase 1)
 ├─ 2.2 Build Scripts (depends on 2.1)
 │   ├─ scripts/build/*.sh - Parameterize
 │   ├─ scripts/release/*.sh - Parameterize
-│   ├─ charts/build-and-push-local.sh - Parameterize
+│   ├─ charts/build-and-push-local.sh - Parameterize [COMPLETED]
 │   └─ Test: Run build script with defaults
-│   [VALIDATE & COMMIT]
+│   [VALIDATE & COMMIT] - PARTIALLY COMPLETED
 │
 └─ 2.3 GitHub Workflows (depends on 2.1)
     ├─ .github/workflows/*.yml - Add env vars
