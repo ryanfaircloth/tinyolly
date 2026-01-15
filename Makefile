@@ -89,7 +89,7 @@ deploy:
 	echo "" && \
 	echo "🔄 Creating terraform auto vars file..." && \
 	echo "ollyscale_chart_tag = \"0.3.0-$$VERSION\"" > $(CURDIR)/.kind/terraform.auto.tfvars && \
-	echo "tinyolly_tag = \"$$VERSION\"" >> $(CURDIR)/.kind/terraform.auto.tfvars && \
+	echo "ollyscale_tag = \"$$VERSION\"" >> $(CURDIR)/.kind/terraform.auto.tfvars && \
 	echo "opamp_tag = \"$$VERSION\"" >> $(CURDIR)/.kind/terraform.auto.tfvars && \
 	echo "🔄 Updating ArgoCD application..." && \
 	cd $(CURDIR)/.kind && \
@@ -125,7 +125,7 @@ demos:
 		terraform apply -auto-approve
 	@echo ""
 	@echo "✅ Custom demos deployed!"
-	@echo "   Access: https://demo-frontend.tinyolly.test:49443"
+	@echo "   Access: https://demo-frontend.ollyscale.test:49443"
 	@echo ""
 
 ## Deploy OpenTelemetry Demo (astronomy shop)
@@ -138,7 +138,7 @@ demos-otel:
 		terraform apply -auto-approve
 	@echo ""
 	@echo "✅ OTel Demo deployed!"
-	@echo "   Access: https://otel-demo.tinyolly.test:49443"
+	@echo "   Access: https://otel-demo.ollyscale.test:49443"
 	@echo ""
 
 ## Deploy both custom and OpenTelemetry demos
@@ -151,8 +151,8 @@ demos-all:
 		terraform apply -auto-approve
 	@echo ""
 	@echo "✅ All demos deployed!"
-	@echo "   Custom Demo: https://demo-frontend.tinyolly.test:49443"
-	@echo "   OTel Demo:   https://otel-demo.tinyolly.test:49443"
+	@echo "   Custom Demo: https://demo-frontend.ollyscale.test:49443"
+	@echo "   OTel Demo:   https://otel-demo.ollyscale.test:49443"
 	@echo ""
 
 ## Disable all demo applications
