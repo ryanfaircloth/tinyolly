@@ -5,7 +5,7 @@ metadata:
   name: demo-frontend
   namespace: {{ .Values.global.namespace }}
   labels:
-    {{- include "tinyolly-demos.frontend.labels" . | nindent 4 }}
+    {{- include "ollyscale-demos.frontend.labels" . | nindent 4 }}
 spec:
   parentRefs:
     {{- toYaml .Values.frontend.httpRoute.parentRefs | nindent 4 }}

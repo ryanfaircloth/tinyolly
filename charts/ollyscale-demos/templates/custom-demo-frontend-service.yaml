@@ -3,7 +3,7 @@ kind: Service
 metadata:
   name: demo-frontend
   namespace: {{.Values.global.namespace}}
-  labels: {{- include "tinyolly-demos.frontend.labels" . | nindent 4}}
+  labels: {{- include "ollyscale-demos.frontend.labels" . | nindent 4}}
 spec:
   type: {{.Values.frontend.service.type}}
   ports:
@@ -16,4 +16,4 @@ spec:
       protocol: TCP
       name: metrics
   selector:
-    {{- include "tinyolly-demos.frontend.selectorLabels" . | nindent 4}}
+    {{- include "ollyscale-demos.frontend.selectorLabels" . | nindent 4}}

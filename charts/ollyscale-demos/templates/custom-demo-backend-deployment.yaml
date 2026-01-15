@@ -4,16 +4,16 @@ metadata:
   name: demo-backend
   namespace: {{ .Values.global.namespace }}
   labels:
-    {{- include "tinyolly-demos.backend.labels" . | nindent 4 }}
+    {{- include "ollyscale-demos.backend.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.backend.replicaCount }}
   selector:
     matchLabels:
-      {{- include "tinyolly-demos.backend.selectorLabels" . | nindent 6 }}
+      {{- include "ollyscale-demos.backend.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
-        {{- include "tinyolly-demos.backend.selectorLabels" . | nindent 8 }}
+        {{- include "ollyscale-demos.backend.selectorLabels" . | nindent 8 }}
       annotations:
         instrumentation.opentelemetry.io/inject-python: "tinyolly/python-instrumentation"
     spec:

@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# Package TinyOlly Helm Chart
+# Package ollyScale Helm Chart
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-CHART_DIR="${SCRIPT_DIR}/tinyolly"
+CHART_DIR="${SCRIPT_DIR}/ollyscale"
 
-echo "📦 Packaging TinyOlly Helm Chart..."
+echo "📦 Packaging ollyScale Helm Chart..."
 
 # Lint the chart first
 echo "🔍 Linting chart..."

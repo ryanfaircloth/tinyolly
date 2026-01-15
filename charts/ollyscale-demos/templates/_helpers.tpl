@@ -1,14 +1,14 @@
 {{/*
 Expand the name of the chart.
 */}}
-{{- define "tinyolly-demos.name" -}}
+{{- define "ollyscale-demos.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
 Create a default fully qualified app name.
 */}}
-{{- define "tinyolly-demos.fullname" -}}
+{{- define "ollyscale-demos.fullname" -}}
 {{- if .Values.fullnameOverride }}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
 {{- else }}
@@ -24,16 +24,16 @@ Create a default fully qualified app name.
 {{/*
 Create chart name and version as used by the chart label.
 */}}
-{{- define "tinyolly-demos.chart" -}}
+{{- define "ollyscale-demos.chart" -}}
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
 Common labels
 */}}
-{{- define "tinyolly-demos.labels" -}}
-helm.sh/chart: {{ include "tinyolly-demos.chart" . }}
-{{ include "tinyolly-demos.selectorLabels" . }}
+{{- define "ollyscale-demos.labels" -}}
+helm.sh/chart: {{ include "ollyscale-demos.chart" . }}
+{{ include "ollyscale-demos.selectorLabels" . }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
@@ -43,17 +43,17 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{/*
 Selector labels
 */}}
-{{- define "tinyolly-demos.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "tinyolly-demos.name" . }}
+{{- define "ollyscale-demos.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "ollyscale-demos.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
 Frontend labels
 */}}
-{{- define "tinyolly-demos.frontend.labels" -}}
-helm.sh/chart: {{ include "tinyolly-demos.chart" . }}
-{{ include "tinyolly-demos.frontend.selectorLabels" . }}
+{{- define "ollyscale-demos.frontend.labels" -}}
+helm.sh/chart: {{ include "ollyscale-demos.chart" . }}
+{{ include "ollyscale-demos.frontend.selectorLabels" . }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
@@ -64,7 +64,7 @@ app.kubernetes.io/component: frontend
 {{/*
 Frontend selector labels
 */}}
-{{- define "tinyolly-demos.frontend.selectorLabels" -}}
+{{- define "ollyscale-demos.frontend.selectorLabels" -}}
 app.kubernetes.io/name: demo-frontend
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
@@ -72,9 +72,9 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{/*
 Backend labels
 */}}
-{{- define "tinyolly-demos.backend.labels" -}}
-helm.sh/chart: {{ include "tinyolly-demos.chart" . }}
-{{ include "tinyolly-demos.backend.selectorLabels" . }}
+{{- define "ollyscale-demos.backend.labels" -}}
+helm.sh/chart: {{ include "ollyscale-demos.chart" . }}
+{{ include "ollyscale-demos.backend.selectorLabels" . }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
@@ -85,7 +85,7 @@ app.kubernetes.io/component: backend
 {{/*
 Backend selector labels
 */}}
-{{- define "tinyolly-demos.backend.selectorLabels" -}}
+{{- define "ollyscale-demos.backend.selectorLabels" -}}
 app.kubernetes.io/name: demo-backend
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}

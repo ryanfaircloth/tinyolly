@@ -3,7 +3,7 @@ kind: Service
 metadata:
   name: demo-backend
   namespace: {{.Values.global.namespace}}
-  labels: {{- include "tinyolly-demos.backend.labels" . | nindent 4}}
+  labels: {{- include "ollyscale-demos.backend.labels" . | nindent 4}}
 spec:
   type: {{.Values.backend.service.type}}
   ports:
@@ -12,4 +12,4 @@ spec:
       protocol: TCP
       name: http
   selector:
-    {{- include "tinyolly-demos.backend.selectorLabels" . | nindent 4}}
+    {{- include "ollyscale-demos.backend.selectorLabels" . | nindent 4}}
