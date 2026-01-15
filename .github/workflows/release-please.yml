@@ -59,22 +59,27 @@ jobs:
         include:
           - component: tinyolly
             path: apps/tinyolly
+            output_key: apps-tinyolly
             dockerfile: apps/tinyolly/Dockerfile
             image: ghcr.io/ryanfaircloth/tinyolly/tinyolly
           - component: tinyolly-ui
             path: apps/tinyolly-ui
+            output_key: apps-tinyolly-ui
             dockerfile: apps/tinyolly-ui/Dockerfile
             image: ghcr.io/ryanfaircloth/tinyolly/tinyolly-ui
           - component: opamp-server
             path: apps/opamp-server
+            output_key: apps-opamp-server
             dockerfile: apps/opamp-server/Dockerfile
             image: ghcr.io/ryanfaircloth/tinyolly/opamp-server
           - component: demo
             path: apps/demo
+            output_key: apps-demo
             dockerfile: apps/demo/Dockerfile
             image: ghcr.io/ryanfaircloth/tinyolly/demo
           - component: demo-otel-agent
             path: apps/demo-otel-agent
+            output_key: apps-demo-otel-agent
             dockerfile: apps/demo-otel-agent/Dockerfile
             image: ghcr.io/ryanfaircloth/tinyolly/demo-otel-agent
     steps:
@@ -83,19 +88,19 @@ jobs:
       - name: Set up QEMU
         if: |
           (github.event_name == 'release' && startsWith(github.event.release.tag_name, format('{0}-v', matrix.component))) ||
-          (github.event_name == 'push' && needs.release-please.outputs[format('{0}--release_created', replace(matrix.path, '/', '-'))] == 'true')
+          (github.event_name == 'push' && needs.release-please.outputs[format('{0}--release_created', matrix.output_key)] == 'true')
         uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
         if: |
           (github.event_name == 'release' && startsWith(github.event.release.tag_name, format('{0}-v', matrix.component))) ||
-          (github.event_name == 'push' && needs.release-please.outputs[format('{0}--release_created', replace(matrix.path, '/', '-'))] == 'true')
+          (github.event_name == 'push' && needs.release-please.outputs[format('{0}--release_created', matrix.output_key)] == 'true')
         uses: docker/setup-buildx-action@v3
 
       - name: Login to GHCR
         if: |
           (github.event_name == 'release' && startsWith(github.event.release.tag_name, format('{0}-v', matrix.component))) ||
-          (github.event_name == 'push' && needs.release-please.outputs[format('{0}--release_created', replace(matrix.path, '/', '-'))] == 'true')
+          (github.event_name == 'push' && needs.release-please.outputs[format('{0}--release_created', matrix.output_key)] == 'true')
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
@@ -105,7 +110,7 @@ jobs:
       - name: Build and push
         if: |
           (github.event_name == 'release' && startsWith(github.event.release.tag_name, format('{0}-v', matrix.component))) ||
-          (github.event_name == 'push' && needs.release-please.outputs[format('{0}--release_created', replace(matrix.path, '/', '-'))] == 'true')
+          (github.event_name == 'push' && needs.release-please.outputs[format('{0}--release_created', matrix.output_key)] == 'true')
         uses: docker/build-push-action@v6
         with:
           context: ${{ matrix.path }}
@@ -115,40 +120,47 @@ jobs:
           tags: |
             ${{ matrix.image }}:v${{ github.event_name == 'release' &&
               replace(github.event.release.tag_name, format('{0}-v', matrix.component), '') ||
-              needs.release-please.outputs[format('{0}--version', replace(matrix.path, '/', '-'))] }}
+              needs.release-please.outputs[format('{0}--version', matrix.output_key)] }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
   # Package and push Helm charts for released components
   release-helm-charts:
-    needs: [release-please, build-containers]
+    needs: release-please
     if: always() && needs.release-please.outputs.releases_created == 'true'
     runs-on: ubuntu-latest
     strategy:
       matrix:
         chart: [tinyolly, tinyolly-demos, tinyolly-demo-otel-agent]
+        include:
+          - chart: tinyolly
+            output_key: charts-tinyolly
+          - chart: tinyolly-demos
+            output_key: charts-tinyolly-demos
+          - chart: tinyolly-demo-otel-agent
+            output_key: charts-tinyolly-demo-otel-agent
     steps:
       - uses: actions/checkout@v6
 
       - name: Install Helm
-        if: needs.release-please.outputs[format('{0}--release_created', replace(format('charts/{0}', matrix.chart), '/', '-'))] == 'true'
+        if: needs.release-please.outputs[format('{0}--release_created', matrix.output_key)] == 'true'
         uses: azure/setup-helm@v4
         with:
           version: latest
 
       - name: Login to GHCR for Helm
-        if: needs.release-please.outputs[format('{0}--release_created', replace(format('charts/{0}', matrix.chart), '/', '-'))] == 'true'
+        if: needs.release-please.outputs[format('{0}--release_created', matrix.output_key)] == 'true'
         run: |
           echo ${{ secrets.GITHUB_TOKEN }} | helm registry login ghcr.io -u ${{ github.actor }} --password-stdin
 
       - name: Package Helm chart
-        if: needs.release-please.outputs[format('{0}--release_created', replace(format('charts/{0}', matrix.chart), '/', '-'))] == 'true'
+        if: needs.release-please.outputs[format('{0}--release_created', matrix.output_key)] == 'true'
         run: |
           cd charts
           helm package ${{ matrix.chart }}
 
       - name: Push Helm chart to GHCR
-        if: needs.release-please.outputs[format('{0}--release_created', replace(format('charts/{0}', matrix.chart), '/', '-'))] == 'true'
+        if: needs.release-please.outputs[format('{0}--release_created', matrix.output_key)] == 'true'
         run: |
           cd charts
-          helm push ${{ matrix.chart }}-${{ needs.release-please.outputs[format('{0}--version', replace(format('charts/{0}', matrix.chart), '/', '-'))] }}.tgz oci://ghcr.io/ryanfaircloth/tinyolly/charts
+          helm push ${{ matrix.chart }}-${{ needs.release-please.outputs[format('{0}--version', matrix.output_key)] }}.tgz oci://ghcr.io/ryanfaircloth/tinyolly/charts
