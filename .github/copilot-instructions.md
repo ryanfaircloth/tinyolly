@@ -1,8 +1,24 @@
 # TinyOlly AI Agent Instructions
 
+## Documentation and Resources
+
+- **Official Documentation**: [https://tinyolly.github.io/tinyolly/](https://tinyolly.github.io/tinyolly/)
+- **Contributing Guide**: [CONTRIBUTING.md](../CONTRIBUTING.md)
+- **README**: [README.md](../README.md)
+- **Pre-commit Documentation**: [docs/precommit.md](../docs/precommit.md)
+
 ## CRITICAL RULES
 
 ### Code Quality and Safety
+
+**Pre-commit hooks are MANDATORY:**
+
+- All commits must pass pre-commit checks before being committed
+- Setup hooks: `make precommit-setup` or `./setup-precommit.sh`
+- Run manually: `make lint` or `pre-commit run --all-files`
+- Auto-fix: `make lint-fix`
+
+**Checks include**: ruff (Python), yamlfmt, prettier (JSON), shellcheck, hadolint (Docker), helm lint, golangci-lint (Go), markdownlint, terraform fmt/validate
 
 **NEVER bypass pre-commit hooks or git checks without explicit permission:**
 
@@ -51,6 +67,15 @@ Shared utilities are in `apps/tinyolly/common/`:
 - **otlp_utils.py**: Centralized OTLP attribute parsing (use `get_attr_value()`, `parse_attributes()`)
 
 ## Key Conventions
+
+### Python Code Style
+
+- **Formatter**: ruff with 120 char line length
+- **Linting**: Comprehensive ruff rules (see `pyproject.toml`)
+- **Imports**: Sorted by ruff (isort rules), known first-party: `tinyolly`, `app`, `common`, `receiver`
+- **Type hints**: Encouraged but not required
+- **Async**: All Redis operations must be async
+- **Config**: [`pyproject.toml`](../pyproject.toml)
 
 ### OTLP Handling
 
@@ -241,9 +266,46 @@ export TF_VAR_bootstrap=false && terraform apply -auto-approve
 
 ### Testing
 
-- **Backend tests**: `apps/tinyolly/tests/`
+### Python Tests
+
+**Location**: `apps/tinyolly/tests/`
+
+**Running tests**:
+
+```bash
+cd apps/tinyolly
+pip install -r requirements-test.txt
+pytest                           # Run all tests
+pytest tests/test_spans.py       # Run specific test file
+pytest -v                        # Verbose output
+pytest -k "test_name"           # Run tests matching pattern
+```
+
+**Test patterns**:
+
 - Use pytest with async support: `pytest-asyncio`
 - Test Redis operations with real Redis instance (not mocked)
+- Use fixtures from `conftest.py` for Redis setup
+- Follow existing test structure for consistency
+
+**Available test files**:
+
+- `test_spans.py`: Span storage and retrieval
+- `test_traces.py`: Trace operations
+- `test_logs.py`: Log ingestion and correlation
+- `test_metrics.py`: Metrics handling
+- `test_compression.py`: ZSTD compression
+- `test_services.py`: Service catalog
+- `test_alerts.py`: Alert generation
+- `test_edge_cases.py`: Edge cases and error handling
+- `test_ttl_cleanup.py`: TTL expiration
+
+### Go Tests (OpAMP Server)
+
+```bash
+cd docker/apps/tinyolly-opamp-server
+go test -v ./...
+```
 
 ## Deployment Environments
 
