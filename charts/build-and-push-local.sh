@@ -22,7 +22,7 @@ REGISTRY_ORG="${REGISTRY_ORG:-$GH_ORG}"
 # Legacy support for local KIND registry
 EXTERNAL_REGISTRY="${EXTERNAL_REGISTRY:-registry.tinyolly.test:49443}"  # For desktop build/push
 INTERNAL_REGISTRY="${INTERNAL_REGISTRY:-docker-registry.registry.svc.cluster.local:5000}"  # For cluster pulls
-CHART_REGISTRY="${CHART_REGISTRY:-${EXTERNAL_REGISTRY}/tinyolly/charts}"
+CHART_REGISTRY="${CHART_REGISTRY:-${EXTERNAL_REGISTRY}/ollyscale/charts}"
 
 # Image naming (can be functional or branded)
 IMAGE_ORG="${IMAGE_ORG:-$PROJECT_SLUG}"  # e.g. ollyscale or observability-platform
@@ -73,10 +73,10 @@ echo "Step 1/4: Building $IMAGE_ORG (API backend + OTLP receiver)"
 echo "-----------------------------------------------------------"
 $CONTAINER_CMD build \
   -f apps/ollyscale/Dockerfile \
-  -t $IMAGE_ORG/tinyolly:latest \
-  -t $IMAGE_ORG/tinyolly:$VERSION \
-  -t $EXTERNAL_REGISTRY/$IMAGE_ORG/tinyolly:latest \
-  -t $EXTERNAL_REGISTRY/$IMAGE_ORG/tinyolly:$VERSION \
+  -t $IMAGE_ORG/ollyscale:latest \
+  -t $IMAGE_ORG/ollyscale:$VERSION \
+  -t $EXTERNAL_REGISTRY/$IMAGE_ORG/ollyscale:latest \
+  -t $EXTERNAL_REGISTRY/$IMAGE_ORG/ollyscale:$VERSION \
   apps/ollyscale/
 echo "✓ $PROJECT_NAME backend image built"
 echo ""
@@ -85,10 +85,10 @@ echo "Step 2/4: Building $IMAGE_ORG-ui (static frontend)"
 echo "-----------------------------------------------------------"
 $CONTAINER_CMD build \
   -f apps/ollyscale-ui/Dockerfile \
-  -t $IMAGE_ORG/tinyolly-ui:latest \
-  -t $IMAGE_ORG/tinyolly-ui:$VERSION \
-  -t $EXTERNAL_REGISTRY/$IMAGE_ORG/tinyolly-ui:latest \
-  -t $EXTERNAL_REGISTRY/$IMAGE_ORG/tinyolly-ui:$VERSION \
+  -t $IMAGE_ORG/ollyscale-ui:latest \
+  -t $IMAGE_ORG/ollyscale-ui:$VERSION \
+  -t $EXTERNAL_REGISTRY/$IMAGE_ORG/ollyscale-ui:latest \
+  -t $EXTERNAL_REGISTRY/$IMAGE_ORG/ollyscale-ui:$VERSION \
   apps/ollyscale-ui/
 echo "✓ $IMAGE_ORG-ui image built"
 echo ""
@@ -122,14 +122,14 @@ echo "=========================================="
 echo ""
 
 echo "Pushing $PROJECT_NAME backend..."
-$CONTAINER_CMD push $PUSH_FLAGS $EXTERNAL_REGISTRY/$IMAGE_ORG/tinyolly:latest
-$CONTAINER_CMD push $PUSH_FLAGS $EXTERNAL_REGISTRY/$IMAGE_ORG/tinyolly:$VERSION
+$CONTAINER_CMD push $PUSH_FLAGS $EXTERNAL_REGISTRY/$IMAGE_ORG/ollyscale:latest
+$CONTAINER_CMD push $PUSH_FLAGS $EXTERNAL_REGISTRY/$IMAGE_ORG/ollyscale:$VERSION
 echo "✓ $PROJECT_NAME backend pushed"
 echo ""
 
 echo "Pushing $IMAGE_ORG-ui..."
-$CONTAINER_CMD push $PUSH_FLAGS $EXTERNAL_REGISTRY/$IMAGE_ORG/tinyolly-ui:latest
-$CONTAINER_CMD push $PUSH_FLAGS $EXTERNAL_REGISTRY/$IMAGE_ORG/tinyolly-ui:$VERSION
+$CONTAINER_CMD push $PUSH_FLAGS $EXTERNAL_REGISTRY/$IMAGE_ORG/ollyscale-ui:latest
+$CONTAINER_CMD push $PUSH_FLAGS $EXTERNAL_REGISTRY/$IMAGE_ORG/ollyscale-ui:$VERSION
 echo "✓ $IMAGE_ORG-ui pushed"
 echo ""
 
@@ -192,7 +192,7 @@ cat > "$SCRIPT_DIR/values-local-dev.yaml" <<EOF
 
 frontend:
   image:
-    repository: $INTERNAL_REGISTRY/$IMAGE_ORG/tinyolly
+    repository: $INTERNAL_REGISTRY/$IMAGE_ORG/ollyscale
     tag: $VERSION
   env:
     - name: MODE
@@ -200,7 +200,7 @@ frontend:
 
 webui:
   image:
-    repository: $INTERNAL_REGISTRY/$IMAGE_ORG/tinyolly-ui
+    repository: $INTERNAL_REGISTRY/$IMAGE_ORG/ollyscale-ui
     tag: $VERSION
 
 opampServer:
@@ -210,7 +210,7 @@ opampServer:
 
 otlpReceiver:
   image:
-    repository: $INTERNAL_REGISTRY/$IMAGE_ORG/tinyolly
+    repository: $INTERNAL_REGISTRY/$IMAGE_ORG/ollyscale
     tag: $VERSION
   env:
     - name: MODE
@@ -298,7 +298,7 @@ echo "    ./deploy-to-argocd.sh"
 echo ""
 echo "  Deploy specific image version with kubectl:"
 echo "    kubectl set image deployment/$PROJECT_SLUG-ui \\"
-echo "      $PROJECT_SLUG-ui=$EXTERNAL_REGISTRY/$IMAGE_ORG/ui:$VERSION -n tinyolly"
+echo "      $PROJECT_SLUG-ui=$EXTERNAL_REGISTRY/$IMAGE_ORG/ui:$VERSION -n ollyscale"
 echo ""
 
 # Auto-deploy to ArgoCD with new chart version and image version

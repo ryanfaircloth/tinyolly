@@ -32,7 +32,7 @@
 
 set -e
 
-# Build TinyOlly UI image only (multi-arch)
+# Build ollyScale UI image only (multi-arch)
 # Usage: ./02-build-ui.sh [version]
 # Example: ./02-build-ui.sh v2.1.0
 #
@@ -47,7 +47,7 @@ CONTAINER_REGISTRY=${CONTAINER_REGISTRY:-"tinyolly"}
 PLATFORMS="linux/amd64,linux/arm64"
 
 echo "=========================================="
-echo "TinyOlly UI - Build (No Push)"
+echo "ollyScale UI - Build (No Push)"
 echo "=========================================="
 echo "Registry: $CONTAINER_REGISTRY"
 echo "Version: $VERSION"
