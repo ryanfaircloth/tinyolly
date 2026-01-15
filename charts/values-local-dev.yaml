@@ -1,12 +1,12 @@
 # Auto-generated local development values
-# Generated: Wed Jan 14 23:51:07 CST 2026
-# Version: 0.0.1768456245
+# Generated: Thu Jan 15 00:01:02 CST 2026
+# Version: v6.4.1-vite-security-fix
 # Uses INTERNAL registry for cluster access
 
 frontend:
   image:
     repository: docker-registry.registry.svc.cluster.local:5000/tinyolly/tinyolly
-    tag: 0.0.1768456245
+    tag: v6.4.1-vite-security-fix
   env:
     - name: MODE
       value: "ui"
@@ -14,17 +14,17 @@ frontend:
 webui:
   image:
     repository: docker-registry.registry.svc.cluster.local:5000/tinyolly/tinyolly-ui
-    tag: 0.0.1768456245
+    tag: v6.4.1-vite-security-fix
 
 opampServer:
   image:
     repository: docker-registry.registry.svc.cluster.local:5000/tinyolly/opamp-server
-    tag: 0.0.1768456245
+    tag: v6.4.1-vite-security-fix
 
 otlpReceiver:
   image:
     repository: docker-registry.registry.svc.cluster.local:5000/tinyolly/tinyolly
-    tag: 0.0.1768456245
+    tag: v6.4.1-vite-security-fix
   env:
     - name: MODE
       value: "receiver"
