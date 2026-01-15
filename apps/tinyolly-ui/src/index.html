@@ -58,6 +58,7 @@
             <button class="tab" onclick="switchTab('metrics', this)" data-tab="metrics">Metrics</button>
             <button class="tab" onclick="switchTab('traces', this)" data-tab="traces">Traces</button>
             <button class="tab" onclick="switchTab('spans', this)" data-tab="spans">Spans</button>
+            <button class="tab" onclick="switchTab('trace-flows', this)" data-tab="trace-flows">Trace Lint</button>
             <button class="tab" onclick="switchTab('catalog', this)" data-tab="catalog">APM Service Catalog</button>
             <button class="tab" onclick="switchTab('map', this)" data-tab="map">APM Service Map</button>
             <button class="tab" onclick="switchTab('ai-agents', this)" data-tab="ai-agents">AI Agents</button>
@@ -136,6 +137,29 @@
                     <img src="/assets/logo.svg" alt="Loading..." style="height: 48px; width: 48px; animation: spin 1.5s linear infinite;">
                     <div style="margin-top: 12px;">Loading spans...</div>
                 </div>
+            </div>
+        </div>
+
+        <!-- Trace Flows Tab -->
+        <div id="trace-flows-content" class="tab-content">
+            <div id="trace-flows-list-view">
+                <div style="margin-bottom: 20px; padding: 15px; background: var(--card-bg); border-radius: 8px; border-left: 4px solid var(--primary);">
+                    <h3 style="margin: 0 0 10px 0; color: var(--primary);">🔍 Trace Lint</h3>
+                    <p style="margin: 0; color: var(--text-muted); line-height: 1.6;">
+                        Analyze unique trace flow structures and get recommendations for improvements. 
+                        Each flow represents a distinct trace pattern based on span hierarchy, services, and operations.
+                        Identifiers like IPs and user agents are excluded to group similar traces together.
+                    </p>
+                </div>
+                <div class="trace-flow-list" id="trace-flows-container">
+                    <div class="loading">
+                        <img src="/assets/logo.svg" alt="Loading..." style="height: 48px; width: 48px; animation: spin 1.5s linear infinite;">
+                        <div style="margin-top: 12px;">Loading trace flows...</div>
+                    </div>
+                </div>
+            </div>
+            <div id="trace-flow-detail-view" style="display: none;">
+                <div id="trace-flow-detail-container"></div>
             </div>
         </div>
 
