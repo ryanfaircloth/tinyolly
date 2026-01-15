@@ -1,4 +1,4 @@
-# TinyOlly Unified Dockerfile
+# ollyScale Unified Dockerfile
 # Single image that can run in either UI or RECEIVER mode
 # Mode is selected via MODE environment variable
 

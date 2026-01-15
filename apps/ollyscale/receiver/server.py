@@ -29,7 +29,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """
-TinyOlly OTLP Receiver - gRPC Implementation with Async Storage
+ollyScale OTLP Receiver - gRPC Implementation with Async Storage
 Receives OTLP data from OpenTelemetry Collector via gRPC and stores in Redis
 Optimized with Batch Operations and uvloop
 """
@@ -187,7 +187,7 @@ def start_receiver(port=4343):
 
     server.add_insecure_port(f"0.0.0.0:{port}")
 
-    logger.info(f"TinyOlly OTLP Receiver (gRPC) starting on port {port}...")
+    logger.info(f"ollyScale OTLP Receiver (gRPC) starting on port {port}...")
 
     # Check Redis connection
     redis_connected = run_async(storage.is_connected())

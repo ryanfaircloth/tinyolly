@@ -29,8 +29,8 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """
-TinyOlly Common Package
-Shared utilities and storage layer used by all TinyOlly components.
+ollyScale Common Package
+Shared utilities and storage layer used by all ollyScale components.
 """
 
 __version__ = "0.1.0"

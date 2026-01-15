@@ -13,7 +13,7 @@
         "Dockerfile",
         {
           "type": "generic",
-          "path": ".kind/modules/main/argocd-applications/observability/tinyolly.yaml",
+          "path": ".kind/modules/main/argocd-applications/observability/ollyscale.yaml",
           "glob": false
         },
         {
@@ -34,7 +34,7 @@
         "Dockerfile",
         {
           "type": "generic",
-          "path": ".kind/modules/main/argocd-applications/observability/tinyolly.yaml",
+          "path": ".kind/modules/main/argocd-applications/observability/ollyscale.yaml",
           "glob": false
         },
         {
@@ -60,7 +60,7 @@
         "Dockerfile",
         {
           "type": "generic",
-          "path": ".kind/modules/main/argocd-applications/observability/tinyolly.yaml",
+          "path": ".kind/modules/main/argocd-applications/observability/ollyscale.yaml",
           "glob": false
         },
         {

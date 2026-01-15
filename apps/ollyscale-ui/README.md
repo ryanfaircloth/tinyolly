@@ -1,6 +1,6 @@
-# TinyOlly UI
+# ollyScale UI
 
-Modern frontend for TinyOlly observability platform built with Vite and TypeScript.
+Modern frontend for ollyScale observability platform built with Vite and TypeScript.
 
 ## Architecture
 
