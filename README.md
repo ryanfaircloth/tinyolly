@@ -87,7 +87,7 @@ Visualize and correlate logs, metrics, and traces without sending data to the cl
 All examples are launched from the repo- clone it first:
 
 ```bash
-git clone https://github.com/ryanfaircloth/tinyolly
+git clone https://github.com/ryanfaircloth/ollyscale
 ```
 
 ## Docker Deployment
@@ -218,7 +218,7 @@ service:
   extensions: [opamp]
 ```
 
-The default configuration template (located at `config/otelcol/config.yaml`) shows a complete example with OTLP receivers, OpAMP extension, batch processing, and spanmetrics connector. Your collector will connect to the OpAMP server and receive configuration updates through the TinyOlly UI.
+The default configuration template (located at `config/otelcol/config.yaml`) shows a complete example with OTLP receivers, OpAMP extension, batch processing, and spanmetrics connector. Your collector will connect to the OpAMP server and receive configuration updates through the ollyScale UI.
 
 **Stop:** `./02-stop-core.sh`
 
@@ -242,20 +242,20 @@ UI available at: `http://tinyolly.test`
 **Enable eBPF agent for zero-code instrumentation:**
 
 ```bash
-helm install tinyolly ./charts/tinyolly \
-  --namespace tinyolly \
+helm install ollyscale ./charts/ollyscale \
+  --namespace ollyscale \
   --create-namespace \
   --set ebpfAgent.enabled=true \
   --set ebpfAgent.config.openPorts="5000,8080,3000"
 ```
 
-The eBPF agent runs as a DaemonSet and automatically captures HTTP/gRPC traces from applications on specified ports without any code changes. See the [Helm Chart README](charts/tinyolly/README.md#ebpf-zero-code-instrumentation) for full configuration options.
+The eBPF agent runs as a DaemonSet and automatically captures HTTP/gRPC traces from applications on specified ports without any code changes. See the [Helm Chart README](charts/ollyscale/README.md#ebpf-zero-code-instrumentation) for full configuration options.
 
 **Cleanup:**
 
 ```bash
-helm uninstall tinyolly -n tinyolly
-kubectl delete namespace tinyolly
+helm uninstall ollyscale -n ollyscale
+kubectl delete namespace ollyscale
 ```
 
 ---
