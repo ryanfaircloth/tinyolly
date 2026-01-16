@@ -130,15 +130,15 @@ export function filterOllyScaleData(item) {
                        )) ||
                        (item.resource && item.resource['service.name']);
 
-    // Filter out TinyOlly internal services
+    // Filter out ollyScale internal services
     return !isOllyScaleService(serviceName);
 }
 
 /**
- * Filter traces - exclude if service is a TinyOlly internal service
+ * Filter traces - exclude if service is a ollyScale internal service
  */
 export function filterOllyScaleTrace(trace) {
-    if (!hideTinyOlly) return true;
+    if (!hideollyScale) return true;
 
     // API returns service_name field for traces
     const serviceName = trace.service_name || trace.serviceName || trace.root_service || trace.rootService;
@@ -146,16 +146,16 @@ export function filterOllyScaleTrace(trace) {
 }
 
 /**
- * Filter metrics - exclude if only from TinyOlly internal services
+ * Filter metrics - exclude if only from ollyScale internal services
  */
 export function filterOllyScaleMetric(metric) {
-    if (!hideTinyOlly) return true;
+    if (!hideollyScale) return true;
 
     // Check services array (from metrics list endpoint)
     if (metric.services && Array.isArray(metric.services)) {
-        // Filter out if ALL services are TinyOlly internal services
-        const hasNonTinyOllyService = metric.services.some(service => !isOllyScaleService(service));
-        return hasNonTinyOllyService;
+        // Filter out if ALL services are ollyScale internal services
+        const hasNonollyScaleService = metric.services.some(service => !isOllyScaleService(service));
+        return hasNonollyScaleService;
     }
 
     // Check in resources object (for single metric detail)
@@ -166,22 +166,22 @@ export function filterOllyScaleMetric(metric) {
 
     // Check in series (for metric detail view)
     if (metric.series && Array.isArray(metric.series)) {
-        // Filter out entire metric if all series are from TinyOlly services
-        const nonTinyOllySeries = metric.series.filter(s => {
+        // Filter out entire metric if all series are from ollyScale services
+        const nonollyScaleSeries = metric.series.filter(s => {
             const serviceName = s.resources && s.resources['service.name'];
             return !isOllyScaleService(serviceName);
         });
-        return nonTinyOllySeries.length > 0;
+        return nonollyScaleSeries.length > 0;
     }
 
     return true;
 }
 
 /**
- * Filter metric series - exclude series from TinyOlly internal services
+ * Filter metric series - exclude series from ollyScale internal services
  */
 export function filterOllyScaleMetricSeries(series) {
-    if (!hideTinyOlly) return series;
+    if (!hideollyScale) return series;
 
     return series.filter(s => {
         const serviceName = s.resources && s.resources['service.name'];

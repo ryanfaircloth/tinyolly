@@ -80,7 +80,7 @@ window.onerror = function (message, source, lineno, colno, error) {
 document.addEventListener('DOMContentLoaded', () => {
     try {
         initTheme();
-        initHideTinyOllyToggle();
+        initHideollyScaleToggle();
 
         // Tab initialization now handles URL parameters internally
         initTabs();

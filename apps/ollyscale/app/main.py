@@ -14,8 +14,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 #
-# Based on TinyOlly (BSD-3-Clause), see LICENSE-BSD3-ORIGINAL
-# Original: https://github.com/tinyolly/tinyolly
+# Based on ollyScale (BSD-3-Clause), see LICENSE-BSD3-ORIGINAL
+# Original: https://github.com/ollyscale/ollyscale
 
 """Main FastAPI application factory"""
 

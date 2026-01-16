@@ -91,18 +91,18 @@ def setup_telemetry():
         from opentelemetry import metrics  # noqa: PLC0415
 
         # Get the meter - operator will have already configured the provider
-        meter = metrics.get_meter("tinyolly-ui")
+        meter = metrics.get_meter("ollyscale-ui")
 
-        # Domain-specific metrics for TinyOlly ingestion operations
+        # Domain-specific metrics for ollyScale ingestion operations
         # These are business metrics, not infrastructure metrics
         ingestion_counter = meter.create_counter(
-            name="tinyolly.ingestion.count",
+            name="ollyscale.ingestion.count",
             description="Total telemetry items ingested by type (spans, logs, metrics)",
             unit="1",
         )
 
         storage_operations_counter = meter.create_counter(
-            name="tinyolly.storage.operations",
+            name="ollyscale.storage.operations",
             description="Storage operations by type (store_spans, store_logs, store_metrics)",
             unit="1",
         )

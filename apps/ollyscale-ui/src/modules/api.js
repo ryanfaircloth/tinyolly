@@ -54,7 +54,7 @@ export async function loadTraces() {
         const response = await fetch('/api/traces?limit=50');
         let traces = await response.json();
 
-        // Filter out TinyOlly traces if hide toggle is active
+        // Filter out ollyScale traces if hide toggle is active
         traces = traces.filter(filterOllyScaleTrace);
 
         renderTraces(traces);
@@ -95,7 +95,7 @@ export async function loadSpans(serviceName = null) {
             return;
         }
 
-        // Filter out TinyOlly spans if hide toggle is active
+        // Filter out ollyScale spans if hide toggle is active
         spans = spans.filter(filterOllyScaleData);
 
         // Replace loading indicator with actual data
@@ -123,7 +123,7 @@ export async function loadLogs(filterTraceId = null) {
         const response = await fetch(url);
         let logs = await response.json();
 
-        // Filter out TinyOlly logs if hide toggle is active
+        // Filter out ollyScale logs if hide toggle is active
         logs = logs.filter(filterOllyScaleData);
 
         renderLogs(logs, 'logs-container');
@@ -144,8 +144,8 @@ export async function loadMetrics() {
         const response = await fetch('/api/metrics');
         let metrics = await response.json();
 
-        // Filter out TinyOlly metrics if hide toggle is active
-        metrics = metrics.filter(filterTinyOllyMetric);
+        // Filter out ollyScale metrics if hide toggle is active
+        metrics = metrics.filter(filterollyScaleMetric);
 
         renderMetrics(metrics);
     } catch (error) {
@@ -162,20 +162,20 @@ export async function loadServiceMap() {
         const response = await fetch('/api/service-map?limit=500');
         let graph = await response.json();
 
-        // Filter out TinyOlly nodes and edges based on toggle state
+        // Filter out ollyScale nodes and edges based on toggle state
         if (shouldHideOllyScale()) {
-            const tinyollyServices = ['tinyolly-ui', 'tinyolly-otlp-receiver', 'tinyolly-opamp-server'];
+            const ollyscaleServices = ['ollyscale-ui', 'ollyscale-otlp-receiver', 'ollyscale-opamp-server'];
 
-            // First, filter edges to remove TinyOlly connections
+            // First, filter edges to remove ollyScale connections
             if (graph.edges) {
                 graph.edges = graph.edges.filter(edge => {
-                    return !tinyollyServices.includes(edge.source) && !tinyollyServices.includes(edge.target);
+                    return !ollyscaleServices.includes(edge.source) && !ollyscaleServices.includes(edge.target);
                 });
             }
 
-            // Then filter nodes: remove TinyOlly services AND nodes only connected to TinyOlly
+            // Then filter nodes: remove ollyScale services AND nodes only connected to ollyScale
             if (graph.nodes) {
-                // Build set of nodes that have connections to non-TinyOlly services
+                // Build set of nodes that have connections to non-ollyScale services
                 const connectedNodes = new Set();
                 if (graph.edges) {
                     graph.edges.forEach(edge => {
@@ -185,11 +185,11 @@ export async function loadServiceMap() {
                 }
 
                 // Keep nodes that are:
-                // Not a TinyOlly service AND have connections in the filtered graph
+                // Not a ollyScale service AND have connections in the filtered graph
                 graph.nodes = graph.nodes.filter(node => {
-                    const isTinyOlly = tinyollyServices.includes(node.id);
+                    const isollyScale = ollyscaleServices.includes(node.id);
                     const hasConnections = connectedNodes.has(node.id);
-                    return !isTinyOlly && hasConnections;
+                    return !isollyScale && hasConnections;
                 });
             }
         }
@@ -212,7 +212,7 @@ export async function loadServiceCatalog() {
         const response = await fetch('/api/service-catalog');
         let services = await response.json();
 
-        // Filter out TinyOlly service if hide toggle is active
+        // Filter out ollyScale service if hide toggle is active
         services = services.filter(filterOllyScaleData);
 
         renderServiceCatalog(services);

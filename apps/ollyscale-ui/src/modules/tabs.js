@@ -41,7 +41,7 @@ let currentTab = 'traces';
 let autoRefreshInterval = null;
 let autoRefreshEnabled = true;
 try {
-    autoRefreshEnabled = localStorage.getItem('tinyolly-auto-refresh') !== 'false';
+    autoRefreshEnabled = localStorage.getItem('ollyscale-auto-refresh') !== 'false';
 } catch (e) {
     console.warn('LocalStorage access failed:', e);
 }
@@ -78,7 +78,7 @@ export function switchTab(tabName, element, fromHistory = false) {
 
     currentTab = tabName;
     try {
-        localStorage.setItem('tinyolly-active-tab', tabName);
+        localStorage.setItem('ollyscale-active-tab', tabName);
     } catch (e) { console.warn('LocalStorage access failed:', e); }
 
     // Update browser history (only if not from history navigation)
@@ -197,7 +197,7 @@ export function stopAutoRefresh() {
 export function toggleAutoRefresh() {
     autoRefreshEnabled = !autoRefreshEnabled;
     try {
-        localStorage.setItem('tinyolly-auto-refresh', autoRefreshEnabled);
+        localStorage.setItem('ollyscale-auto-refresh', autoRefreshEnabled);
     } catch (e) { console.warn('LocalStorage access failed:', e); }
 
     if (autoRefreshEnabled) {

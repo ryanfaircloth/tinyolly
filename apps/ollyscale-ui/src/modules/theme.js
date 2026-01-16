@@ -38,7 +38,7 @@ import { loadMetrics, loadServiceMap } from './api.js';
 export function initTheme() {
     let savedTheme = 'light';
     try {
-        savedTheme = localStorage.getItem('tinyolly-theme');
+        savedTheme = localStorage.getItem('ollyscale-theme');
     } catch (e) {
         console.warn('LocalStorage access failed:', e);
     }
@@ -58,7 +58,7 @@ export function toggleTheme() {
 export function setTheme(theme) {
     document.documentElement.setAttribute('data-theme', theme);
     try {
-        localStorage.setItem('tinyolly-theme', theme);
+        localStorage.setItem('ollyscale-theme', theme);
     } catch (e) { console.warn('LocalStorage access failed:', e); }
 
     const icon = document.getElementById('theme-icon');
@@ -75,7 +75,7 @@ export function setTheme(theme) {
     // Re-render charts if they exist (to update colors)
     // We need to import currentTab from somewhere or pass it in,
     // but for now let's rely on the global currentTab if possible or just re-render active tab
-    const activeTab = localStorage.getItem('tinyolly-active-tab');
+    const activeTab = localStorage.getItem('ollyscale-active-tab');
     if (activeTab === 'map') {
         loadServiceMap();
     } else if (activeTab === 'metrics') {

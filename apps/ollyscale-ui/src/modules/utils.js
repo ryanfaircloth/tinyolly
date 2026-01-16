@@ -234,9 +234,9 @@ export function renderActionButton(id, label, style = 'secondary', size = 'defau
     return `<button id="${id}" class="${baseClass} ${themeClass} ${sizeClass}">${label}</button>`;
 }
 
-/** Renders empty state with TinyOlly logo and message */
+/** Renders empty state with ollyScale logo and message */
 export function renderEmptyState(message) {
-    // Use dimmed TinyOlly logo for empty states for consistency
+    // Use dimmed ollyScale logo for empty states for consistency
     return `
         <div class="empty">
             <div class="empty-icon">
