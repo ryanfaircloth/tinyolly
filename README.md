@@ -20,6 +20,10 @@ TinyOlly pioneered the concept of "desktop observability" - bringing enterprise-
 
 ---
 
+## Quick Start
+
+See the [Quick Start Guide](https://ryanfaircloth.github.io/ollyscale/quickstart/) to get up and running in minutes.
+
 ## Documentation
 
 Docs are here: [https://ryanfaircloth.github.io/ollyscale/](https://ryanfaircloth.github.io/ollyscale/)
