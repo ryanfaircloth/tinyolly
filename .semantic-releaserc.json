@@ -1,0 +1,245 @@
+{
+  "branches": ["main", { "name": "ollyScale", "prerelease": "dev" }],
+  "repositoryUrl": "https://github.com/ryanfaircloth/ollyscale.git",
+  "plugins": [
+    ["@semantic-release/commit-analyzer", { "preset": "conventionalcommits" }],
+    ["@semantic-release/release-notes-generator", { "preset": "conventionalcommits" }],
+    ["@semantic-release/changelog", { "changelogFile": "CHANGELOG.md" }],
+    ["@semantic-release/github", { "assets": ["CHANGELOG.md"] }]
+  ],
+  "packages": [
+    {
+      "path": "apps/ollyscale",
+      "name": "ollyscale",
+      "plugins": [
+        [
+          "@semantic-release/commit-analyzer",
+          {
+            "preset": "conventionalcommits"
+          }
+        ],
+        [
+          "@semantic-release/release-notes-generator",
+          {
+            "preset": "conventionalcommits"
+          }
+        ],
+        [
+          "@semantic-release/changelog",
+          {
+            "changelogFile": "apps/ollyscale/CHANGELOG.md"
+          }
+        ],
+        [
+          "@semantic-release/exec",
+          {
+            "prepareCmd": "scripts/update-chart-values.sh ollyscale ${nextRelease.version}",
+            "publishCmd": "echo 'Publishing ollyscale:${nextRelease.version}'"
+          }
+        ],
+        [
+          "@semantic-release/git",
+          {
+            "assets": ["apps/ollyscale/pyproject.toml", "apps/ollyscale/CHANGELOG.md", "charts/ollyscale/values.yaml"],
+            "message": "chore(ollyscale): release v${nextRelease.version}"
+          }
+        ],
+        [
+          "@semantic-release/github",
+          {
+            "releasedLabels": ["released"],
+            "successComment": "This release is included in version ${nextRelease.version}"
+          }
+        ]
+      ]
+    },
+    {
+      "path": "apps/ollyscale-ui",
+      "name": "ollyscale-ui",
+      "plugins": [
+        [
+          "@semantic-release/commit-analyzer",
+          {
+            "preset": "conventionalcommits"
+          }
+        ],
+        [
+          "@semantic-release/release-notes-generator",
+          {
+            "preset": "conventionalcommits"
+          }
+        ],
+        [
+          "@semantic-release/changelog",
+          {
+            "changelogFile": "apps/ollyscale-ui/CHANGELOG.md"
+          }
+        ],
+        [
+          "@semantic-release/exec",
+          {
+            "prepareCmd": "scripts/update-chart-values.sh ollyscale-ui ${nextRelease.version}",
+            "publishCmd": "echo 'Publishing ollyscale-ui:${nextRelease.version}'"
+          }
+        ],
+        [
+          "@semantic-release/git",
+          {
+            "assets": [
+              "apps/ollyscale-ui/package.json",
+              "apps/ollyscale-ui/CHANGELOG.md",
+              "charts/ollyscale/values.yaml"
+            ],
+            "message": "chore(ollyscale-ui): release v${nextRelease.version}"
+          }
+        ],
+        [
+          "@semantic-release/github",
+          {
+            "releasedLabels": ["released"],
+            "successComment": "This release is included in version ${nextRelease.version}"
+          }
+        ]
+      ]
+    },
+    {
+      "path": "apps/opamp-server",
+      "name": "opamp-server",
+      "plugins": [
+        [
+          "@semantic-release/commit-analyzer",
+          {
+            "preset": "conventionalcommits"
+          }
+        ],
+        [
+          "@semantic-release/release-notes-generator",
+          {
+            "preset": "conventionalcommits"
+          }
+        ],
+        [
+          "@semantic-release/changelog",
+          {
+            "changelogFile": "apps/opamp-server/CHANGELOG.md"
+          }
+        ],
+        [
+          "@semantic-release/exec",
+          {
+            "prepareCmd": "scripts/update-chart-values.sh opamp-server ${nextRelease.version}",
+            "publishCmd": "echo 'Publishing opamp-server:${nextRelease.version}'"
+          }
+        ],
+        [
+          "@semantic-release/git",
+          {
+            "assets": ["apps/opamp-server/go.mod", "apps/opamp-server/CHANGELOG.md", "charts/ollyscale/values.yaml"],
+            "message": "chore(opamp-server): release v${nextRelease.version}"
+          }
+        ],
+        [
+          "@semantic-release/github",
+          {
+            "releasedLabels": ["released"],
+            "successComment": "This release is included in version ${nextRelease.version}"
+          }
+        ]
+      ]
+    },
+    {
+      "path": "apps/demo",
+      "name": "demo",
+      "plugins": [
+        [
+          "@semantic-release/commit-analyzer",
+          {
+            "preset": "conventionalcommits"
+          }
+        ],
+        [
+          "@semantic-release/release-notes-generator",
+          {
+            "preset": "conventionalcommits"
+          }
+        ],
+        [
+          "@semantic-release/changelog",
+          {
+            "changelogFile": "apps/demo/CHANGELOG.md"
+          }
+        ],
+        [
+          "@semantic-release/exec",
+          {
+            "prepareCmd": "scripts/update-chart-values.sh demo ${nextRelease.version}",
+            "publishCmd": "echo 'Publishing demo:${nextRelease.version}'"
+          }
+        ],
+        [
+          "@semantic-release/git",
+          {
+            "assets": ["apps/demo/pyproject.toml", "apps/demo/CHANGELOG.md", "charts/ollyscale-demos/values.yaml"],
+            "message": "chore(demo): release v${nextRelease.version}"
+          }
+        ],
+        [
+          "@semantic-release/github",
+          {
+            "releasedLabels": ["released"],
+            "successComment": "This release is included in version ${nextRelease.version}"
+          }
+        ]
+      ]
+    },
+    {
+      "path": "apps/demo-otel-agent",
+      "name": "demo-otel-agent",
+      "plugins": [
+        [
+          "@semantic-release/commit-analyzer",
+          {
+            "preset": "conventionalcommits"
+          }
+        ],
+        [
+          "@semantic-release/release-notes-generator",
+          {
+            "preset": "conventionalcommits"
+          }
+        ],
+        [
+          "@semantic-release/changelog",
+          {
+            "changelogFile": "apps/demo-otel-agent/CHANGELOG.md"
+          }
+        ],
+        [
+          "@semantic-release/exec",
+          {
+            "prepareCmd": "scripts/update-chart-values.sh demo-otel-agent ${nextRelease.version}",
+            "publishCmd": "echo 'Publishing demo-otel-agent:${nextRelease.version}'"
+          }
+        ],
+        [
+          "@semantic-release/git",
+          {
+            "assets": [
+              "apps/demo-otel-agent/pyproject.toml",
+              "apps/demo-otel-agent/CHANGELOG.md",
+              "charts/ollyscale-otel-agent/values.yaml"
+            ],
+            "message": "chore(demo-otel-agent): release v${nextRelease.version}"
+          }
+        ],
+        [
+          "@semantic-release/github",
+          {
+            "releasedLabels": ["released"],
+            "successComment": "This release is included in version ${nextRelease.version}"
+          }
+        ]
+      ]
+    }
+  ]
+}
