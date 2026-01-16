@@ -1,5 +1,9 @@
 name: Publish Documentation
 
+# This workflow builds and deploys MkDocs documentation to the gh-pages branch.
+# The gh-pages branch is automatically created/updated and should be configured
+# as the source for GitHub Pages in repository settings.
+
 on:
   push:
     branches:
