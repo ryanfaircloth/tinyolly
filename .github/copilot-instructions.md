@@ -72,11 +72,13 @@ Shared utilities are in `apps/ollyscale/common/`:
 ### Code Organization
 
 **Backend (`apps/ollyscale/`)**:
+
 - **Routers**: `app/routers/` (ingest, query, services, admin, system, opamp)
 - **Models**: `models.py` (Pydantic schemas)
 - **Dependencies**: Use FastAPI dependency injection via `app/dependencies.py`
 
 **Frontend (`apps/ollyscale-ui/`)**:
+
 - **TypeScript/Vite**: Modern build tooling with ES modules
 - **Modules**: `src/modules/` (api, traces, serviceMap, metrics, etc.)
 - **Assets**: Compiled to `dist/` and served by nginx

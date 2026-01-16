@@ -30,8 +30,8 @@ theme:
     - search.highlight
     - content.tabs
     - content.code.annotate
-  logo: images/logo.png
-  favicon: images/logo.png
+  logo: images/logo.svg
+  favicon: images/logo.svg
 
 extra_css:
   - assets/css/custom.css

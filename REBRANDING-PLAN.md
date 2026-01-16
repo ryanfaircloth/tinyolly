@@ -66,7 +66,7 @@ strategy, and CI/CD improvements for future forks.
 - [ ] `README.md` - Add "Origins" section, update all references
 - [ ] `CONTRIBUTING.md` - Update repository URLs, project name
 - [ ] `docs/` directory - All markdown files
-- [ ] `docs/images/` - Logo files (ollyscaletitle.png, etc.) **→ Phase 7**
+- [ ] `docs/images/` - Logo files (ollyscaletitle.svg, etc.) **→ Phase 7**
 - [ ] `mkdocs.yml` - Site name, repo URL
 - [ ] Repository description on GitHub
 - [ ] Social media preview image **→ Phase 7**
@@ -434,7 +434,7 @@ Phase 9: Documentation Polish (depends on Phase 8)
 ### Phase 7: Visual Identity & UX Improvements
 
 1. Design new ollyScale logo and branding assets
-2. Update `docs/images/` - Replace ollyscaletitle.png and all logos
+2. Update `docs/images/` - Replace ollyscaletitle.svg and all logos
 3. Implement new color scheme across UI
 4. Update favicon and social media preview images
 5. Redesign problematic UI components (fix UX issues)
