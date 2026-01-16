@@ -35,9 +35,9 @@ import time
 
 import psutil
 from fastapi import APIRouter, Depends
-from models import AdminStatsResponse, AlertConfig, AlertRule
 
 from common import Storage
+from models import AdminStatsResponse, AlertConfig, AlertRule
 
 from ..dependencies import get_alert_manager, get_storage
 from ..managers.alerts import AlertManager

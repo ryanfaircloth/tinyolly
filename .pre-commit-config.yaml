@@ -54,7 +54,7 @@ repos:
     hooks:
       - id: prettier
         types_or: [json, yaml]
-        exclude: ^(charts/.*/templates/|config/otelcol/templates/|node_modules/)
+        exclude: ^(charts/.*/templates/|config/otelcol/templates/|node_modules/|\.kind/)
 
   # Shell script linting
   - repo: https://github.com/shellcheck-py/shellcheck-py

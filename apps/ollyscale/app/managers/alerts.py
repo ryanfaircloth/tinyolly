@@ -36,6 +36,7 @@ import os
 import time
 
 import aiohttp
+
 from models import AlertRule
 
 logger = logging.getLogger(__name__)

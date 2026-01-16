@@ -31,10 +31,8 @@
 """WebSocket connection manager"""
 
 import logging
-from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from fastapi import WebSocket
+from fastapi import WebSocket
 
 logger = logging.getLogger(__name__)
 

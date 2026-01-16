@@ -33,9 +33,9 @@
 import json
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
-from models import ErrorResponse, IngestResponse
 
 from common import Storage
+from models import ErrorResponse, IngestResponse
 
 from ..core.telemetry import get_metrics
 from ..dependencies import get_alert_manager, get_storage

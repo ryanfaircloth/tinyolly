@@ -33,9 +33,9 @@
 from typing import Any
 
 from fastapi import APIRouter, Depends, Query
-from models import ServiceMap
 
 from common import Storage
+from models import ServiceMap
 
 from ..dependencies import get_storage
 

@@ -38,9 +38,9 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import StreamingResponse
-from models import ErrorResponse, MetricDetail, MetricMetadata, MetricQueryResult, TraceDetail
 
 from common import Storage
+from models import ErrorResponse, MetricDetail, MetricMetadata, MetricQueryResult, TraceDetail
 
 from ..dependencies import get_storage
 
