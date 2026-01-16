@@ -161,5 +161,5 @@ If you're migrating from the old `k8s-demo/` or `k8s-otel-demo/` directories, se
 
 For issues or questions:
 
-- [GitHub Issues](https://github.com/tinyolly/tinyolly/issues)
+- [GitHub Issues](https://github.com/ryanfaircloth/ollyscale/issues)
 - [Documentation](https://tinyolly.io/docs)

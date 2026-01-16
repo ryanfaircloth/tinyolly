@@ -245,8 +245,8 @@ cd charts
 ./build-and-push-local.sh v2.1.x-custom-demo
 
 # Images will be built and pushed:
-# - registry.tinyolly.test:49443/tinyolly/demo-frontend:v2.1.x-custom-demo
-# - registry.tinyolly.test:49443/tinyolly/demo-backend:v2.1.x-custom-demo
+# - registry.ollyscale.test:49443/ollyscale/demo-frontend:v2.1.x-custom-demo
+# - registry.ollyscale.test:49443/ollyscale/demo-backend:v2.1.x-custom-demo
 ```
 
 ### Source Code

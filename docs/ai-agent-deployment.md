@@ -85,7 +85,7 @@ If you only changed the Helm chart (no code changes):
 ```bash
 cd charts
 helm package tinyolly-ai-agent
-helm push tinyolly-ai-agent-0.1.0.tgz oci://registry.tinyolly.test:49443/tinyolly/charts --insecure-skip-tls-verify
+helm push tinyolly-ai-agent-0.1.0.tgz oci://registry.ollyscale.test:49443/ollyscale/charts --insecure-skip-tls-verify
 
 # Update ArgoCD
 cd ../.kind
@@ -109,7 +109,7 @@ Key defaults:
 
 ### Customization
 
-To override values, edit `.kind/modules/tinyolly/argocd-applications/observability/tinyolly-ai-agent.yaml`:
+To override values, edit `.kind/modules/ollyscale/argocd-applications/observability/tinyolly-ai-agent.yaml`:
 
 ```yaml
 spec:
@@ -259,7 +259,7 @@ If you were using the old K8s deployment method:
 ## Files Reference
 
 - **Helm Chart**: `charts/tinyolly-ai-agent/`
-- **ArgoCD App**: `.kind/modules/tinyolly/argocd-applications/observability/tinyolly-ai-agent.yaml`
-- **Terraform Config**: `.kind/modules/tinyolly/variables.tf` (ai_agent_image, ai_agent_tag)
+- **ArgoCD App**: `.kind/modules/ollyscale/argocd-applications/observability/tinyolly-ai-agent.yaml`
+- **Terraform Config**: `.kind/modules/ollyscale/variables.tf` (ai_agent_image, ai_agent_tag)
 - **Build Script**: `charts/build-and-push-local.sh`
 - **Application Code**: `apps/ai-agent-demo/`

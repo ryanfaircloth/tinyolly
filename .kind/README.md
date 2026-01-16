@@ -1,4 +1,4 @@
-# TinyOlly KIND Cluster Configuration
+# ollyScale KIND Cluster Configuration
 
 ## Quick Start
 

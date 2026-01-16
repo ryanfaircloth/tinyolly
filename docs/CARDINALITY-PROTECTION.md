@@ -20,7 +20,7 @@ TinyOlly includes built-in protection against metric cardinality explosion with 
 
 ### Kubernetes Deployment
 
-Update Helm values in `charts/tinyolly/values.yaml`:
+Update Helm values in `charts/ollyscale/values.yaml`:
 
 ```yaml
 otlpReceiver:

@@ -108,9 +108,9 @@ CONTAINER_REGISTRY="${CONTAINER_REGISTRY:-ghcr.io}"
 
 ### 3. Helm Charts
 
-- [ ] `charts/tinyolly/Chart.yaml` - name, description, home, sources
-- [ ] `charts/tinyolly/values.yaml` - image repositories, names
-- [ ] `charts/tinyolly/templates/*.yaml` - labels, annotations, names
+- [ ] `charts/ollyscale/Chart.yaml` - name, description, home, sources
+- [ ] `charts/ollyscale/values.yaml` - image repositories, names
+- [ ] `charts/ollyscale/templates/*.yaml` - labels, annotations, names
 - [ ] `charts/tinyolly-demos/Chart.yaml`
 - [ ] `charts/tinyolly-demos/values.yaml`
 - [ ] `charts/tinyolly-demo-otel-agent/Chart.yaml`
@@ -120,16 +120,16 @@ CONTAINER_REGISTRY="${CONTAINER_REGISTRY:-ghcr.io}"
 
 - [ ] `.kind/modules/main/main.tf` - Cluster name, namespaces
 - [ ] `.kind/modules/main/variables.tf` - Variable names, defaults
-- [ ] `.kind/modules/tinyolly/*.tf` - Module name, resource names
-- [ ] `.kind/modules/tinyolly/argocd-applications/observability/*.yaml`
+- [ ] `.kind/modules/ollyscale/*.tf` - Module name, resource names
+- [ ] `.kind/modules/ollyscale/argocd-applications/observability/*.yaml`
 - [ ] `.kind/terraform.auto.tfvars` - Variable values
-- [ ] Consider: Rename `.kind/modules/tinyolly/` to `.kind/modules/observability/`
+- [ ] Consider: Rename `.kind/modules/ollyscale/` to `.kind/modules/observability/`
 
 ### 5. Source Code - Python
 
-**Backend (`apps/tinyolly/`):**
+**Backend (`apps/ollyscale/`):**
 
-- [ ] Directory name: `apps/tinyolly/` → `apps/observability-platform/` or `apps/ollyscale/`
+- [ ] Directory name: `apps/ollyscale/` → `apps/observability-platform/` or `apps/ollyscale/`
 - [ ] `app/__init__.py` - Service name, metadata
 - [ ] `app/main.py` - FastAPI title, description, version
 - [ ] `models.py` - Model names if branded
@@ -250,7 +250,7 @@ Phase 2: Infrastructure (depends on Phase 1)
 
 Phase 3: Kubernetes/Helm (depends on Phase 2)
 ├─ 3.1 Helm Chart Renaming (critical path)
-│   ├─ Rename charts/tinyolly/ → charts/ollyscale/ [COMPLETED]
+│   ├─ Rename charts/ollyscale/ → charts/ollyscale/ [COMPLETED]
 │   ├─ Update Chart.yaml (name, description, home, sources) [COMPLETED]
 │   ├─ Update values.yaml (image repos, names)
 │   ├─ Update all templates/*.yaml (labels, annotations)
@@ -264,7 +264,7 @@ Phase 3: Kubernetes/Helm (depends on Phase 2)
 │   [VALIDATE & COMMIT] - COMPLETED
 │
 └─ 3.3 Terraform/KIND (depends on 3.1, 3.2)
-    ├─ Rename .kind/modules/tinyolly/ → .kind/modules/ollyscale/
+    ├─ Rename .kind/modules/ollyscale/ → .kind/modules/ollyscale/
     ├─ Update main.tf, variables.tf
     ├─ Update argocd-applications/*.yaml
     ├─ Update terraform.auto.tfvars
@@ -274,7 +274,7 @@ Phase 3: Kubernetes/Helm (depends on Phase 2)
 
 Phase 4: Source Code (depends on Phase 3)
 ├─ 4.1 Python Backend (parallel with 4.2, 4.3)
-│   ├─ Rename apps/tinyolly/ → apps/ollyscale/
+│   ├─ Rename apps/ollyscale/ → apps/ollyscale/
 │   ├─ Update app/main.py (title, description)
 │   ├─ Update all imports across files
 │   ├─ Add AGPL headers to modified files

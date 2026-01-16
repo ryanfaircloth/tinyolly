@@ -142,8 +142,8 @@ Changes:
 - Updated apps/ollyscale/CHANGELOG.md
 - Updated apps/opamp-server/VERSION
 - Updated apps/opamp-server/CHANGELOG.md
-- Updated charts/tinyolly/Chart.yaml
-- Updated charts/tinyolly/CHANGELOG.md
+- Updated charts/ollyscale/Chart.yaml
+- Updated charts/ollyscale/CHANGELOG.md
 ```
 
 ### When Release PR Is Merged
@@ -154,11 +154,11 @@ Changes:
    - `helm-tinyolly-v0.2.0`
 
 2. **Container images** built and pushed:
-   - `ghcr.io/tinyolly/tinyolly:v2.3.0` (+ `:latest`)
-   - `ghcr.io/tinyolly/opamp-server:v1.0.1` (+ `:latest`)
+   - `ghcr.io/ollyscale/tinyolly:v2.3.0` (+ `:latest`)
+   - `ghcr.io/ollyscale/opamp-server:v1.0.1` (+ `:latest`)
 
 3. **Helm charts** packaged and pushed:
-   - `oci://ghcr.io/tinyolly/charts/tinyolly:0.2.0`
+   - `oci://ghcr.io/ollyscale/charts/tinyolly:0.2.0`
    - Chart's `values.yaml` updated with new image versions
 
 ## Version Strategy

@@ -31,7 +31,7 @@ TinyOlly includes a web interface for managing OpenTelemetry Collector configura
 TinyOlly includes a sample collector configuration that you can customize for your needs. The configuration files are located at:
 
 - **Docker**: `docker/otelcol-configs/config.yaml`
-- **Kubernetes (Helm)**: Configured via Helm values - see `charts/tinyolly/values.yaml` for OTel Collector settings
+- **Kubernetes (Helm)**: Configured via Helm values - see `charts/ollyscale/values.yaml` for OTel Collector settings
 
 ## Default Configuration
 
@@ -69,7 +69,7 @@ cd docker
 
 When deployed via Helm, the OTel Collector is managed by the OpenTelemetry Operator. To customize the configuration:
 
-1. Edit `charts/tinyolly/values.yaml` under the `otelCollector` section
+1. Edit `charts/ollyscale/values.yaml` under the `otelCollector` section
 2. Apply changes:
 
    ```bash

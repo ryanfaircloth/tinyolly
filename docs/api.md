@@ -436,15 +436,15 @@ curl http://localhost:5005/openapi.json > tinyolly-openapi.json
 
 # Generate Python client
 openapi-generator-cli generate \
-  -i tinyolly-openapi.json \
+  -i ollyscale-openapi.json \
   -g python \
-  -o ./tinyolly-python-client
+  -o ./ollyscale-python-client
 
 # Generate Go client
 openapi-generator-cli generate \
-  -i tinyolly-openapi.json \
+  -i ollyscale-openapi.json \
   -g go \
-  -o ./tinyolly-go-client
+  -o ./ollyscale-go-client
 
 # Generate TypeScript client
 openapi-generator-cli generate \
@@ -474,5 +474,5 @@ TinyOlly is designed for local development and does **not** include authenticati
 ## Need Help?
 
 - [View interactive examples in Swagger UI](http://localhost:5005/docs)
-- [Open an issue on GitHub](https://github.com/tinyolly/tinyolly/issues)
+- [Open an issue on GitHub](https://github.com/ryanfaircloth/ollyscale/issues)
 - [Read the technical architecture](technical.md)

@@ -16,8 +16,8 @@
 **This is a FORK:**
 
 - **Repository**: `ryanfaircloth/tinyolly` (forked from `tinyolly/tinyolly`)
-- **Container Registry**: `ghcr.io/ryanfaircloth/tinyolly` - ALWAYS use the fork registry, NEVER `ghcr.io/tinyolly`
-- **Helm Chart Registry**: `ghcr.io/ryanfaircloth/tinyolly/charts` - ALWAYS use the fork registry, NEVER `ghcr.io/tinyolly/charts`
+- **Container Registry**: `ghcr.io/ryanfaircloth/ollyscale` - ALWAYS use the fork registry, NEVER `ghcr.io/tinyolly`
+- **Helm Chart Registry**: `ghcr.io/ryanfaircloth/ollyscale/charts` - ALWAYS use the fork registry, NEVER `ghcr.io/ollyscale/charts`
 
 ## Project Overview
 
@@ -45,7 +45,7 @@ OTel SDK → Collector (4317/4318) → OTLP Receiver (4343) → Redis (6379) ←
 
 ### Shared Code
 
-Shared utilities are in `apps/tinyolly/common/`:
+Shared utilities are in `apps/ollyscale/common/`:
 
 - **storage.py**: Redis operations with ZSTD compression, msgpack serialization
 - **otlp_utils.py**: Centralized OTLP attribute parsing (use `get_attr_value()`, `parse_attributes()`)
@@ -65,11 +65,11 @@ Shared utilities are in `apps/tinyolly/common/`:
 
 - **PRODUCER spans** (kind=4): Edge direction is `source → target` (normal)
 - **CONSUMER spans** (kind=5): Edge direction is **reversed** `target ← source` for messaging systems
-- See [storage.py](apps/tinyolly/common/storage.py) `build_service_graph()` for implementation
+- See [storage.py](apps/ollyscale/common/storage.py) `build_service_graph()` for implementation
 
 ### Code Organization
 
-**Backend (`apps/tinyolly/`)**:
+**Backend (`apps/ollyscale/`)**:
 - **Routers**: `app/routers/` (ingest, query, services, admin, system, opamp)
 - **Models**: `models.py` (Pydantic schemas)
 - **Dependencies**: Use FastAPI dependency injection via `app/dependencies.py`
@@ -103,7 +103,7 @@ cd charts
 **How `build-and-push-local.sh` works**:
 
 1. Builds all 4 container images (python-base, UI, OTLP receiver, OpAMP server)
-2. Pushes images to `registry.tinyolly.test:49443` (external registry endpoint)
+2. Pushes images to `registry.ollyscale.test:49443` (external registry endpoint)
 3. Updates `Chart.yaml` version to `0.1.1-<your-version-tag>`
 4. Packages and pushes Helm chart to OCI registry
 5. Creates `values-local-dev.yaml` with image references using **internal registry** (`docker-registry.registry.svc.cluster.local:5000`)
@@ -128,22 +128,22 @@ kubectl -n argocd patch application tinyolly --type merge \
 
 **REGISTRY ENDPOINTS** (same physical registry, different access points):
 
-- **External (desktop → registry)**: `registry.tinyolly.test:49443` - Use for `podman push --tls-verify=false`
+- **External (desktop → registry)**: `registry.ollyscale.test:49443` - Use for `podman push --tls-verify=false`
 - **NodePort (desktop → cluster)**: `localhost:30500` - Alternative push endpoint (same registry)
 - **Internal (cluster → registry)**: `docker-registry.registry.svc.cluster.local:5000` - Use in Kubernetes deployments
 
 **BUILD & DEPLOY WORKFLOW** (automated by `build-and-push-local.sh`):
 
-1. Script builds images and pushes to **external endpoint** (`registry.tinyolly.test:49443`)
+1. Script builds images and pushes to **external endpoint** (`registry.ollyscale.test:49443`)
 2. Images automatically available via NodePort (`localhost:30500`)
 3. Script generates Helm `values-local-dev.yaml` using **internal endpoint** for image pulls
-4. Helm chart packaged and pushed to OCI registry at `registry.tinyolly.test:49443/tinyolly/charts`
+4. Helm chart packaged and pushed to OCI registry at `registry.ollyscale.test:49443/ollyscale/charts`
 5. ArgoCD pulls chart from registry, deploys to cluster using internal DNS for image pulls
 
 **DO NOT**:
 
 - Mix registry endpoints in same command
-- Push to `registry.tinyolly.test:49443` and deploy with same address (cluster can't resolve it)
+- Push to `registry.ollyscale.test:49443` and deploy with same address (cluster can't resolve it)
 - Manually tag/push to multiple endpoints (build scripts handle this)
 - **DEPRECATED**: Old `k8s/` scripts (`05-rebuild-local-changes.sh`, `06-rebuild-all-local.sh`, `07-deploy-local-images.sh`) are obsolete - use `charts/build-and-push-local.sh` instead
 
@@ -167,8 +167,8 @@ terraform apply -replace='kubectl_manifest.observability_applications["observabi
 ```bash
 # Build and push to external endpoint (from docker/apps)
 cd docker/apps
-podman build -f ../dockerfiles/Dockerfile.tinyolly-ui -t registry.tinyolly.test:49443/tinyolly/ui:v2.1.9 .
-podman push --tls-verify=false registry.tinyolly.test:49443/tinyolly/ui:v2.1.9
+podman build -f ../dockerfiles/Dockerfile.tinyolly-ui -t registry.ollyscale.test:49443/ollyscale/ui:v2.1.9 .
+podman push --tls-verify=false registry.ollyscale.test:49443/ollyscale/ui:v2.1.9
 
 # Update ArgoCD Application spec with new image tag
 kubectl -n argocd patch application tinyolly --type merge \
@@ -179,7 +179,7 @@ kubectl -n argocd patch application tinyolly --type merge \
 
 - **Clear cache after deployment**: `kubectl exec -n tinyolly tinyolly-redis-0 -- redis-cli -p 6379 FLUSHDB`
 - **Check logs**: `kubectl logs -n tinyolly deployment/tinyolly-ui -f`
-- **Verify image**: `podman images | grep registry.tinyolly.test:49443/tinyolly/ui`
+- **Verify image**: `podman images | grep registry.ollyscale.test:49443/ollyscale/ui`
 - **Check ArgoCD sync**: `kubectl -n argocd get application tinyolly -o jsonpath='{.status.sync.status}'`
 - **Force ArgoCD refresh**: `kubectl -n argocd patch application tinyolly -p '{"metadata":{"annotations":{"argocd.argoproj.io/refresh":"hard"}}}' --type merge`
 - **Wait for pods to restart**: `sleep 20 && kubectl get po -n tinyolly`
@@ -241,7 +241,7 @@ export TF_VAR_bootstrap=false && terraform apply -auto-approve
 
 ### Testing
 
-- **Backend tests**: `apps/tinyolly/tests/`
+- **Backend tests**: `apps/ollyscale/tests/`
 - Use pytest with async support: `pytest-asyncio`
 - Test Redis operations with real Redis instance (not mocked)
 
@@ -250,7 +250,7 @@ export TF_VAR_bootstrap=false && terraform apply -auto-approve
 ### Kubernetes
 
 - **Deployment**: ArgoCD manages infrastructure and applications
-- **Local registry**: `registry.tinyolly.test:49443` (TLS, skip verify) for dev builds
+- **Local registry**: `registry.ollyscale.test:49443` (TLS, skip verify) for dev builds
 - **Namespace**: `tinyolly`
 - **Services**: Exposed via Envoy Gateway with HTTPRoutes
 

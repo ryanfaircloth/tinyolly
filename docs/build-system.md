@@ -48,7 +48,7 @@ DELIVERABLE: OCI Container Images
 **Published to**:
 
 - Production: `ghcr.io/ryanfaircloth/tinyolly/tinyolly:VERSION`
-- Local dev: `registry.tinyolly.test:49443/tinyolly/tinyolly:VERSION`
+- Local dev: `registry.ollyscale.test:49443/tinyolly/tinyolly:VERSION`
 
 **Run modes** (controlled by `MODE` env var):
 
@@ -73,7 +73,7 @@ docker buildx build --platform linux/amd64,linux/arm64 \
 
 # Local dev (single-arch)
 podman build -f apps/tinyolly/Dockerfile \
-  -t registry.tinyolly.test:49443/tinyolly/tinyolly:v2.1.x-feature \
+  -t registry.ollyscale.test:49443/tinyolly/tinyolly:v2.1.x-feature \
   apps/tinyolly/
 ```
 
@@ -92,7 +92,7 @@ podman build -f apps/tinyolly/Dockerfile \
 **Published to**:
 
 - Production: `ghcr.io/ryanfaircloth/tinyolly/webui:VERSION`
-- Local dev: `registry.tinyolly.test:49443/tinyolly/webui:VERSION`
+- Local dev: `registry.ollyscale.test:49443/tinyolly/webui:VERSION`
 
 **Functionality**:
 
@@ -123,7 +123,7 @@ docker buildx build --platform linux/amd64,linux/arm64 \
 
 # Local dev (single-arch)
 podman build -f apps/tinyolly-ui/Dockerfile \
-  -t registry.tinyolly.test:49443/tinyolly/webui:v2.1.x-feature \
+  -t registry.ollyscale.test:49443/tinyolly/webui:v2.1.x-feature \
   apps/tinyolly-ui/
 ```
 
@@ -143,7 +143,7 @@ podman build -f apps/tinyolly-ui/Dockerfile \
 **Published to**:
 
 - Production: `ghcr.io/ryanfaircloth/tinyolly/opamp-server:VERSION`
-- Local dev: `registry.tinyolly.test:49443/tinyolly/opamp-server:VERSION`
+- Local dev: `registry.ollyscale.test:49443/tinyolly/opamp-server:VERSION`
 
 **Functionality**:
 
@@ -169,7 +169,7 @@ docker buildx build --platform linux/amd64,linux/arm64 \
 
 # Local dev (single-arch)
 podman build -f apps/opamp-server/Dockerfile \
-  -t registry.tinyolly.test:49443/tinyolly/opamp-server:v2.1.x-feature \
+  -t registry.ollyscale.test:49443/tinyolly/opamp-server:v2.1.x-feature \
   apps/opamp-server/
 ```
 
@@ -188,7 +188,7 @@ podman build -f apps/opamp-server/Dockerfile \
 **Published to**:
 
 - Production: `ghcr.io/ryanfaircloth/tinyolly/demo:VERSION`
-- Local dev: `registry.tinyolly.test:49443/tinyolly/demo:VERSION`
+- Local dev: `registry.ollyscale.test:49443/tinyolly/demo:VERSION`
 
 **Functionality**:
 
@@ -215,7 +215,7 @@ docker buildx build --platform linux/amd64,linux/arm64 \
 
 # Local dev (single-arch)
 podman build -f apps/demo/Dockerfile \
-  -t registry.tinyolly.test:49443/tinyolly/demo:v2.1.x-feature \
+  -t registry.ollyscale.test:49443/tinyolly/demo:v2.1.x-feature \
   apps/demo/
 ```
 
@@ -244,7 +244,7 @@ DELIVERABLE: Helm Charts (OCI format)
 **Published to**:
 
 - Production: `oci://ghcr.io/ryanfaircloth/tinyolly/charts/tinyolly:VERSION`
-- Local dev: `oci://registry.tinyolly.test:49443/tinyolly/charts/tinyolly:VERSION`
+- Local dev: `oci://registry.ollyscale.test:49443/tinyolly/charts/tinyolly:VERSION`
 
 **Contains**:
 
@@ -289,7 +289,7 @@ helm package charts/tinyolly/ -d charts/
 
 # Push to OCI registry
 helm push charts/tinyolly-0.1.1-v2.1.x-feature.tgz \
-  oci://registry.tinyolly.test:49443/tinyolly/charts
+  oci://registry.ollyscale.test:49443/tinyolly/charts
 ```
 
 **Version format**:
@@ -313,7 +313,7 @@ helm push charts/tinyolly-0.1.1-v2.1.x-feature.tgz \
 **Published to**:
 
 - Production: `oci://ghcr.io/ryanfaircloth/tinyolly/charts/tinyolly-demos:VERSION`
-- Local dev: `oci://registry.tinyolly.test:49443/tinyolly/charts/tinyolly-demos:VERSION`
+- Local dev: `oci://registry.ollyscale.test:49443/tinyolly/charts/tinyolly-demos:VERSION`
 
 **Contains**:
 
@@ -346,7 +346,7 @@ helm package charts/tinyolly-demos/ -d charts/
 
 # Push to OCI registry
 helm push charts/tinyolly-demos-0.1.5.tgz \
-  oci://registry.tinyolly.test:49443/tinyolly/charts
+  oci://registry.ollyscale.test:49443/tinyolly/charts
 ```
 
 **Rebuild triggers**:
@@ -451,7 +451,7 @@ cd charts
 ### Local Development Builds → Local Registry (Single-platform)
 
 **Location**: `charts/`  
-**Registry**: `registry.tinyolly.test:49443/tinyolly/*`  
+**Registry**: `registry.ollyscale.test:49443/tinyolly/*`  
 **Platforms**: Native only (faster builds)
 
 | Script                            | Builds                                                              | Description                                                                                                                           |
@@ -465,23 +465,23 @@ cd charts
 
 # Step 1: Build images
 podman build -f apps/tinyolly/Dockerfile \
-  -t registry.tinyolly.test:49443/tinyolly/tinyolly:v2.1.x-tail-sampling \
+  -t registry.ollyscale.test:49443/tinyolly/tinyolly:v2.1.x-tail-sampling \
   apps/tinyolly/
 
 podman build -f apps/tinyolly-ui/Dockerfile \
-  -t registry.tinyolly.test:49443/tinyolly/webui:v2.1.x-tail-sampling \
+  -t registry.ollyscale.test:49443/tinyolly/webui:v2.1.x-tail-sampling \
   apps/tinyolly-ui/
 
 podman build -f apps/opamp-server/Dockerfile \
-  -t registry.tinyolly.test:49443/tinyolly/opamp-server:v2.1.x-tail-sampling \
+  -t registry.ollyscale.test:49443/tinyolly/opamp-server:v2.1.x-tail-sampling \
   apps/opamp-server/
 
 podman build -f apps/demo/Dockerfile \
-  -t registry.tinyolly.test:49443/tinyolly/demo:v2.1.x-tail-sampling \
+  -t registry.ollyscale.test:49443/tinyolly/demo:v2.1.x-tail-sampling \
   apps/demo/
 
 # Step 2: Push images to local registry (external endpoint)
-podman push --tls-verify=false registry.tinyolly.test:49443/tinyolly/tinyolly:v2.1.x-tail-sampling
+podman push --tls-verify=false registry.ollyscale.test:49443/tinyolly/tinyolly:v2.1.x-tail-sampling
 # ... (webui, opamp-server, demo)
 
 # Step 3: Update Chart.yaml version
@@ -505,7 +505,7 @@ helm package charts/tinyolly/ -d charts/
 
 # Step 6: Push chart to OCI registry
 helm push charts/tinyolly-0.1.1-v2.1.x-tail-sampling.tgz \
-  oci://registry.tinyolly.test:49443/tinyolly/charts
+  oci://registry.ollyscale.test:49443/tinyolly/charts
 ```
 
 **Deploy to cluster**:
@@ -562,9 +562,9 @@ TinyOlly uses **different registry endpoints** for build/push vs runtime deploym
 
 **Rules**:
 
-1. **Build scripts** push to `registry.tinyolly.test:49443` (external endpoint)
+1. **Build scripts** push to `registry.ollyscale.test:49443` (external endpoint)
 2. **Helm values** reference `docker-registry.registry.svc.cluster.local:5000` (internal endpoint)
-3. **Never** use `registry.tinyolly.test:49443` in pod image specs - cluster can't resolve it!
+3. **Never** use `registry.ollyscale.test:49443` in pod image specs - cluster can't resolve it!
 
 **Example** (`values-local-dev.yaml`):
 
@@ -578,7 +578,7 @@ ui:
 # ❌ WRONG - external endpoint, pods can't pull
 ui:
   image:
-    repository: registry.tinyolly.test:49443/tinyolly/tinyolly
+    repository: registry.ollyscale.test:49443/tinyolly/tinyolly
     tag: v2.1.x-feature
 ```
 
@@ -738,9 +738,9 @@ git push origin v2.1.8
 # When you ONLY changed tinyolly source code
 cd /repo/root/docker
 podman build -f dockerfiles/Dockerfile.tinyolly \
-  -t registry.tinyolly.test:49443/tinyolly/tinyolly:v2.1.x-hotfix .
+  -t registry.ollyscale.test:49443/tinyolly/tinyolly:v2.1.x-hotfix .
 podman push --tls-verify=false \
-  registry.tinyolly.test:49443/tinyolly/tinyolly:v2.1.x-hotfix
+  registry.ollyscale.test:49443/tinyolly/tinyolly:v2.1.x-hotfix
 
 # Update just the image tag in ArgoCD
 kubectl -n argocd patch application tinyolly --type merge \

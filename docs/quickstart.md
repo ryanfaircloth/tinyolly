@@ -22,8 +22,8 @@ Get TinyOlly running in under 5 minutes!
 ## Step 1: Clone the Repository
 
 ```bash
-git clone https://github.com/tinyolly/tinyolly
-cd tinyolly
+git clone https://github.com/ryanfaircloth/ollyscale
+cd ollyscale
 ```
 
 ---
@@ -233,4 +233,4 @@ cd docker
 - Restart demo: `cd apps/demo && ./02-cleanup-demo.sh && ./01-deploy-demo.sh`
 - Check logs: `docker compose -f apps/demo/docker-compose-demo.yml logs demo-frontend`
 
-For more help, [open an issue on GitHub](https://github.com/tinyolly/tinyolly/issues).
+For more help, [open an issue on GitHub](https://github.com/ryanfaircloth/ollyscale/issues).

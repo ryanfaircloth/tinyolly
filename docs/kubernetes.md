@@ -12,7 +12,7 @@ Deploy TinyOlly on Kubernetes (Minikube) for local development!
 All examples are launched from the repo - clone it first or download the current GitHub release archive:
 
 ```bash
-git clone https://github.com/tinyolly/tinyolly
+git clone https://github.com/ryanfaircloth/ollyscale
 ```
 
 ## Prerequisites
@@ -236,6 +236,6 @@ The default configuration template (included as a ConfigMap in `k8s-core-only/ti
 
 ## Building Images
 
-By default, deployment scripts pull pre-built images from GitHub Container Registry (GHCR). For building images locally (Minikube) or publishing to GHCR, see [build/README.md](https://github.com/tinyolly/tinyolly/blob/main/build/README.md).
+By default, deployment scripts pull pre-built images from GitHub Container Registry (GHCR). For building images locally (Minikube) or publishing to GHCR, see [build/README.md](https://github.com/ryanfaircloth/ollyscale/blob/main/build/README.md).
 
 ---
