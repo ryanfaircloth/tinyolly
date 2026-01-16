@@ -1,4 +1,4 @@
-# TinyOlly AI Agent Instructions
+# ollyScale AI Agent Instructions
 
 ## CRITICAL RULES
 
@@ -15,13 +15,15 @@
 
 **This is a FORK:**
 
-- **Repository**: `ryanfaircloth/tinyolly` (forked from `tinyolly/tinyolly`)
-- **Container Registry**: `ghcr.io/ryanfaircloth/ollyscale` - ALWAYS use the fork registry, NEVER `ghcr.io/tinyolly`
-- **Helm Chart Registry**: `ghcr.io/ryanfaircloth/ollyscale/charts` - ALWAYS use the fork registry, NEVER `ghcr.io/ollyscale/charts`
+- **Repository**: `ryanfaircloth/ollyscale` (forked from `tinyolly/tinyolly`)
+- **Original Project**: TinyOlly by Infrastructure Architects, LLC (BSD-3-Clause)
+- **Fork Enhancements**: AGPL-3.0 licensed
+- **Container Registry**: `ghcr.io/ryanfaircloth/ollyscale` - ALWAYS use this registry
+- **Helm Chart Registry**: `ghcr.io/ryanfaircloth/ollyscale/charts` - ALWAYS use this registry
 
 ## Project Overview
 
-**TinyOlly** is a lightweight, desktop-first OpenTelemetry observability platform for local development. It ingests traces, logs, and metrics via OTLP, stores them in Redis with 30-minute TTL, and provides real-time visualization through a web UI.
+**ollyScale** is a lightweight, desktop-first OpenTelemetry observability platform for local development, evolved from TinyOlly. It ingests traces, logs, and metrics via OTLP, stores them in Redis with 30-minute TTL, and provides real-time visualization through a web UI.
 
 **Core Philosophy**: Ephemeral observability for development. Data is compressed (ZSTD + msgpack), TTL'd, and never persisted. Think of it as "observability workbench" not production monitoring.
 
@@ -29,9 +31,9 @@
 
 ### Core Services
 
-- **tinyolly-ui** (FastAPI): Web UI + REST API + OTLP ingestion (port 5002)
-- **tinyolly-otlp-receiver** (FastAPI): Dedicated OTLP receiver (port 4343)
-- **tinyolly-opamp-server** (Go): OpAMP server for OTel Collector remote config (ports 4320/4321)
+- **ollyscale-ui** (FastAPI): Web UI + REST API + OTLP ingestion (port 5002)
+- **ollyscale-otlp-receiver** (FastAPI): Dedicated OTLP receiver (port 4343)
+- **ollyscale-opamp-server** (Go): OpAMP server for OTel Collector remote config (ports 4320/4321)
 - **Redis**: Storage backend (port 6379)
 - **OTel Collector**: Bundled collector for demo environments (ports 4317/4318)
 
@@ -74,7 +76,7 @@ Shared utilities are in `apps/ollyscale/common/`:
 - **Models**: `models.py` (Pydantic schemas)
 - **Dependencies**: Use FastAPI dependency injection via `app/dependencies.py`
 
-**Frontend (`apps/tinyolly-ui/`)**:
+**Frontend (`apps/ollyscale-ui/`)**:
 - **TypeScript/Vite**: Modern build tooling with ES modules
 - **Modules**: `src/modules/` (api, traces, serviceMap, metrics, etc.)
 - **Assets**: Compiled to `dist/` and served by nginx
@@ -95,7 +97,7 @@ Shared utilities are in `apps/ollyscale/common/`:
 # Create/update cluster infrastructure (from repo root)
 make up                         # Bootstrap KIND cluster + ArgoCD via Terraform
 
-# Build and deploy TinyOlly (from repo root or charts/)
+# Build and deploy ollyScale (from repo root or charts/)
 cd charts
 ./build-and-push-local.sh v2.1.x-description  # Build images + Helm chart, push to local registry
 ```
@@ -110,17 +112,17 @@ cd charts
 
 **ArgoCD deployment**:
 
-- ArgoCD Application defined in `.kind/modules/main/argocd-applications/observability/tinyolly.yaml`
+- ArgoCD Application defined in `.kind/modules/main/argocd-applications/observability/ollyscale.yaml`
 - Automatically syncs Helm chart from local OCI registry
 - Must update `targetRevision` in ArgoCD Application to deploy new chart version:
 
 ```bash
 # Option 1: Update via terraform (preferred)
 cd .kind
-terraform apply -replace='kubectl_manifest.observability_applications["observability/tinyolly.yaml"]' -auto-approve
+terraform apply -replace='kubectl_manifest.observability_applications["observability/ollyscale.yaml"]' -auto-approve
 
 # Option 2: Patch directly
-kubectl -n argocd patch application tinyolly --type merge \
+kubectl -n argocd patch application ollyscale --type merge \
   -p '{"spec":{"source":{"targetRevision":"0.1.1-v2.1.x-description"}}}'
 ```
 
@@ -159,7 +161,7 @@ cd charts
 
 # Update ArgoCD to use new chart version
 cd ../.kind
-terraform apply -replace='kubectl_manifest.observability_applications["observability/tinyolly.yaml"]' -auto-approve
+terraform apply -replace='kubectl_manifest.observability_applications["observability/ollyscale.yaml"]' -auto-approve
 ```
 
 **MANUAL PATTERN** (if scripts fail):
@@ -167,22 +169,22 @@ terraform apply -replace='kubectl_manifest.observability_applications["observabi
 ```bash
 # Build and push to external endpoint (from docker/apps)
 cd docker/apps
-podman build -f ../dockerfiles/Dockerfile.tinyolly-ui -t registry.ollyscale.test:49443/ollyscale/ui:v2.1.9 .
+podman build -f ../dockerfiles/Dockerfile.ollyscale-ui -t registry.ollyscale.test:49443/ollyscale/ui:v2.1.9 .
 podman push --tls-verify=false registry.ollyscale.test:49443/ollyscale/ui:v2.1.9
 
 # Update ArgoCD Application spec with new image tag
-kubectl -n argocd patch application tinyolly --type merge \
+kubectl -n argocd patch application ollyscale --type merge \
   -p '{"spec":{"source":{"helm":{"valuesObject":{"ui":{"image":{"tag":"v2.1.9"}}}}}}}'
 ```
 
 ### Testing Changes
 
-- **Clear cache after deployment**: `kubectl exec -n tinyolly tinyolly-redis-0 -- redis-cli -p 6379 FLUSHDB`
-- **Check logs**: `kubectl logs -n tinyolly deployment/tinyolly-ui -f`
+- **Clear cache after deployment**: `kubectl exec -n ollyscale ollyscale-redis-0 -- redis-cli -p 6379 FLUSHDB`
+- **Check logs**: `kubectl logs -n ollyscale deployment/ollyscale-ui -f`
 - **Verify image**: `podman images | grep registry.ollyscale.test:49443/ollyscale/ui`
-- **Check ArgoCD sync**: `kubectl -n argocd get application tinyolly -o jsonpath='{.status.sync.status}'`
-- **Force ArgoCD refresh**: `kubectl -n argocd patch application tinyolly -p '{"metadata":{"annotations":{"argocd.argoproj.io/refresh":"hard"}}}' --type merge`
-- **Wait for pods to restart**: `sleep 20 && kubectl get po -n tinyolly`
+- **Check ArgoCD sync**: `kubectl -n argocd get application ollyscale -o jsonpath='{.status.sync.status}'`
+- **Force ArgoCD refresh**: `kubectl -n argocd patch application ollyscale -p '{"metadata":{"annotations":{"argocd.argoproj.io/refresh":"hard"}}}' --type merge`
+- **Wait for pods to restart**: `sleep 20 && kubectl get po -n ollyscale`
 
 ### Terraform Bootstrap Pattern
 
@@ -233,7 +235,7 @@ export TF_VAR_bootstrap=false && terraform apply -auto-approve
 
 ### Frontend (TypeScript/Vite)
 
-- **Location**: `apps/tinyolly-ui/src/modules/`
+- **Location**: `apps/ollyscale-ui/src/modules/`
 - **TypeScript modules**: `api.ts`, `traces.ts`, `serviceMap.ts`, `metrics.ts`, etc.
 - **Cytoscape.js**: For service map visualization
 - **Chart.js**: For metrics charts
@@ -251,7 +253,7 @@ export TF_VAR_bootstrap=false && terraform apply -auto-approve
 
 - **Deployment**: ArgoCD manages infrastructure and applications
 - **Local registry**: `registry.ollyscale.test:49443` (TLS, skip verify) for dev builds
-- **Namespace**: `tinyolly`
+- **Namespace**: `ollyscale`
 - **Services**: Exposed via Envoy Gateway with HTTPRoutes
 
 ### ArgoCD GitOps
@@ -262,25 +264,25 @@ export TF_VAR_bootstrap=false && terraform apply -auto-approve
 - **Example**: `docker-registry.yaml` (Helm) + `docker-registry-route.yaml` (raw HTTPRoute)
 - **No Flux**: All deployments use ArgoCD native Helm support, not Flux HelmRelease CRDs
 - **Sync waves**: Applications use `argocd.argoproj.io/sync-wave` annotation for ordered deployment
-- **TinyOlly chart source**: `docker-registry.registry.svc.cluster.local:5000/ollyscale/charts` (OCI registry)
+- **ollyScale chart source**: `docker-registry.registry.svc.cluster.local:5000/ollyscale/charts` (OCI registry)
 - **Update pattern**: Change `targetRevision` in Application manifest, then `terraform apply -replace`
 
 ## Common Tasks
 
 ### Debugging OTLP Issues
 
-1. Check span attributes: `kubectl logs -n tinyolly deployment/tinyolly-ui | grep "kind"`
-2. Verify storage format: `kubectl exec -n tinyolly deployment/tinyolly-redis -- redis-cli -p 6379 KEYS "span:*" | head -5`
+1. Check span attributes: `kubectl logs -n ollyscale deployment/ollyscale-ui | grep "kind"`
+2. Verify storage format: `kubectl exec -n ollyscale deployment/ollyscale-redis -- redis-cli -p 6379 KEYS "span:*" | head -5`
 3. Test attribute parsing: Use `get_attr_value()` from `otlp_utils` with multiple semantic convention keys
 
 ### Clearing Data
 
 ```bash
 # Docker
-docker exec tinyolly-redis redis-cli -p 6379 FLUSHDB
+docker exec ollyscale-redis redis-cli -p 6379 FLUSHDB
 
 # Kubernetes
-kubectl exec -n tinyolly deployment/tinyolly-redis -- redis-cli -p 6379 FLUSHDB
+kubectl exec -n ollyscale deployment/ollyscale-redis -- redis-cli -p 6379 FLUSHDB
 ```
 
 ### Adding Metrics to Service Catalog
@@ -291,9 +293,9 @@ kubectl exec -n tinyolly deployment/tinyolly-redis -- redis-cli -p 6379 FLUSHDB
 
 ## OpAMP Integration
 
-TinyOlly uses **OpAMP** (OpenTelemetry Agent Management Protocol) for remote OTel Collector configuration:
+ollyScale uses **OpAMP** (OpenTelemetry Agent Management Protocol) for remote OTel Collector configuration:
 
-- Server: Go implementation at `docker/apps/tinyolly-opamp-server/main.go`
+- Server: Go implementation at `docker/apps/ollyscale-opamp-server/main.go`
 - Validation: Uses `otelcol-contrib validate` binary in UI container
 - Templates: YAML configs in `otelcol-configs/` and `otelcol-templates/`
 - REST API: `/opamp/*` endpoints in `app/routers/opamp.py`
