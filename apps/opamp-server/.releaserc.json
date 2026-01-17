@@ -1,0 +1,24 @@
+{
+  "branches": ["main"],
+  "tagFormat": "opamp-server-v${version}",
+  "plugins": [
+    ["@semantic-release/commit-analyzer", { "preset": "conventionalcommits" }],
+    ["@semantic-release/release-notes-generator", { "preset": "conventionalcommits" }],
+    ["@semantic-release/changelog", { "changelogFile": "CHANGELOG.md" }],
+    [
+      "@semantic-release/exec",
+      {
+        "prepareCmd": "../../scripts/update-chart-values.sh opamp-server ${nextRelease.version}",
+        "publishCmd": "echo 'opamp-server:${nextRelease.version}'"
+      }
+    ],
+    [
+      "@semantic-release/git",
+      {
+        "assets": ["CHANGELOG.md", "../../charts/ollyscale/values.yaml"],
+        "message": "chore(opamp-server): release v${nextRelease.version}"
+      }
+    ],
+    "@semantic-release/github"
+  ]
+}

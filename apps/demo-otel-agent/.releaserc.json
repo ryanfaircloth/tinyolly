@@ -1,0 +1,24 @@
+{
+  "branches": ["main"],
+  "tagFormat": "demo-otel-agent-v${version}",
+  "plugins": [
+    ["@semantic-release/commit-analyzer", { "preset": "conventionalcommits" }],
+    ["@semantic-release/release-notes-generator", { "preset": "conventionalcommits" }],
+    ["@semantic-release/changelog", { "changelogFile": "CHANGELOG.md" }],
+    [
+      "@semantic-release/exec",
+      {
+        "prepareCmd": "../../scripts/update-chart-values.sh demo-otel-agent ${nextRelease.version}",
+        "publishCmd": "echo 'demo-otel-agent:${nextRelease.version}'"
+      }
+    ],
+    [
+      "@semantic-release/git",
+      {
+        "assets": ["CHANGELOG.md", "pyproject.toml", "../../charts/ollyscale-otel-agent/values.yaml"],
+        "message": "chore(demo-otel-agent): release v${nextRelease.version}"
+      }
+    ],
+    "@semantic-release/github"
+  ]
+}
