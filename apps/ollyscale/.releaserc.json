@@ -8,7 +8,8 @@
       "semantic-release-pypi",
       {
         "srcDir": ".",
-        "pypiPublish": false
+        "pypiPublish": false,
+        "buildPath": null
       }
     ],
     [
