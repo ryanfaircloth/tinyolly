@@ -4,18 +4,39 @@
   "plugins": [
     ["@semantic-release/commit-analyzer", { "preset": "conventionalcommits" }],
     ["@semantic-release/release-notes-generator", { "preset": "conventionalcommits" }],
-    ["@semantic-release/changelog", { "changelogFile": "CHANGELOG.md" }],
+    "@semantic-release/npm",
     [
-      "@semantic-release/exec",
+      "semantic-release-yaml",
       {
-        "prepareCmd": "../../scripts/update-chart-values.sh ollyscale-ui ${nextRelease.version}",
-        "publishCmd": "echo 'ollyscale-ui:${nextRelease.version}'"
+        "commands": [
+          {
+            "cwd": "../../charts/ollyscale",
+            "file": "values.yaml",
+            "selector": "webui.image.tag",
+            "value": "v${nextRelease.version}"
+          }
+        ]
+      }
+    ],
+    [
+      "@codedependant/semantic-release-docker",
+      {
+        "dockerImage": "ollyscale-ui",
+        "dockerRegistry": "ghcr.io",
+        "dockerProject": "ryanfaircloth/ollyscale",
+        "dockerFile": "Dockerfile",
+        "dockerContext": ".",
+        "dockerTags": ["latest", "{{major}}", "{{major}}.{{minor}}", "{{version}}"],
+        "dockerBuildFlags": {
+          "platform": "linux/amd64,linux/arm64"
+        },
+        "dockerPublish": true
       }
     ],
     [
       "@semantic-release/git",
       {
-        "assets": ["CHANGELOG.md", "package.json", "../../charts/ollyscale/values.yaml"],
+        "assets": ["package.json", "package-lock.json", "../../charts/ollyscale/values.yaml"],
         "message": "chore(ollyscale-ui): release v${nextRelease.version}"
       }
     ],

@@ -4,18 +4,38 @@
   "plugins": [
     ["@semantic-release/commit-analyzer", { "preset": "conventionalcommits" }],
     ["@semantic-release/release-notes-generator", { "preset": "conventionalcommits" }],
-    ["@semantic-release/changelog", { "changelogFile": "CHANGELOG.md" }],
     [
-      "@semantic-release/exec",
+      "semantic-release-yaml",
       {
-        "prepareCmd": "../../scripts/update-chart-values.sh opamp-server ${nextRelease.version}",
-        "publishCmd": "echo 'opamp-server:${nextRelease.version}'"
+        "commands": [
+          {
+            "cwd": "../../charts/ollyscale",
+            "file": "values.yaml",
+            "selector": "opampServer.image.tag",
+            "value": "v${nextRelease.version}"
+          }
+        ]
+      }
+    ],
+    [
+      "@codedependant/semantic-release-docker",
+      {
+        "dockerImage": "opamp-server",
+        "dockerRegistry": "ghcr.io",
+        "dockerProject": "ryanfaircloth/ollyscale",
+        "dockerFile": "Dockerfile",
+        "dockerContext": ".",
+        "dockerTags": ["latest", "{{major}}", "{{major}}.{{minor}}", "{{version}}"],
+        "dockerBuildFlags": {
+          "platform": "linux/amd64,linux/arm64"
+        },
+        "dockerPublish": true
       }
     ],
     [
       "@semantic-release/git",
       {
-        "assets": ["CHANGELOG.md", "../../charts/ollyscale/values.yaml"],
+        "assets": ["../../charts/ollyscale/values.yaml"],
         "message": "chore(opamp-server): release v${nextRelease.version}"
       }
     ],

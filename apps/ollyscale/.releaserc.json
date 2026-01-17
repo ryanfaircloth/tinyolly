@@ -4,18 +4,51 @@
   "plugins": [
     ["@semantic-release/commit-analyzer", { "preset": "conventionalcommits" }],
     ["@semantic-release/release-notes-generator", { "preset": "conventionalcommits" }],
-    ["@semantic-release/changelog", { "changelogFile": "CHANGELOG.md" }],
     [
-      "@semantic-release/exec",
+      "@pdecat/semantic-release-python",
       {
-        "prepareCmd": "../../scripts/update-chart-values.sh ollyscale ${nextRelease.version}",
-        "publishCmd": "echo 'ollyscale:${nextRelease.version}'"
+        "setupPy": "pyproject.toml",
+        "pypiPublish": false
+      }
+    ],
+    [
+      "semantic-release-yaml",
+      {
+        "commands": [
+          {
+            "cwd": "../../charts/ollyscale",
+            "file": "values.yaml",
+            "selector": "frontend.image.tag",
+            "value": "v${nextRelease.version}"
+          },
+          {
+            "cwd": "../../charts/ollyscale",
+            "file": "values.yaml",
+            "selector": "otlpReceiver.image.tag",
+            "value": "v${nextRelease.version}"
+          }
+        ]
+      }
+    ],
+    [
+      "@codedependant/semantic-release-docker",
+      {
+        "dockerImage": "ollyscale",
+        "dockerRegistry": "ghcr.io",
+        "dockerProject": "ryanfaircloth/ollyscale",
+        "dockerFile": "Dockerfile",
+        "dockerContext": ".",
+        "dockerTags": ["latest", "{{major}}", "{{major}}.{{minor}}", "{{version}}"],
+        "dockerBuildFlags": {
+          "platform": "linux/amd64,linux/arm64"
+        },
+        "dockerPublish": true
       }
     ],
     [
       "@semantic-release/git",
       {
-        "assets": ["CHANGELOG.md", "pyproject.toml", "../../charts/ollyscale/values.yaml"],
+        "assets": ["pyproject.toml", "../../charts/ollyscale/values.yaml"],
         "message": "chore(ollyscale): release v${nextRelease.version}"
       }
     ],
