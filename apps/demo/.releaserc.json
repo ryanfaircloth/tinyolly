@@ -9,16 +9,14 @@
       {
         "replacements": [
           {
-            "files": ["pyproject.toml"],
+            "files": ["apps/demo/pyproject.toml"],
             "from": "version = \".*\"",
-            "to": "version = \"${nextRelease.version}\"",
-            "glob": { "cwd": "apps/demo" }
+            "to": "version = \"${nextRelease.version}\""
           },
           {
-            "files": ["__init__.py"],
+            "files": ["apps/demo/__init__.py"],
             "from": "__version__ = \".*\"",
-            "to": "__version__ = \"${nextRelease.version}\"",
-            "glob": { "cwd": "apps/demo" }
+            "to": "__version__ = \"${nextRelease.version}\""
           }
         ]
       }

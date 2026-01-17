@@ -9,16 +9,14 @@
       {
         "replacements": [
           {
-            "files": ["pyproject.toml"],
+            "files": ["apps/demo-otel-agent/pyproject.toml"],
             "from": "version = \".*\"",
-            "to": "version = \"${nextRelease.version}\"",
-            "glob": { "cwd": "apps/demo-otel-agent" }
+            "to": "version = \"${nextRelease.version}\""
           },
           {
-            "files": ["__init__.py"],
+            "files": ["apps/demo-otel-agent/__init__.py"],
             "from": "__version__ = \".*\"",
-            "to": "__version__ = \"${nextRelease.version}\"",
-            "glob": { "cwd": "apps/demo-otel-agent" }
+            "to": "__version__ = \"${nextRelease.version}\""
           }
         ]
       }
