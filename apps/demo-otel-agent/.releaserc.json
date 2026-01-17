@@ -7,7 +7,7 @@
     [
       "semantic-release-pypi",
       {
-        "setupPy": "pyproject.toml",
+        "srcDir": "apps/demo-otel-agent",
         "pypiPublish": false
       }
     ],
@@ -42,7 +42,7 @@
     [
       "@semantic-release/git",
       {
-        "assets": ["pyproject.toml", "../../charts/ollyscale-otel-agent/values.yaml"],
+        "assets": ["apps/demo-otel-agent/pyproject.toml", "../../charts/ollyscale-otel-agent/values.yaml"],
         "message": "chore(demo-otel-agent): release v${nextRelease.version}"
       }
     ],

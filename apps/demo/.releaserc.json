@@ -7,7 +7,7 @@
     [
       "semantic-release-pypi",
       {
-        "setupPy": "pyproject.toml",
+        "srcDir": "apps/demo",
         "pypiPublish": false
       }
     ],
@@ -48,7 +48,7 @@
     [
       "@semantic-release/git",
       {
-        "assets": ["pyproject.toml", "../../charts/ollyscale-demos/values.yaml"],
+        "assets": ["apps/demo/pyproject.toml", "../../charts/ollyscale-demos/values.yaml"],
         "message": "chore(demo): release v${nextRelease.version}"
       }
     ],
