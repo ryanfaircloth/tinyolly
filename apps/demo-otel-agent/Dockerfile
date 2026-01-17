@@ -4,9 +4,9 @@ FROM python:3.14-slim as builder
 # Install Poetry
 RUN pip install --no-cache-dir poetry>=1.8.0
 
-# Configure Poetry: no virtual env (we're in container), no dev deps by default
+# Configure Poetry: ensure venv is created in project and no dev deps by default
 ENV POETRY_NO_INTERACTION=1 \
-    POETRY_VENV_IN_PROJECT=1 \
+    POETRY_VIRTUALENVS_IN_PROJECT=1 \
     POETRY_CACHE_DIR=/opt/poetry_cache
 
 WORKDIR /app
@@ -14,8 +14,8 @@ WORKDIR /app
 # Copy Poetry configuration
 COPY pyproject.toml poetry.lock ./
 
-# Install dependencies
-RUN poetry install --only=main && rm -rf $POETRY_CACHE_DIR
+# Install dependencies into project venv
+RUN poetry config virtualenvs.in-project true && poetry install --only=main && rm -rf $POETRY_CACHE_DIR
 
 # Production stage
 FROM python:3.14-slim as runtime
