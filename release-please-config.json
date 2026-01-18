@@ -23,12 +23,12 @@
     },
     "apps/demo": {
       "component": "demo",
-      "release-type": "simple",
+      "release-type": "python",
       "package-name": "@ollyscale/demo"
     },
     "apps/demo-otel-agent": {
       "component": "demo-otel-agent",
-      "release-type": "simple",
+      "release-type": "python",
       "package-name": "@ollyscale/demo-otel-agent"
     },
     "charts/ollyscale": {
