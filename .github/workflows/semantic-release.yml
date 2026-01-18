@@ -1,9 +1,18 @@
-name: semantic-release
+name: semantic-release (DEPRECATED - use release-please)
+
+# This workflow is deprecated and should not be used.
+# The release-please workflow (.github/workflows/release-please.yml) 
+# has replaced this semantic-release workflow.
+# This file is kept for reference during the migration period.
 
 on:
-  push:
-    branches:
-      - main
+  # Disabled - workflow no longer runs on any events
+  workflow_dispatch:
+    inputs:
+      disabled:
+        description: 'This workflow is disabled. Use release-please instead.'
+        required: false
+        default: 'true'
 
 permissions:
   contents: write
@@ -14,6 +23,7 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-latest
+    if: false  # Workflow is disabled
     env:
       # GitHub and GHCR authentication
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
