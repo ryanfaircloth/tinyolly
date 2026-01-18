@@ -7,6 +7,7 @@ on:
       - develop
       - next-release
       - next-release-major
+      - copilot/next-release  # Current testing branch
   workflow_dispatch:
     inputs:
       prerelease:
