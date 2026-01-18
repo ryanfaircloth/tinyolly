@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - copilot/next-release  # Treat as develop branch for pre-release builds
   workflow_dispatch:
     inputs:
       prerelease:
@@ -23,7 +24,19 @@ jobs:
     outputs:
       releases_created: ${{ steps.release.outputs.releases_created }}
       release_data: ${{ toJSON(steps.release.outputs) }}
+      is_prerelease: ${{ steps.check_branch.outputs.is_prerelease }}
     steps:
+      - name: Check if this is a pre-release branch
+        id: check_branch
+        run: |
+          if [[ "${{ github.ref }}" == "refs/heads/copilot/next-release" ]] || [[ "${{ inputs.prerelease }}" == "true" ]]; then
+            echo "is_prerelease=true" >> $GITHUB_OUTPUT
+            echo "📦 Building as pre-release"
+          else
+            echo "is_prerelease=false" >> $GITHUB_OUTPUT
+            echo "🚀 Building as stable release"
+          fi
+      
       - name: Run release-please
         id: release
         uses: ryanfaircloth/release-please-action@test/fork-dependency
@@ -107,7 +120,10 @@ jobs:
             type=semver,pattern={{version}},value=${{ steps.check_release.outputs.version }}
             type=semver,pattern={{major}}.{{minor}},value=${{ steps.check_release.outputs.version }}
             type=semver,pattern={{major}},value=${{ steps.check_release.outputs.version }}
-            type=raw,value=latest,enable=${{ !inputs.prerelease }}
+            type=raw,value=latest,enable=${{ needs.release-please.outputs.is_prerelease != 'true' }}
+          labels: |
+            org.opencontainers.image.version=${{ steps.check_release.outputs.version }}
+            org.opencontainers.image.prerelease=${{ needs.release-please.outputs.is_prerelease }}
 
       - name: Build and push Docker image
         if: steps.check_release.outputs.released == 'true'
