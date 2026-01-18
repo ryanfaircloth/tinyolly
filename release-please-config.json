@@ -52,33 +52,28 @@
       "extra-files": [
         {
           "type": "yaml",
-          "path": "charts/ollyscale/Chart.yaml",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "yaml",
-          "path": "charts/ollyscale/values.yaml",
+          "path": "values.yaml",
           "jsonpath": "$.frontend.image.tag",
           "component": "ollyscale",
           "bumpDependents": true
         },
         {
           "type": "yaml",
-          "path": "charts/ollyscale/values.yaml",
+          "path": "values.yaml",
           "jsonpath": "$.otlpReceiver.image.tag",
           "component": "ollyscale",
           "bumpDependents": true
         },
         {
           "type": "yaml",
-          "path": "charts/ollyscale/values.yaml",
+          "path": "values.yaml",
           "jsonpath": "$.webui.image.tag",
           "component": "ollyscale-ui",
           "bumpDependents": true
         },
         {
           "type": "yaml",
-          "path": "charts/ollyscale/values.yaml",
+          "path": "values.yaml",
           "jsonpath": "$.opampServer.image.tag",
           "component": "opamp-server",
           "bumpDependents": true
@@ -89,25 +84,11 @@
       "component": "chart-ollyscale-demos",
       "release-type": "helm",
       "package-name": "ollyscale-demos",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "charts/ollyscale-demos/Chart.yaml",
-          "jsonpath": "$.version"
-        }
-      ]
     },
     "charts/ollyscale-otel-agent": {
       "component": "chart-ollyscale-otel-agent",
       "release-type": "helm",
       "package-name": "ollyscale-otel-agent",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "charts/ollyscale-otel-agent/Chart.yaml",
-          "jsonpath": "$.version"
-        }
-      ]
     }
   },
   "plugins": [
