@@ -47,10 +47,8 @@
         "dockerFile": "Dockerfile",
         "dockerContext": ".",
         "dockerTags": ["{{version}}", "develop", "latest", "{{major}}", "{{major}}.{{minor}}"],
-        "dockerBuildFlags": {
-          "quiet": false
-        },
-        "dockerPublish": true
+        "dockerPublish": true,
+        "quiet": false
       }
     ],
     [
