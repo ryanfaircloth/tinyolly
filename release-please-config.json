@@ -9,14 +9,7 @@
     "apps/ollyscale": {
       "component": "ollyscale",
       "release-type": "python",
-      "package-name": "@ollyscale/ollyscale",
-      "extra-files": [
-        {
-          "type": "json",
-          "path": "package.json",
-          "jsonpath": "$.version"
-        }
-      ]
+      "package-name": "@ollyscale/ollyscale"
     },
     "apps/ollyscale-ui": {
       "component": "ollyscale-ui",
@@ -26,14 +19,7 @@
     "apps/opamp-server": {
       "component": "opamp-server",
       "release-type": "simple",
-      "package-name": "@ollyscale/opamp-server",
-      "extra-files": [
-        {
-          "type": "json",
-          "path": "package.json",
-          "jsonpath": "$.version"
-        }
-      ]
+      "package-name": "@ollyscale/opamp-server"
     },
     "apps/demo": {
       "component": "demo",

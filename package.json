@@ -8,14 +8,7 @@
     "url": "https://github.com/ryanfaircloth/ollyscale.git"
   },
   "workspaces": [
-    "apps/ollyscale",
-    "apps/ollyscale-ui",
-    "apps/opamp-server",
-    "apps/demo",
-    "apps/demo-otel-agent",
-    "charts/ollyscale",
-    "charts/ollyscale-demos",
-    "charts/ollyscale-otel-agent"
+    "apps/ollyscale-ui"
   ],
   "scripts": {},
   "devDependencies": {
