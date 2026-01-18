@@ -9,7 +9,7 @@
       {
         "commands": [
           {
-            "file": "charts/ollyscale/values.yaml",
+            "file": "../../charts/ollyscale/values.yaml",
             "selector": "opampServer.image.tag",
             "value": "v${nextRelease.version}"
           }

@@ -10,7 +10,7 @@
       {
         "commands": [
           {
-            "file": "charts/ollyscale/values.yaml",
+            "file": "../../charts/ollyscale/values.yaml",
             "selector": "webui.image.tag",
             "value": "v${nextRelease.version}"
           }

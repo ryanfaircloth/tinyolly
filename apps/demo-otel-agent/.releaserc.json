@@ -26,7 +26,7 @@
       {
         "commands": [
           {
-            "file": "charts/ollyscale-otel-agent/values.yaml",
+            "file": "../../charts/ollyscale-otel-agent/values.yaml",
             "selector": "image.tag",
             "value": "v${nextRelease.version}"
           }

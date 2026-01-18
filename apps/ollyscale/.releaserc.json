@@ -26,12 +26,12 @@
       {
         "commands": [
           {
-            "file": "charts/ollyscale/values.yaml",
+            "file": "../../charts/ollyscale/values.yaml",
             "selector": "frontend.image.tag",
             "value": "v${nextRelease.version}"
           },
           {
-            "file": "charts/ollyscale/values.yaml",
+            "file": "../../charts/ollyscale/values.yaml",
             "selector": "otlpReceiver.image.tag",
             "value": "v${nextRelease.version}"
           }
