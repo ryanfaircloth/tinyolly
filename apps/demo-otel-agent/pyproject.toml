@@ -22,7 +22,7 @@ classifiers = [
     "Topic :: System :: Monitoring",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
-requires-python = ">=3.11"
+requires-python = ">=3.11,<4"
 dependencies = [
     # AI/LLM client
     "ollama>=0.4.0",
