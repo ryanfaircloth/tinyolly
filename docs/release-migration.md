@@ -145,7 +145,7 @@ The chart configuration uses `bumpDependents`:
 
 ### semantic-release Flow
 
-```
+```text
 1. Push to main
 2. semantic-release runs for all workspaces
 3. Each workspace checks for changes
@@ -164,7 +164,7 @@ The chart configuration uses `bumpDependents`:
 
 ### release-please Flow
 
-```
+```text
 1. Push to main
 2. release-please creates/updates PR per component with changes
 3. Review and merge PR

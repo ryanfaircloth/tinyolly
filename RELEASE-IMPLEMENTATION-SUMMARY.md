@@ -2,7 +2,8 @@
 
 ## Overview
 
-This document summarizes the implementation of the release-please system for the ollyscale repository. The system was implemented in the `copilot/next-release` branch as requested.
+This document summarizes the implementation of the release-please system for the ollyscale repository.
+The system was implemented in the `copilot/next-release` branch as requested.
 
 ## Problem Statement
 
@@ -14,13 +15,15 @@ The repository needed a release system that could:
 4. Package and publish Helm charts to OCI registry
 5. Support pre-release builds for testing
 
-The previous semantic-release system was complex and couldn't handle the dependency relationships properly, requiring a custom fork of release-please with the `bumpDependents` feature.
+The previous semantic-release system was complex and couldn't handle the dependency relationships
+properly, requiring a custom fork of release-please with the `bumpDependents` feature.
 
 ## Solution Implemented
 
 ### release-please with bumpDependents
 
-We implemented release-please using the forked action `ryanfaircloth/release-please-action@test/fork-dependency` which supports the `bumpDependents` feature for cross-component version management.
+We implemented release-please using the forked action `ryanfaircloth/release-please-action@test/fork-dependency`
+which supports the `bumpDependents` feature for cross-component version management.
 
 ### Architecture
 
@@ -44,7 +47,7 @@ We implemented release-please using the forked action `ryanfaircloth/release-ple
 
 The `charts/ollyscale` chart tracks 4 dependencies using `bumpDependents: true`:
 
-```
+```text
 $.frontend.image.tag     → watches: ollyscale
 $.otlpReceiver.image.tag → watches: ollyscale
 $.webui.image.tag        → watches: ollyscale-ui
@@ -182,7 +185,7 @@ Automatic version bumping based on commit type:
 
 All validation checks pass:
 
-```
+```text
 ✅ JSON files are valid
 ✅ Manifest matches config
 ✅ No duplicate components
@@ -341,6 +344,8 @@ For questions or issues:
 
 ## Conclusion
 
-The release-please system is fully implemented and validated in the `copilot/next-release` branch. All configuration is complete, validated, and documented. The system is ready for testing once merged to `main`.
+The release-please system is fully implemented and validated in the `copilot/next-release` branch. All
+configuration is complete, validated, and documented. The system is ready for testing once merged to `main`.
 
-The key innovation is the `bumpDependents` feature from the forked release-please action, which solves the cross-component dependency problem that the original issue described.
+The key innovation is the `bumpDependents` feature from the forked release-please action, which solves the
+cross-component dependency problem that the original issue described.

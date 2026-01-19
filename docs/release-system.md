@@ -2,7 +2,8 @@
 
 ## Overview
 
-This project uses [release-please](https://github.com/googleapis/release-please) with a custom fork that supports the `bumpDependents` feature for managing cross-component version dependencies.
+This project uses [release-please](https://github.com/googleapis/release-please) with a custom fork that
+supports the `bumpDependents` feature for managing cross-component version dependencies.
 
 ## Architecture
 
@@ -26,7 +27,8 @@ The repository contains multiple components that are released independently:
 
 ### Dependency Management with bumpDependents
 
-The `bumpDependents` feature automatically bumps the Helm chart version when any of its application dependencies are released. This is configured in `release-please-config.json`:
+The `bumpDependents` feature automatically bumps the Helm chart version when any of its application
+dependencies are released. This is configured in `release-please-config.json`:
 
 ```json
 {
@@ -128,7 +130,7 @@ Tracks the current version of each component. This file is automatically updated
 
 Follow [Conventional Commits](https://www.conventionalcommits.org/) specification:
 
-```
+```text
 <type>[optional scope]: <description>
 
 [optional body]
@@ -184,7 +186,7 @@ Components are tagged with their component name prefix:
 
 Each release creates multiple Docker image tags:
 
-```
+```text
 ghcr.io/ryanfaircloth/ollyscale/ollyscale:2.1.9      # Exact version
 ghcr.io/ryanfaircloth/ollyscale/ollyscale:2.1        # Minor version
 ghcr.io/ryanfaircloth/ollyscale/ollyscale:2          # Major version
