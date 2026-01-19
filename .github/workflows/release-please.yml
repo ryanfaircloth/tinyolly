@@ -7,11 +7,11 @@ on:
       - develop
       - next-release
       - next-release-major
-      - copilot/next-release  # Current testing branch
+      - copilot/next-release # Current testing branch
   workflow_dispatch:
     inputs:
       prerelease:
-        description: 'Create pre-release'
+        description: "Create pre-release"
         required: false
         type: boolean
         default: false
@@ -33,7 +33,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          
+
       - name: Check if this is a pre-release branch
         id: check_branch
         run: |
@@ -45,7 +45,7 @@ jobs:
             echo "is_prerelease=true" >> $GITHUB_OUTPUT
             echo "📦 Building as pre-release (branch: ${GITHUB_REF#refs/heads/})"
           fi
-      
+
       - name: Run release-please
         id: release
         uses: ryanfaircloth/release-please-action@test/fork-dependency
@@ -90,7 +90,7 @@ jobs:
         run: |
           RELEASE_DATA='${{ needs.release-please.outputs.release_data }}'
           COMPONENT_PATH="${{ matrix.component.path }}"
-          
+
           # Check if this component has a release
           if echo "$RELEASE_DATA" | jq -e ".[\"${COMPONENT_PATH}--tag_name\"]" > /dev/null 2>&1; then
             TAG_NAME=$(echo "$RELEASE_DATA" | jq -r ".[\"${COMPONENT_PATH}--tag_name\"]")
@@ -169,7 +169,7 @@ jobs:
         run: |
           RELEASE_DATA='${{ needs.release-please.outputs.release_data }}'
           CHART_PATH="${{ matrix.chart.path }}"
-          
+
           # Check if this chart has a release
           if echo "$RELEASE_DATA" | jq -e ".[\"${CHART_PATH}--tag_name\"]" > /dev/null 2>&1; then
             TAG_NAME=$(echo "$RELEASE_DATA" | jq -r ".[\"${CHART_PATH}--tag_name\"]")

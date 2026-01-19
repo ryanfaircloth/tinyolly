@@ -59,7 +59,7 @@ echo ""
 
 # Test 4: Validate extra-files paths exist
 echo "4️⃣  Validating extra-files paths exist..."
-jq -r '.packages[] | .["extra-files"][]? | if type == "string" then . else .path end' release-please-config.json | while read -r file; do
+while read -r file; do
     if [[ "$file" == *"*"* ]]; then
         echo -e "${YELLOW}⏭️  Skipping glob pattern: $file${NC}"
     elif [ -f "$file" ]; then
@@ -68,7 +68,7 @@ jq -r '.packages[] | .["extra-files"][]? | if type == "string" then . else .path
         echo -e "${RED}❌ $file does not exist${NC}"
         ERRORS=$((ERRORS + 1))
     fi
-done
+done < <(jq -r '.packages[] | .["extra-files"][]? | if type == "string" then . else .path end' release-please-config.json)
 echo ""
 
 # Test 5: Check bumpDependents configuration
@@ -80,15 +80,16 @@ echo ""
 # Test 6: Validate component references in bumpDependents
 echo "6️⃣  Validating bumpDependents component references..."
 all_components=$(jq -r '.packages[].component' release-please-config.json)
-jq -r '.packages["charts/ollyscale"]["extra-files"][] | select(.bumpDependents) | .component' release-please-config.json | while read -r comp; do
+while read -r comp; do
     if echo "$all_components" | grep -q "^${comp}$"; then
         echo -e "${GREEN}✅ Component '$comp' exists${NC}"
     else
         echo -e "${RED}❌ Component '$comp' not found in config${NC}"
         ERRORS=$((ERRORS + 1))
     fi
-done
+done < <(jq -r '.packages["charts/ollyscale"]["extra-files"][] | select(.bumpDependents) | .component' release-please-config.json)
 echo ""
+
 
 # Test 7: Check Chart.yaml versions
 echo "7️⃣  Checking Chart.yaml versions..."

@@ -11,6 +11,7 @@ This project uses [release-please](https://github.com/googleapis/release-please)
 The repository contains multiple components that are released independently:
 
 **Applications (Container Images):**
+
 - `apps/ollyscale` - Python backend → `ghcr.io/ryanfaircloth/ollyscale/ollyscale`
 - `apps/ollyscale-ui` - TypeScript frontend → `ghcr.io/ryanfaircloth/ollyscale/ollyscale-ui`
 - `apps/opamp-server` - Go OpAMP server → `ghcr.io/ryanfaircloth/ollyscale/opamp-server`
@@ -18,6 +19,7 @@ The repository contains multiple components that are released independently:
 - `apps/demo-otel-agent` - Demo OTel agent → `ghcr.io/ryanfaircloth/ollyscale/demo-otel-agent`
 
 **Helm Charts:**
+
 - `charts/ollyscale` - Main application chart → `ghcr.io/ryanfaircloth/ollyscale/charts/ollyscale`
 - `charts/ollyscale-demos` - Demo charts → `ghcr.io/ryanfaircloth/ollyscale/charts/ollyscale-demos`
 - `charts/ollyscale-otel-agent` - OTel agent chart → `ghcr.io/ryanfaircloth/ollyscale/charts/ollyscale-otel-agent`
@@ -43,6 +45,7 @@ The `bumpDependents` feature automatically bumps the Helm chart version when any
 ```
 
 When `apps/ollyscale` gets a new release:
+
 1. The app's version is bumped (e.g., `v2.1.9` → `v2.1.10`)
 2. The app updates `charts/ollyscale/values.yaml` with `frontend.image.tag: v2.1.10`
 3. The chart detects this change via `bumpDependents: true`
@@ -53,12 +56,14 @@ When `apps/ollyscale` gets a new release:
 ### Supported Branches
 
 The release-please workflow triggers on pushes to these branches:
+
 - **`main`** - Stable releases (Docker images tagged with `latest`)
 - **`develop`** - Pre-release builds
 - **`next-release`** - Pre-release builds for minor version testing
 - **`next-release-major`** - Pre-release builds for major version testing
 
 **Pre-release behavior:**
+
 - All branches except `main` produce pre-release builds
 - Pre-release Docker images do NOT get the `latest` tag
 - GitHub releases marked as pre-releases
@@ -91,6 +96,7 @@ gh workflow run release-please.yml -f prerelease=true
 ```
 
 Pre-releases:
+
 - Tagged as pre-release in GitHub
 - Docker images do NOT get the `latest` tag
 - Useful for testing in staging environments
@@ -100,6 +106,7 @@ Pre-releases:
 ### release-please-config.json
 
 Main configuration file defining:
+
 - Component locations (`packages`)
 - Release types (python, node, helm, simple)
 - Extra files to update (version files, image tags)
@@ -130,6 +137,7 @@ Follow [Conventional Commits](https://www.conventionalcommits.org/) specificatio
 ```
 
 **Types:**
+
 - `feat`: New feature (minor bump)
 - `fix`: Bug fix (patch bump)
 - `docs`: Documentation changes (no bump)
@@ -139,6 +147,7 @@ Follow [Conventional Commits](https://www.conventionalcommits.org/) specificatio
 - `ci`: CI/CD changes (no bump)
 
 **Scopes (optional):**
+
 - Component names: `ollyscale`, `ollyscale-ui`, `opamp-server`, `chart-ollyscale`
 - Functional areas: `api`, `ui`, `storage`, `ingestion`
 
@@ -202,6 +211,7 @@ helm install ollyscale oci://ghcr.io/ryanfaircloth/ollyscale/charts/ollyscale
 ### Release PR not created
 
 Check that:
+
 1. Commits follow Conventional Commit format
 2. Changes are in the component's directory
 3. Commits were pushed to `main` branch
@@ -209,6 +219,7 @@ Check that:
 ### Chart not bumped when app changes
 
 Verify in `release-please-config.json`:
+
 1. The app component updates the chart's `values.yaml` in its `extra-files`
 2. The chart has corresponding entry with `bumpDependents: true`
 3. The `component` name matches exactly
@@ -216,6 +227,7 @@ Verify in `release-please-config.json`:
 ### Build failures
 
 Check GitHub Actions logs:
+
 1. Docker build step - may need to fix Dockerfile issues
 2. Helm package step - may need to fix Chart.yaml issues
 3. Registry push step - check credentials and permissions
@@ -258,12 +270,14 @@ done
 The old semantic-release system has been replaced with release-please. Key differences:
 
 **semantic-release (old):**
+
 - Single monolithic release for all components
 - Required `@anolilab/multi-semantic-release` plugin
 - Complex plugin configuration per component
 - Released everything together
 
 **release-please (new):**
+
 - Independent releases per component
 - Native multi-package support
 - Simpler configuration

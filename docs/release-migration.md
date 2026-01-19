@@ -5,12 +5,14 @@ This document explains the migration from semantic-release to release-please and
 ## Why Migrate?
 
 The previous semantic-release system had challenges with:
+
 - Complex multi-package coordination requiring custom plugins
 - All components released together even when only one changed
 - Difficulty managing cross-component dependencies
 - Complex configuration spread across multiple `.releaserc.json` files
 
 The new release-please system provides:
+
 - **Native multi-package support** - no special plugins needed
 - **Separate releases** - each component releases independently
 - **bumpDependents feature** - automatic version bumping when dependencies change
@@ -22,6 +24,7 @@ The new release-please system provides:
 ### Configuration Files
 
 **Removed:**
+
 - Individual `.releaserc.json` files in `apps/*/` and `charts/*/` ✅ COMPLETED
 - Root `.releaserc.json` ✅ COMPLETED
 - `.multi-releaserc.json` ✅ COMPLETED
@@ -29,20 +32,24 @@ The new release-please system provides:
 - `.github/workflows/semantic-release.yml` ✅ COMPLETED
 
 **Added:**
+
 - `release-please-config.json` - Main configuration for all components
 - `.release-please-manifest.json` - Version tracking manifest
 
 ### GitHub Workflows
 
 **Removed:**
+
 - `.github/workflows/semantic-release.yml` - Completely removed ✅ COMPLETED
 
 **Added:**
+
 - `.github/workflows/release-please.yml` - New release workflow supporting multiple branches
 
 ### Version Management
 
 **Before (semantic-release):**
+
 ```bash
 # All components released together when main is updated
 git push origin main
@@ -50,6 +57,7 @@ git push origin main
 ```
 
 **After (release-please):**
+
 ```bash
 # Commit with conventional commit format
 git commit -m "feat(ollyscale): add new API endpoint"
@@ -62,11 +70,13 @@ git push origin main
 ### Dependency Management
 
 **Before (semantic-release):**
+
 - Each component's `.releaserc.json` had `semantic-release-yaml` plugin
 - Manually specified which values.yaml fields to update
 - No automatic chart version bumping
 
 **After (release-please):**
+
 - App components update their image tags in values.yaml via `extra-files`
 - Chart has `bumpDependents: true` entries that watch for these changes
 - Chart version automatically bumps when any dependency changes
@@ -146,6 +156,7 @@ The chart configuration uses `bumpDependents`:
 ```
 
 **Issues:**
+
 - All workspaces processed even if unchanged
 - Single workflow must handle all build types
 - Complex plugin configuration per workspace
@@ -164,6 +175,7 @@ The chart configuration uses `bumpDependents`:
 ```
 
 **Benefits:**
+
 - Only changed components get PRs
 - Review releases before they happen
 - Matrix strategy handles builds cleanly
@@ -222,6 +234,7 @@ git push origin main
 ### Release PR not created
 
 **Check:**
+
 1. Commits follow Conventional Commit format
 2. Commits are in correct component directory
 3. Commits pushed to `main` branch
@@ -230,6 +243,7 @@ git push origin main
 ### Chart not bumped when app changes
 
 **Check:**
+
 1. App component has `extra-files` entry updating `values.yaml`
 2. Chart has matching `bumpDependents: true` entry
 3. Component name matches exactly in both places
@@ -237,6 +251,7 @@ git push origin main
 ### Build fails after release
 
 **Check:**
+
 1. Dockerfile exists and is valid
 2. GitHub token has packages:write permission
 3. Image name in workflow matches ghcr.io registry
@@ -246,16 +261,19 @@ git push origin main
 If the migration needs to be rolled back:
 
 1. Re-enable semantic-release workflow:
+
    ```yaml
    # Remove "if: false" from .github/workflows/semantic-release.yml
    ```
 
 2. Restore `.releaserc.json` files from git history:
+
    ```bash
    git checkout <previous-commit> -- apps/*/.releaserc.json charts/*/.releaserc.json
    ```
 
 3. Remove release-please configuration:
+
    ```bash
    git rm release-please-config.json .release-please-manifest.json
    git rm .github/workflows/release-please.yml
