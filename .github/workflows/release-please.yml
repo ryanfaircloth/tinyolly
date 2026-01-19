@@ -26,8 +26,25 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       releases_created: ${{ steps.release.outputs.releases_created }}
-      release_data: ${{ toJSON(steps.release.outputs) }}
       is_prerelease: ${{ steps.check_branch.outputs.is_prerelease }}
+      # App releases
+      ollyscale_released: ${{ steps.release.outputs['apps/ollyscale--release_created'] }}
+      ollyscale_version: ${{ steps.release.outputs['apps/ollyscale--version'] }}
+      ollyscale_ui_released: ${{ steps.release.outputs['apps/ollyscale-ui--release_created'] }}
+      ollyscale_ui_version: ${{ steps.release.outputs['apps/ollyscale-ui--version'] }}
+      opamp_server_released: ${{ steps.release.outputs['apps/opamp-server--release_created'] }}
+      opamp_server_version: ${{ steps.release.outputs['apps/opamp-server--version'] }}
+      demo_released: ${{ steps.release.outputs['apps/demo--release_created'] }}
+      demo_version: ${{ steps.release.outputs['apps/demo--version'] }}
+      demo_otel_agent_released: ${{ steps.release.outputs['apps/demo-otel-agent--release_created'] }}
+      demo_otel_agent_version: ${{ steps.release.outputs['apps/demo-otel-agent--version'] }}
+      # Chart releases
+      chart_ollyscale_released: ${{ steps.release.outputs['charts/ollyscale--release_created'] }}
+      chart_ollyscale_version: ${{ steps.release.outputs['charts/ollyscale--version'] }}
+      chart_ollyscale_demos_released: ${{ steps.release.outputs['charts/ollyscale-demos--release_created'] }}
+      chart_ollyscale_demos_version: ${{ steps.release.outputs['charts/ollyscale-demos--version'] }}
+      chart_ollyscale_otel_agent_released: ${{ steps.release.outputs['charts/ollyscale-otel-agent--release_created'] }}
+      chart_ollyscale_otel_agent_version: ${{ steps.release.outputs['charts/ollyscale-otel-agent--version'] }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -55,65 +72,21 @@ jobs:
           manifest-file: .release-please-manifest.json
           target-branch: ${{ github.ref_name }}
 
-  build-and-publish:
+  # Container builds
+  build-ollyscale:
     needs: release-please
-    if: needs.release-please.outputs.releases_created == 'true'
+    if: needs.release-please.outputs.ollyscale_released == 'true'
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        component:
-          - name: ollyscale
-            path: apps/ollyscale
-            dockerfile: apps/ollyscale/Dockerfile
-            image: ghcr.io/ryanfaircloth/ollyscale/ollyscale
-          - name: ollyscale-ui
-            path: apps/ollyscale-ui
-            dockerfile: apps/ollyscale-ui/Dockerfile
-            image: ghcr.io/ryanfaircloth/ollyscale/ollyscale-ui
-          - name: opamp-server
-            path: apps/opamp-server
-            dockerfile: apps/opamp-server/Dockerfile
-            image: ghcr.io/ryanfaircloth/ollyscale/opamp-server
-          - name: demo
-            path: apps/demo
-            dockerfile: apps/demo/Dockerfile
-            image: ghcr.io/ryanfaircloth/ollyscale/demo
-          - name: demo-otel-agent
-            path: apps/demo-otel-agent
-            dockerfile: apps/demo-otel-agent/Dockerfile
-            image: ghcr.io/ryanfaircloth/ollyscale/demo-otel-agent
     steps:
       - uses: actions/checkout@v4
 
-      - name: Check if component was released
-        id: check_release
-        run: |
-          RELEASE_DATA='${{ needs.release-please.outputs.release_data }}'
-          COMPONENT_PATH="${{ matrix.component.path }}"
-
-          # Check if this component has a release
-          if echo "$RELEASE_DATA" | jq -e ".[\"${COMPONENT_PATH}--tag_name\"]" > /dev/null 2>&1; then
-            TAG_NAME=$(echo "$RELEASE_DATA" | jq -r ".[\"${COMPONENT_PATH}--tag_name\"]")
-            VERSION=$(echo "$TAG_NAME" | sed 's/.*-v//')
-            echo "released=true" >> $GITHUB_OUTPUT
-            echo "version=$VERSION" >> $GITHUB_OUTPUT
-            echo "tag=$TAG_NAME" >> $GITHUB_OUTPUT
-            echo "✅ Component ${{ matrix.component.name }} was released as $TAG_NAME"
-          else
-            echo "released=false" >> $GITHUB_OUTPUT
-            echo "⏭️ Component ${{ matrix.component.name }} was not released"
-          fi
-
       - name: Set up QEMU
-        if: steps.check_release.outputs.released == 'true'
         uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
-        if: steps.check_release.outputs.released == 'true'
         uses: docker/setup-buildx-action@v3
 
       - name: Log in to GitHub Container Registry
-        if: steps.check_release.outputs.released == 'true'
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
@@ -121,26 +94,24 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Extract metadata
-        if: steps.check_release.outputs.released == 'true'
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ matrix.component.image }}
+          images: ghcr.io/ryanfaircloth/ollyscale/ollyscale
           tags: |
-            type=semver,pattern={{version}},value=${{ steps.check_release.outputs.version }}
-            type=semver,pattern={{major}}.{{minor}},value=${{ steps.check_release.outputs.version }}
-            type=semver,pattern={{major}},value=${{ steps.check_release.outputs.version }}
+            type=semver,pattern={{version}},value=${{ needs.release-please.outputs.ollyscale_version }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ needs.release-please.outputs.ollyscale_version }}
+            type=semver,pattern={{major}},value=${{ needs.release-please.outputs.ollyscale_version }}
             type=raw,value=latest,enable=${{ needs.release-please.outputs.is_prerelease != 'true' }}
           labels: |
-            org.opencontainers.image.version=${{ steps.check_release.outputs.version }}
+            org.opencontainers.image.version=${{ needs.release-please.outputs.ollyscale_version }}
             org.opencontainers.image.prerelease=${{ needs.release-please.outputs.is_prerelease }}
 
       - name: Build and push Docker image
-        if: steps.check_release.outputs.released == 'true'
         uses: docker/build-push-action@v6
         with:
-          context: ${{ matrix.component.path }}
-          file: ${{ matrix.component.dockerfile }}
+          context: apps/ollyscale
+          file: apps/ollyscale/Dockerfile
           platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
@@ -148,55 +119,264 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  publish-helm-charts:
+  build-ollyscale-ui:
     needs: release-please
-    if: needs.release-please.outputs.releases_created == 'true'
+    if: needs.release-please.outputs.ollyscale_ui_released == 'true'
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        chart:
-          - name: ollyscale
-            path: charts/ollyscale
-          - name: ollyscale-demos
-            path: charts/ollyscale-demos
-          - name: ollyscale-otel-agent
-            path: charts/ollyscale-otel-agent
     steps:
       - uses: actions/checkout@v4
 
-      - name: Check if chart was released
-        id: check_release
-        run: |
-          RELEASE_DATA='${{ needs.release-please.outputs.release_data }}'
-          CHART_PATH="${{ matrix.chart.path }}"
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
 
-          # Check if this chart has a release
-          if echo "$RELEASE_DATA" | jq -e ".[\"${CHART_PATH}--tag_name\"]" > /dev/null 2>&1; then
-            TAG_NAME=$(echo "$RELEASE_DATA" | jq -r ".[\"${CHART_PATH}--tag_name\"]")
-            VERSION=$(echo "$TAG_NAME" | sed 's/.*-v//')
-            echo "released=true" >> $GITHUB_OUTPUT
-            echo "version=$VERSION" >> $GITHUB_OUTPUT
-            echo "tag=$TAG_NAME" >> $GITHUB_OUTPUT
-            echo "✅ Chart ${{ matrix.chart.name }} was released as $TAG_NAME"
-          else
-            echo "released=false" >> $GITHUB_OUTPUT
-            echo "⏭️ Chart ${{ matrix.chart.name }} was not released"
-          fi
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/ryanfaircloth/ollyscale/ollyscale-ui
+          tags: |
+            type=semver,pattern={{version}},value=${{ needs.release-please.outputs.ollyscale_ui_version }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ needs.release-please.outputs.ollyscale_ui_version }}
+            type=semver,pattern={{major}},value=${{ needs.release-please.outputs.ollyscale_ui_version }}
+            type=raw,value=latest,enable=${{ needs.release-please.outputs.is_prerelease != 'true' }}
+          labels: |
+            org.opencontainers.image.version=${{ needs.release-please.outputs.ollyscale_ui_version }}
+            org.opencontainers.image.prerelease=${{ needs.release-please.outputs.is_prerelease }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: apps/ollyscale-ui
+          file: apps/ollyscale-ui/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  build-opamp-server:
+    needs: release-please
+    if: needs.release-please.outputs.opamp_server_released == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/ryanfaircloth/ollyscale/opamp-server
+          tags: |
+            type=semver,pattern={{version}},value=${{ needs.release-please.outputs.opamp_server_version }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ needs.release-please.outputs.opamp_server_version }}
+            type=semver,pattern={{major}},value=${{ needs.release-please.outputs.opamp_server_version }}
+            type=raw,value=latest,enable=${{ needs.release-please.outputs.is_prerelease != 'true' }}
+          labels: |
+            org.opencontainers.image.version=${{ needs.release-please.outputs.opamp_server_version }}
+            org.opencontainers.image.prerelease=${{ needs.release-please.outputs.is_prerelease }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: apps/opamp-server
+          file: apps/opamp-server/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  build-demo:
+    needs: release-please
+    if: needs.release-please.outputs.demo_released == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/ryanfaircloth/ollyscale/demo
+          tags: |
+            type=semver,pattern={{version}},value=${{ needs.release-please.outputs.demo_version }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ needs.release-please.outputs.demo_version }}
+            type=semver,pattern={{major}},value=${{ needs.release-please.outputs.demo_version }}
+            type=raw,value=latest,enable=${{ needs.release-please.outputs.is_prerelease != 'true' }}
+          labels: |
+            org.opencontainers.image.version=${{ needs.release-please.outputs.demo_version }}
+            org.opencontainers.image.prerelease=${{ needs.release-please.outputs.is_prerelease }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: apps/demo
+          file: apps/demo/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  build-demo-otel-agent:
+    needs: release-please
+    if: needs.release-please.outputs.demo_otel_agent_released == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/ryanfaircloth/ollyscale/demo-otel-agent
+          tags: |
+            type=semver,pattern={{version}},value=${{ needs.release-please.outputs.demo_otel_agent_version }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ needs.release-please.outputs.demo_otel_agent_version }}
+            type=semver,pattern={{major}},value=${{ needs.release-please.outputs.demo_otel_agent_version }}
+            type=raw,value=latest,enable=${{ needs.release-please.outputs.is_prerelease != 'true' }}
+          labels: |
+            org.opencontainers.image.version=${{ needs.release-please.outputs.demo_otel_agent_version }}
+            org.opencontainers.image.prerelease=${{ needs.release-please.outputs.is_prerelease }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: apps/demo-otel-agent
+          file: apps/demo-otel-agent/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # Helm chart publishing (depends on container builds)
+  publish-chart-ollyscale:
+    needs: [release-please, build-ollyscale, build-ollyscale-ui, build-opamp-server]
+    if: |
+      always() &&
+      needs.release-please.outputs.chart_ollyscale_released == 'true' &&
+      (needs.build-ollyscale.result == 'success' || needs.build-ollyscale.result == 'skipped') &&
+      (needs.build-ollyscale-ui.result == 'success' || needs.build-ollyscale-ui.result == 'skipped') &&
+      (needs.build-opamp-server.result == 'success' || needs.build-opamp-server.result == 'skipped')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
 
       - name: Install Helm
-        if: steps.check_release.outputs.released == 'true'
         uses: azure/setup-helm@v4
         with:
           version: latest
 
       - name: Log in to GitHub Container Registry
-        if: steps.check_release.outputs.released == 'true'
         run: |
           echo "${{ secrets.GITHUB_TOKEN }}" | helm registry login ghcr.io --username ${{ github.actor }} --password-stdin
 
       - name: Package and push Helm chart
-        if: steps.check_release.outputs.released == 'true'
         run: |
-          cd ${{ matrix.chart.path }}
+          cd charts/ollyscale
           helm package .
-          helm push ${{ matrix.chart.name }}-${{ steps.check_release.outputs.version }}.tgz oci://ghcr.io/ryanfaircloth/ollyscale/charts
+          helm push ollyscale-${{ needs.release-please.outputs.chart_ollyscale_version }}.tgz oci://ghcr.io/ryanfaircloth/ollyscale/charts
+
+  publish-chart-ollyscale-demos:
+    needs: [release-please, build-demo]
+    if: |
+      always() &&
+      needs.release-please.outputs.chart_ollyscale_demos_released == 'true' &&
+      (needs.build-demo.result == 'success' || needs.build-demo.result == 'skipped')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: latest
+
+      - name: Log in to GitHub Container Registry
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | helm registry login ghcr.io --username ${{ github.actor }} --password-stdin
+
+      - name: Package and push Helm chart
+        run: |
+          cd charts/ollyscale-demos
+          helm package .
+          helm push ollyscale-demos-${{ needs.release-please.outputs.chart_ollyscale_demos_version }}.tgz oci://ghcr.io/ryanfaircloth/ollyscale/charts
+
+  publish-chart-ollyscale-otel-agent:
+    needs: [release-please, build-demo-otel-agent]
+    if: |
+      always() &&
+      needs.release-please.outputs.chart_ollyscale_otel_agent_released == 'true' &&
+      (needs.build-demo-otel-agent.result == 'success' || needs.build-demo-otel-agent.result == 'skipped')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: latest
+
+      - name: Log in to GitHub Container Registry
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | helm registry login ghcr.io --username ${{ github.actor }} --password-stdin
+
+      - name: Package and push Helm chart
+        run: |
+          cd charts/ollyscale-otel-agent
+          helm package .
+          helm push ollyscale-otel-agent-${{ needs.release-please.outputs.chart_ollyscale_otel_agent_version }}.tgz oci://ghcr.io/ryanfaircloth/ollyscale/charts
