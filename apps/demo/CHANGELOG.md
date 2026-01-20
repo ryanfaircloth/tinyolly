@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/ryanfaircloth/ollyscale/compare/demo-v0.1.1...demo-v0.1.2) (2026-01-20)
+
+
+### Documentation
+
+* add component descriptions for artifact generation ([bcfba38](https://github.com/ryanfaircloth/ollyscale/commit/bcfba3885dc982e786cb60d0e3190aab24aee772))
+
 ## [0.1.1](https://github.com/ryanfaircloth/ollyscale/compare/demo-v0.1.0...demo-v0.1.1) (2026-01-19)
 
 
