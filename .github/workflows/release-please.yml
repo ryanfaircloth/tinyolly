@@ -20,6 +20,6 @@ jobs:
       - name: Run release-please
         uses: ryanfaircloth/release-please-action@test/fork-dependency
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.RELEASE_PLEASE_PAT_TOKEN }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
