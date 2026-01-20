@@ -19,7 +19,8 @@
 
 """
 OllyScale - Unified Entry Point
-Runs in either UI mode or OTLP Receiver mode based on MODE environment variable
+Runs in either UI mode or OTLP Receiver mode based on MODE environment variable.
+Supports both standalone and containerized deployments.
 """
 
 import logging
