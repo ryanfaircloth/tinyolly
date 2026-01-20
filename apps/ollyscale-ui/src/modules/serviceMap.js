@@ -20,37 +20,37 @@ export function renderServiceMap(graph) {
         {
             key: 'isolated',
             shape: 'diamond',
-            color: '#6366f1',
+            color: '#6366f1', // Indigo
             label: 'Isolated',
             svg: `<svg width="18" height="18" viewBox="0 0 18 18"><polygon points="9,2 16,9 9,16 2,9" fill="#6366f1" stroke="#6366f1" stroke-width="2"/></svg>`
         },
         {
             key: 'service',
             shape: 'ellipse',
-            color: '#6366f1',
+            color: '#0ea5e9', // Sky Blue
             label: 'Service',
-            svg: `<svg width="18" height="18" viewBox="0 0 18 18"><ellipse cx="9" cy="9" rx="8" ry="8" fill="#6366f1" stroke="#6366f1" stroke-width="2"/></svg>`
+            svg: `<svg width="18" height="18" viewBox="0 0 18 18"><ellipse cx="9" cy="9" rx="8" ry="8" fill="#0ea5e9" stroke="#0ea5e9" stroke-width="2"/></svg>`
         },
         {
             key: 'database',
             shape: 'rectangle',
-            color: '#10b981',
+            color: '#f59e42', // Amber
             label: 'Database',
-            svg: `<svg width="18" height="18" viewBox="0 0 18 18"><rect x="3" y="3" width="12" height="12" rx="2" fill="#10b981" stroke="#10b981" stroke-width="2"/></svg>`
+            svg: `<svg width="18" height="18" viewBox="0 0 18 18"><rect x="3" y="3" width="12" height="12" rx="2" fill="#f59e42" stroke="#f59e42" stroke-width="2"/></svg>`
         },
         {
             key: 'messaging',
-            shape: 'barrel',
-            color: '#f59e42',
+            shape: 'hexagon',
+            color: '#10b981', // Emerald
             label: 'Messaging',
-            svg: `<svg width="18" height="18" viewBox="0 0 18 18"><rect x="3" y="4" width="12" height="10" rx="5" fill="#f59e42" stroke="#f59e42" stroke-width="2"/></svg>`
+            svg: `<svg width="18" height="18" viewBox="0 0 18 18"><polygon points="9,2 16,6 16,12 9,16 2,12 2,6" fill="#10b981" stroke="#10b981" stroke-width="2"/></svg>`
         },
         {
             key: 'external',
-            shape: 'rhomboid',
-            color: '#f43f5e',
+            shape: 'triangle',
+            color: '#f43f5e', // Rose
             label: 'External',
-            svg: `<svg width="18" height="18" viewBox="0 0 18 18"><polygon points="4,4 14,4 12,14 2,14" fill="#f43f5e" stroke="#f43f5e" stroke-width="2"/></svg>`
+            svg: `<svg width="18" height="18" viewBox="0 0 18 18"><polygon points="9,2 16,16 2,16" fill="#f43f5e" stroke="#f43f5e" stroke-width="2"/></svg>`
         },
     ];
 
@@ -72,8 +72,8 @@ export function renderServiceMap(graph) {
     if (legendEl) {
         let html = '<div class="service-map-legend-title">Legend</div>';
         legendMap.forEach(({ svg, label }) => {
-            html += `<div class="service-map-legend-item">
-                <span class="service-map-legend-shape-svg">${svg}</span>
+            html += `<div class="service-map-legend-item" title="${label}">
+                <span class="service-map-legend-shape-svg" aria-label="${label}" tabindex="0">${svg}</span>
                 <span class="service-map-legend-label">${label}</span>
             </div>`;
         });
@@ -251,15 +251,16 @@ export function renderServiceMap(graph) {
             }
         ],
         layout: {
-            name: 'cose',
-            animate: true,
-            componentSpacing: 100,
-            nodeRepulsion: function (node) { return 400000; },
-            idealEdgeLength: function (edge) { return 100; },
-            nestingFactor: 5,
-            gravity: 80,
-            numIter: 1000,
-            coolingFactor: 0.95
+            name: 'grid',
+            rows: Math.ceil(Math.sqrt(graph.nodes.length)),
+            cols: Math.ceil(graph.nodes.length / Math.ceil(Math.sqrt(graph.nodes.length))),
+            position: function(node) {
+                // Deterministic: order by array index
+                const idx = graph.nodes.findIndex(n => n.id === node.id());
+                return { row: Math.floor(idx / Math.ceil(Math.sqrt(graph.nodes.length))), col: idx % Math.ceil(Math.sqrt(graph.nodes.length)) };
+            },
+            avoidOverlap: true,
+            animate: true
         },
         minZoom: 0.5,
         maxZoom: 3,
