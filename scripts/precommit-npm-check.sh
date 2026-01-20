@@ -20,8 +20,11 @@ for dir in apps/ollyscale-ui; do
     fi
 
     cd "$dir" || exit 1
-    if ! npm ci --dry-run --prefer-offline >/dev/null 2>&1; then
-        echo "ERROR: $dir npm dependencies out of sync. Run: cd $dir && npm install"
+    # Run npm ci dry-run and capture output
+    if ! npm_output=$(npm ci --dry-run --prefer-offline 2>&1); then
+        echo "ERROR: $dir npm dependencies out of sync."
+        echo "$npm_output"
+        echo "Fix by running: cd $dir && npm install"
         FAILED=1
     fi
     cd - >/dev/null || exit 1
