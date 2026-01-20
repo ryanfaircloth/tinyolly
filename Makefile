@@ -88,12 +88,31 @@ deploy:
 	echo "✅ Images built and pushed: version $$VERSION" && \
 	echo "" && \
 	echo "🔄 Creating terraform auto vars file..." && \
-	echo "ollyscale_chart_tag = \"0.3.0-$$VERSION\"" > $(CURDIR)/.kind/terraform.auto.tfvars && \
+	BASE_CHART_VERSION=$$(grep "^version:" $(CURDIR)/charts/ollyscale/Chart.yaml | awk '{print $$2}' | cut -d'-' -f1); \
+	echo "ollyscale_chart_tag = \"$$BASE_CHART_VERSION-$$VERSION\"" > $(CURDIR)/.kind/terraform.auto.tfvars && \
 	echo "ollyscale_tag = \"$$VERSION\"" >> $(CURDIR)/.kind/terraform.auto.tfvars && \
 	echo "opamp_tag = \"$$VERSION\"" >> $(CURDIR)/.kind/terraform.auto.tfvars && \
 	echo "🔄 Updating ArgoCD application..." && \
 	cd $(CURDIR)/.kind && \
 	terraform apply -auto-approve && \
+	echo "" && \
+	echo "⏳ Waiting for ollyscale to sync..." && \
+	echo "   This may take a few minutes on first deployment or major upgrades." && \
+	for i in 1 2 3 4 5 6 7 8 9 10 11 12; do \
+		SYNC_STATUS=$$(kubectl get application ollyscale -n argocd -o jsonpath='{.status.sync.status}' 2>/dev/null || echo "NotFound"); \
+		HEALTH_STATUS=$$(kubectl get application ollyscale -n argocd -o jsonpath='{.status.health.status}' 2>/dev/null || echo "Unknown"); \
+		if [ "$$SYNC_STATUS" = "Synced" ] && [ "$$HEALTH_STATUS" = "Healthy" ]; then \
+			echo "✅ ollyscale is synced and healthy!"; \
+			break; \
+		fi; \
+		echo "   Status: Sync=$$SYNC_STATUS, Health=$$HEALTH_STATUS (attempt $$i/12)"; \
+		if [ $$i -eq 12 ]; then \
+			echo "⚠️  Timeout waiting for ollyscale to sync. Check status with:"; \
+			echo "     kubectl get application ollyscale -n argocd"; \
+			break; \
+		fi; \
+		sleep 10; \
+	done && \
 	echo "" && \
 	echo "✅ Deployment complete!" && \
 	echo "" && \
