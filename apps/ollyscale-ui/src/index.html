@@ -22,52 +22,92 @@
     </script>
 </head>
 <body>
-    <!-- Header -->
-    <header>
-        <div class="container">
-            <div style="display: flex; align-items: center; gap: 12px;">
-                <img src="/assets/logo.svg" alt="OllyScale Logo" style="height: 36px; width: auto; cursor: pointer;" onclick="window.location.href='/'">>
-                <div>
-                    <h1 style="cursor: pointer; margin: 0;" onclick="window.location.href='/'">OllyScale</h1>
-                    <div class="subtitle">Lightweight Observability For OpenTelemetry - Logs, Metrics & Traces</div>
-                </div>
-            </div>
-            <div class="header-controls">
-                <button class="theme-toggle" onclick="window.toggleHideOllyScale()" id="hide-ollyscale-btn" title="Hide OllyScale's own telemetry">
-                    <span id="hide-ollyscale-text">Show OllyScale</span>
-                </button>
-                <a href="https://ollyscale.dev/docs" target="_blank" class="docs-link">
-                    <span>Docs</span>
-                </a>
-                <a href="/docs" target="_blank" class="docs-link">
-                    <span>OpenAPI</span>
-                </a>
-                <button class="theme-toggle" onclick="toggleTheme()">
-                    <span id="theme-icon">🌙</span>
-                    <span id="theme-text">Dark Mode</span>
-                </button>
+    <!-- Left Sidebar Navigation -->
+    <aside class="sidebar" id="sidebar">
+        <!-- Sidebar Header -->
+        <div class="sidebar-header">
+            <div class="sidebar-brand">
+                <img src="/assets/logo.svg" alt="OllyScale Logo" class="sidebar-logo">
+                <span class="sidebar-title">OllyScale</span>
             </div>
         </div>
-    </header>
 
-    <!-- Main Container -->
-    <div class="container">
-        <!-- Tabs Navigation -->
-        <div class="tabs">
-            <button class="tab active" onclick="switchTab('logs', this)" data-tab="logs">Logs</button>
-            <button class="tab" onclick="switchTab('metrics', this)" data-tab="metrics">Metrics</button>
-            <button class="tab" onclick="switchTab('traces', this)" data-tab="traces">Traces</button>
-            <button class="tab" onclick="switchTab('spans', this)" data-tab="spans">Spans</button>
-            <button class="tab" onclick="switchTab('catalog', this)" data-tab="catalog">APM Service Catalog</button>
-            <button class="tab" onclick="switchTab('map', this)" data-tab="map">APM Service Map</button>
-            <button class="tab" onclick="switchTab('ai-agents', this)" data-tab="ai-agents">AI Agents</button>
-            <button class="tab" onclick="switchTab('collector', this)" data-tab="collector">OpenTelemetry Collector + OpAMP Config</button>
-            <div style="margin-left: auto; display: flex; align-items: center; padding-bottom: 0;">
-                <button onclick="toggleAutoRefresh()" title="Pause auto-refresh" id="auto-refresh-btn" class="pause-btn">
-                    <span id="refresh-icon">⏸</span>
-                </button>
-            </div>
+        <!-- Sidebar Toggle -->
+        <div class="sidebar-toggle-wrapper">
+            <button class="sidebar-toggle" id="sidebar-toggle" onclick="window.toggleSidebar()" title="Toggle sidebar">
+                <span class="toggle-icon">☰</span>
+            </button>
         </div>
+
+        <!-- Primary Navigation -->
+        <nav class="sidebar-nav">
+            <button class="nav-item active" onclick="switchTab('logs', this)" data-tab="logs">
+                <span class="nav-icon">📋</span>
+                <span class="nav-label">Logs</span>
+            </button>
+            <button class="nav-item" onclick="switchTab('metrics', this)" data-tab="metrics">
+                <span class="nav-icon">📊</span>
+                <span class="nav-label">Metrics</span>
+            </button>
+            <button class="nav-item" onclick="switchTab('traces', this)" data-tab="traces">
+                <span class="nav-icon">🔍</span>
+                <span class="nav-label">Traces</span>
+            </button>
+            <button class="nav-item" onclick="switchTab('spans', this)" data-tab="spans">
+                <span class="nav-icon">📦</span>
+                <span class="nav-label">Spans</span>
+            </button>
+            <button class="nav-item" onclick="switchTab('catalog', this)" data-tab="catalog">
+                <span class="nav-icon">🏢</span>
+                <span class="nav-label">APM Catalog</span>
+            </button>
+            <button class="nav-item" onclick="switchTab('map', this)" data-tab="map">
+                <span class="nav-icon">🗺️</span>
+                <span class="nav-label">APM Map</span>
+            </button>
+            <button class="nav-item" onclick="switchTab('ai-agents', this)" data-tab="ai-agents">
+                <span class="nav-icon">🤖</span>
+                <span class="nav-label">AI Agents</span>
+            </button>
+            <button class="nav-item" onclick="switchTab('collector', this)" data-tab="collector">
+                <span class="nav-icon">⚙️</span>
+                <span class="nav-label">OTel Config</span>
+            </button>
+        </nav>
+
+        <!-- Auto-Refresh Control -->
+        <div class="sidebar-controls">
+            <button class="sidebar-control-btn" onclick="toggleAutoRefresh()" title="Toggle auto-refresh" id="auto-refresh-btn">
+                <span class="nav-icon" id="refresh-icon">⏸</span>
+                <span class="nav-label">Auto-Refresh</span>
+            </button>
+        </div>
+
+        <!-- Secondary Actions (Bottom) -->
+        <div class="sidebar-footer">
+            <button class="sidebar-footer-btn" onclick="toggleTheme()" title="Toggle theme">
+                <span class="nav-icon" id="theme-icon">🌙</span>
+                <span class="nav-label" id="theme-text">Dark Mode</span>
+            </button>
+            <a href="https://ollyscale.dev/docs" target="_blank" class="sidebar-footer-btn" title="Documentation">
+                <span class="nav-icon">📚</span>
+                <span class="nav-label">Docs</span>
+            </a>
+            <a href="/docs" target="_blank" class="sidebar-footer-btn" title="OpenAPI Documentation">
+                <span class="nav-icon">🔧</span>
+                <span class="nav-label">API</span>
+            </a>
+            <button class="sidebar-footer-btn" onclick="window.toggleHideOllyScale()" id="hide-ollyscale-btn" title="Hide OllyScale's own telemetry">
+                <span class="nav-icon">👁️</span>
+                <span class="nav-label" id="hide-ollyscale-text">Show Own</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content" id="main-content">
+        <!-- Content Container -->
+        <div class="content-wrapper">
 
         <!-- Logs Tab -->
         <div id="logs-content" class="tab-content active">
@@ -327,7 +367,7 @@
                 </div>
             </div>
         </div>
-    </div>
+    </main>
 
     <!-- Main Application Entry -->
     <script type="module" src="/main.ts"></script>

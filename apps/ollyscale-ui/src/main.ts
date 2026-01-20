@@ -24,6 +24,7 @@ Chart.register(...registerables);
 // Import all application modules
 import './modules/api.js';
 import './modules/theme.js';
+import './modules/sidebar.js';
 import './modules/tabs.js';
 import './modules/filter.js';
 import './modules/utils.js';

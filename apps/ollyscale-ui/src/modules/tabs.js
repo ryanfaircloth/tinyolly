@@ -36,6 +36,7 @@
 import { loadLogs, loadSpans, loadTraces, loadMetrics, loadServiceMap, loadServiceCatalog, loadCollector, initCollector } from './api.js';
 import { showTracesList, isSpanDetailOpen } from './render.js';
 import { clearMetricSearch } from './metrics.js';
+import { initSidebar } from './sidebar.js';
 
 let currentTab = 'traces';
 let autoRefreshInterval = null;
@@ -51,6 +52,9 @@ export function getCurrentTab() {
 }
 
 export function initTabs() {
+    // Initialize sidebar
+    initSidebar();
+
     // Check URL parameter first (for bookmarks/direct links)
     const urlParams = new URLSearchParams(window.location.search);
     const urlTab = urlParams.get('tab');
@@ -88,14 +92,19 @@ export function switchTab(tabName, element, fromHistory = false) {
         window.history.pushState({ tab: tabName }, '', url);
     }
 
-    // Update tab buttons
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    // Update sidebar nav items (replaces old tab buttons)
+    document.querySelectorAll('.nav-item').forEach(t => t.classList.remove('active'));
     if (element) {
         element.classList.add('active');
     } else {
-        const btn = document.querySelector(`.tab[data-tab="${tabName}"]`);
+        const btn = document.querySelector(`.nav-item[data-tab="${tabName}"]`);
         if (btn) btn.classList.add('active');
     }
+
+    // Also update old .tab elements if they exist (backward compatibility during transition)
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    const oldBtn = document.querySelector(`.tab[data-tab="${tabName}"]`);
+    if (oldBtn) oldBtn.classList.add('active');
 
     // Update tab content
     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
