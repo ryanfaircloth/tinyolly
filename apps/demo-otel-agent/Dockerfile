@@ -11,8 +11,9 @@ ENV POETRY_NO_INTERACTION=1 \
 
 WORKDIR /app
 
-# Copy Poetry configuration
+# Copy Poetry configuration and source files
 COPY pyproject.toml poetry.lock ./
+COPY agent.py ./
 
 # Install dependencies into project venv
 RUN poetry config virtualenvs.in-project true && poetry install --only=main && rm -rf $POETRY_CACHE_DIR
@@ -27,9 +28,7 @@ COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV}
 
 WORKDIR /app
 
-# Copy application code
-COPY agent.py ./
-
 # Run directly - instrumentation is initialized in code
+# agent.py is already in the venv from builder stage
 # Works with both manual setup and OTel operator injection
 CMD ["python", "-u", "agent.py"]
