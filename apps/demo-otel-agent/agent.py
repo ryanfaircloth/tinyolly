@@ -1,3 +1,4 @@
+# Demo OTel Agent - Traffic generator for testing observability
 # BSD 3-Clause License
 #
 # Copyright (c) 2025, Infrastructure Architects, LLC

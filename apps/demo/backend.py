@@ -1,3 +1,4 @@
+# Demo Backend Service - Example microservice with OpenTelemetry instrumentation
 # BSD 3-Clause License
 #
 # Copyright (c) 2025, Infrastructure Architects, LLC

@@ -1,3 +1,4 @@
+// OpAMP Server for OpenTelemetry Collector Remote Configuration
 // BSD 3-Clause License
 //
 // Copyright (c) 2025, Infrastructure Architects, LLC
