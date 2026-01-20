@@ -1,33 +1,9 @@
 /*
- * BSD 3-Clause License
+ * Copyright (c) 2026, Ryan Faircloth & ollyScale contributors
+ * SPDX-License-Identifier: AGPL-3.0
  *
- * Copyright (c) 2025, Infrastructure Architects, LLC
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice,
- *    this list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * 3. Neither the name of the copyright holder nor the names of its
- *    contributors may be used to endorse or promote products derived from this
- *    software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * This file is part of ollyScale and is licensed under the AGPL-3.0 license.
+ * See the LICENSE file in the project root for more information.
  */
 
 /**
@@ -38,6 +14,71 @@ let cy = null;
 export function renderServiceMap(graph) {
     const container = document.getElementById('service-map-cy');
     if (!container) return;
+
+    // Central node type/shape/color/label mapping (single source of truth)
+    const NODE_TYPE_MAP = [
+        {
+            key: 'isolated',
+            shape: 'diamond',
+            color: '#6366f1',
+            label: 'Isolated',
+            svg: `<svg width="18" height="18" viewBox="0 0 18 18"><polygon points="9,2 16,9 9,16 2,9" fill="#6366f1" stroke="#6366f1" stroke-width="2"/></svg>`
+        },
+        {
+            key: 'service',
+            shape: 'ellipse',
+            color: '#6366f1',
+            label: 'Service',
+            svg: `<svg width="18" height="18" viewBox="0 0 18 18"><ellipse cx="9" cy="9" rx="8" ry="8" fill="#6366f1" stroke="#6366f1" stroke-width="2"/></svg>`
+        },
+        {
+            key: 'database',
+            shape: 'rectangle',
+            color: '#10b981',
+            label: 'Database',
+            svg: `<svg width="18" height="18" viewBox="0 0 18 18"><rect x="3" y="3" width="12" height="12" rx="2" fill="#10b981" stroke="#10b981" stroke-width="2"/></svg>`
+        },
+        {
+            key: 'messaging',
+            shape: 'barrel',
+            color: '#f59e42',
+            label: 'Messaging',
+            svg: `<svg width="18" height="18" viewBox="0 0 18 18"><rect x="3" y="4" width="12" height="10" rx="5" fill="#f59e42" stroke="#f59e42" stroke-width="2"/></svg>`
+        },
+        {
+            key: 'external',
+            shape: 'rhomboid',
+            color: '#f43f5e',
+            label: 'External',
+            svg: `<svg width="18" height="18" viewBox="0 0 18 18"><polygon points="4,4 14,4 12,14 2,14" fill="#f43f5e" stroke="#f43f5e" stroke-width="2"/></svg>`
+        },
+    ];
+
+    function getNodeTypeInfo(type) {
+        const t = (type || '').toLowerCase();
+        return (
+            NODE_TYPE_MAP.find(n => n.key === t) ||
+            NODE_TYPE_MAP.find(n => n.key === 'service')
+        );
+    }
+
+    // Use NODE_TYPE_MAP for legend
+    const legendMap = NODE_TYPE_MAP;
+    // Node rendering uses NODE_TYPE_MAP and getNodeTypeInfo
+    // Remove all duplicate shape/color logic
+
+    // Render legend
+    const legendEl = document.getElementById('service-map-legend');
+    if (legendEl) {
+        let html = '<div class="service-map-legend-title">Legend</div>';
+        legendMap.forEach(({ svg, label }) => {
+            html += `<div class="service-map-legend-item">
+                <span class="service-map-legend-shape-svg">${svg}</span>
+                <span class="service-map-legend-label">${label}</span>
+            </div>`;
+        });
+        legendEl.innerHTML = html;
+    }
 
     // Validate graph data
     if (!graph || !graph.nodes || !Array.isArray(graph.nodes)) {
@@ -75,62 +116,35 @@ export function renderServiceMap(graph) {
 
     // Transform data for Cytoscape
     const elements = [];
-
-    // Nodes
-    graph.nodes.forEach(node => {
-        let shape = 'round-rectangle';
-        let type = node.type || 'Service';
-
-        const inCount = incoming.get(node.id) || 0;
-        const outCount = outgoing.get(node.id) || 0;
-
-        let color = '#0066CC'; // Default Blue
-
-        // Check metrics for health status
-        const metrics = node.metrics || {};
-        if (metrics.error_rate && metrics.error_rate > 5) {
-            color = '#ef4444'; // Red for high error rate
-        } else if (metrics.error_rate && metrics.error_rate > 0) {
-            color = '#f59e0b'; // Orange for some errors
-        } else {
-            // Fallback to topology inference if no health issues
-            if (node.type === 'database') {
-                shape = 'barrel';
-                type = 'Database';
-                color = '#10b981'; // Green
-            } else if (node.type === 'messaging') {
-                shape = 'rhomboid';
-                type = 'Messaging';
-                color = '#8b5cf6'; // Purple
-            } else {
-                if (inCount === 0 && outCount === 0) {
-                    shape = 'ellipse';
-                    type = 'Isolated';
-                    color = '#94a3b8'; // Gray
-                } else if (inCount === 0) {
-                    shape = 'diamond';
-                    type = 'Client';
-                    color = '#6366f1'; // Indigo
-                } else if (outCount === 0) {
-                    shape = 'barrel';
-                    type = 'External';
-                    color = '#10b981'; // Green
-                }
-            }
-        }
-
-        elements.push({
-            group: 'nodes',
-            data: {
-                id: node.id,
-                label: node.label,
-                shape: shape,
-                type: type,
-                color: color,
-                metrics: metrics
-            }
-        });
-    });
+                        graph.nodes.forEach(node => {
+                            const inCount = incoming.get(node.id) || 0;
+                            const outCount = outgoing.get(node.id) || 0;
+                            let nodeType = (node.type || '').toLowerCase();
+                            // Infer type if not set
+                            if (!nodeType) {
+                                if (inCount === 0 && outCount === 0) nodeType = 'isolated';
+                                else nodeType = 'service';
+                            }
+                            let { shape, color, label } = getNodeTypeInfo(nodeType);
+                            // Health coloring overrides
+                            const metrics = node.metrics || {};
+                            if (metrics.error_rate && metrics.error_rate > 5) {
+                                color = '#ef4444';
+                            } else if (metrics.error_rate && metrics.error_rate > 0) {
+                                color = '#f59e0b';
+                            }
+                            elements.push({
+                                group: 'nodes',
+                                data: {
+                                    id: node.id,
+                                    label: node.label,
+                                    shape: shape,
+                                    type: label,
+                                    color: color,
+                                    metrics: metrics
+                                }
+                            });
+                        });
 
     // Edges
     if (graph.edges && Array.isArray(graph.edges)) {
