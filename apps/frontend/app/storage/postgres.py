@@ -5,7 +5,6 @@ import json
 from typing import Any
 
 from sqlalchemy import text
-from sqlalchemy.dialects.postgresql import insert
 
 from app.db.session import Database
 from app.models.api import (
@@ -73,38 +72,41 @@ class PostgresStorage(StorageBackend):
 
     async def _upsert_service(self, session, service_name: str) -> int:
         """Upsert service dimension and return service_id."""
-        stmt = (
-            insert(text("service_dim"))
-            .values(service_name=service_name)
-            .on_conflict_do_update(index_elements=["service_name"], set_={"service_name": service_name})
-            .returning(text("service_id"))
-        )
+        query = text("""
+            INSERT INTO service_dim (service_name)
+            VALUES (:service_name)
+            ON CONFLICT (service_name)
+            DO UPDATE SET service_name = EXCLUDED.service_name
+            RETURNING service_id
+        """)
 
-        result = await session.execute(stmt)
+        result = await session.execute(query, {"service_name": service_name})
         return result.scalar()
 
     async def _upsert_operation(self, session, operation_name: str) -> int:
         """Upsert operation dimension and return operation_id."""
-        stmt = (
-            insert(text("operation_dim"))
-            .values(operation_name=operation_name)
-            .on_conflict_do_update(index_elements=["operation_name"], set_={"operation_name": operation_name})
-            .returning(text("operation_id"))
-        )
+        query = text("""
+            INSERT INTO operation_dim (operation_name)
+            VALUES (:operation_name)
+            ON CONFLICT (operation_name)
+            DO UPDATE SET operation_name = EXCLUDED.operation_name
+            RETURNING operation_id
+        """)
 
-        result = await session.execute(stmt)
+        result = await session.execute(query, {"operation_name": operation_name})
         return result.scalar()
 
     async def _upsert_resource(self, session, resource_jsonb: dict) -> int:
         """Upsert resource dimension and return resource_id."""
-        stmt = (
-            insert(text("resource_dim"))
-            .values(resource_jsonb=resource_jsonb)
-            .on_conflict_do_update(index_elements=["resource_jsonb"], set_={"resource_jsonb": resource_jsonb})
-            .returning(text("resource_id"))
-        )
+        query = text("""
+            INSERT INTO resource_dim (resource_jsonb)
+            VALUES (:resource_jsonb)
+            ON CONFLICT (resource_jsonb)
+            DO UPDATE SET resource_jsonb = EXCLUDED.resource_jsonb
+            RETURNING resource_id
+        """)
 
-        result = await session.execute(stmt)
+        result = await session.execute(query, {"resource_jsonb": json.dumps(resource_jsonb)})
         return result.scalar()
 
     def _hex_to_bytes(self, hex_str: str) -> bytes:
@@ -243,8 +245,8 @@ class PostgresStorage(StorageBackend):
             """)
 
             params = {
-                "start_ns": time_range.start_ns,
-                "end_ns": time_range.end_ns,
+                "start_ns": time_range.start_time,
+                "end_ns": time_range.end_time,
                 "tenant_id": "default",
             }
 
@@ -433,8 +435,8 @@ class PostgresStorage(StorageBackend):
 
             limit = pagination.limit if pagination else 100
             params = {
-                "start_ns": time_range.start_ns,
-                "end_ns": time_range.end_ns,
+                "start_ns": time_range.start_time,
+                "end_ns": time_range.end_time,
                 "tenant_id": "default",
                 "limit": limit + 1,
             }
@@ -497,8 +499,8 @@ class PostgresStorage(StorageBackend):
 
             if time_range:
                 where_clause += " AND s.start_time_ns >= :start_ns AND s.start_time_ns < :end_ns"
-                params["start_ns"] = time_range.start_ns
-                params["end_ns"] = time_range.end_ns
+                params["start_ns"] = time_range.start_time
+                params["end_ns"] = time_range.end_time
 
             query = text(f"""
                 SELECT
@@ -563,7 +565,7 @@ class PostgresStorage(StorageBackend):
             """)
 
             result = await session.execute(
-                query, {"start_ns": time_range.start_ns, "end_ns": time_range.end_ns, "tenant_id": "default"}
+                query, {"start_ns": time_range.start_time, "end_ns": time_range.end_time, "tenant_id": "default"}
             )
             rows = result.fetchall()
 
