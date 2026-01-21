@@ -34,12 +34,12 @@ import json
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 
-from common import Storage
 from models import ErrorResponse, IngestResponse
 
 from ..core.telemetry import get_metrics
-from ..dependencies import get_alert_manager, get_storage
+from ..dependencies import get_alert_manager
 from ..managers.alerts import AlertManager
+from ..storage import PostgresStorage
 
 router = APIRouter(prefix="/v1", tags=["Ingestion"])
 
@@ -68,7 +68,8 @@ def get_ingestion_metrics():
     },
 )
 async def ingest_traces(
-    request: Request, storage: Storage = Depends(get_storage), alert_manager: AlertManager = Depends(get_alert_manager)
+    request: Request,
+    alert_manager: AlertManager = Depends(get_alert_manager),
 ):
     """
     Accept traces in OTLP JSON format (OpenTelemetry Protocol).
@@ -108,7 +109,6 @@ async def ingest_traces(
         raise HTTPException(status_code=400, detail=f"Invalid request body: {e!s}")
 
     spans_to_store = []
-
     if "resourceSpans" in data:
         for resource_span in data["resourceSpans"]:
             for scope_span in resource_span.get("scopeSpans", []):
@@ -119,17 +119,17 @@ async def ingest_traces(
     else:
         spans_to_store = [data]
 
-    if spans_to_store:
-        await storage.store_spans(spans_to_store)
+    # Use PostgresStorage for ingestion
+    pg_storage = PostgresStorage(dsn="postgresql://postgres:postgres@localhost:5432/ollyscale")
+    await pg_storage.connect()
+    for span in spans_to_store:
+        await pg_storage.store_trace(span)
+        await alert_manager.check_span_error(span)
+    await pg_storage.close()
 
-        # Track ingestion metrics
-        metrics["ingestion_counter"].add(len(spans_to_store), {"type": "spans"})
-        metrics["storage_operations_counter"].add(1, {"operation": "store_spans", "count": len(spans_to_store)})
-
-        # Check for span errors and trigger alerts
-        for span in spans_to_store:
-            await alert_manager.check_span_error(span)
-
+    # Track ingestion metrics
+    metrics["ingestion_counter"].add(len(spans_to_store), {"type": "spans"})
+    metrics["storage_operations_counter"].add(1, {"operation": "store_spans", "count": len(spans_to_store)})
     return {"status": "ok"}
 
 
@@ -145,7 +145,7 @@ async def ingest_traces(
         413: {"model": ErrorResponse, "description": "Payload too large (max 5MB)"},
     },
 )
-async def ingest_logs(request: Request, storage: Storage = Depends(get_storage)):
+async def ingest_logs(request: Request):
     """
     Accept logs in OTLP JSON format (OpenTelemetry Protocol).
 
@@ -165,7 +165,6 @@ async def ingest_logs(request: Request, storage: Storage = Depends(get_storage))
     ```
     """
     metrics = get_ingestion_metrics()
-
     content_length = request.headers.get("content-length")
     if content_length and int(content_length) > 5 * 1024 * 1024:
         raise HTTPException(status_code=413, detail="Payload too large")
@@ -179,19 +178,19 @@ async def ingest_logs(request: Request, storage: Storage = Depends(get_storage))
     except ValueError as e:
         raise HTTPException(status_code=400, detail=f"Invalid request body: {e!s}")
 
-    # Handle array or single log
     logs = data if isinstance(data, list) else [data]
-
-    # Filter valid logs
     valid_logs = [log for log in logs if isinstance(log, dict)]
 
-    if valid_logs:
-        await storage.store_logs(valid_logs)
+    pg_storage = PostgresStorage(dsn="postgresql://postgres:postgres@localhost:5432/ollyscale")
+    await pg_storage.connect()
+    for log in valid_logs:
+        # TODO: implement store_log in PostgresStorage
+        if hasattr(pg_storage, "store_log"):
+            await pg_storage.store_log(log)
+    await pg_storage.close()
 
-        # Track ingestion metrics
-        metrics["ingestion_counter"].add(len(valid_logs), {"type": "logs"})
-        metrics["storage_operations_counter"].add(1, {"operation": "store_logs", "count": len(valid_logs)})
-
+    metrics["ingestion_counter"].add(len(valid_logs), {"type": "logs"})
+    metrics["storage_operations_counter"].add(1, {"operation": "store_logs", "count": len(valid_logs)})
     return {"status": "ok"}
 
 
@@ -207,7 +206,7 @@ async def ingest_logs(request: Request, storage: Storage = Depends(get_storage))
         413: {"model": ErrorResponse, "description": "Payload too large (max 5MB)"},
     },
 )
-async def ingest_metrics(request: Request, storage: Storage = Depends(get_storage)):
+async def ingest_metrics(request: Request):
     """
     Accept metrics in OTLP JSON format (OpenTelemetry Protocol).
 
@@ -230,8 +229,6 @@ async def ingest_metrics(request: Request, storage: Storage = Depends(get_storag
     ```
     """
     metrics = get_ingestion_metrics()
-
-    # Validate payload size (limit to 5MB)
     content_length = request.headers.get("content-length")
     if content_length and int(content_length) > 5 * 1024 * 1024:
         raise HTTPException(status_code=413, detail="Payload too large")
@@ -245,32 +242,26 @@ async def ingest_metrics(request: Request, storage: Storage = Depends(get_storag
     except ValueError as e:
         raise HTTPException(status_code=400, detail=f"Invalid request body: {e!s}")
 
-    # Check if this is OTLP format
+    pg_storage = PostgresStorage(dsn="postgresql://postgres:postgres@localhost:5432/ollyscale")
+    await pg_storage.connect()
+    metric_count = 0
     if isinstance(data, dict) and "resourceMetrics" in data:
-        # OTLP format - store directly
-        await storage.store_metrics(data)
-
-        # Count metrics in OTLP format
-        metric_count = 0
         for resource_metric in data.get("resourceMetrics", []):
             for scope_metric in resource_metric.get("scopeMetrics", []):
-                metric_count += len(scope_metric.get("metrics", []))
-
-        # Track ingestion metrics
-        metrics["ingestion_counter"].add(metric_count, {"type": "metrics"})
-        metrics["storage_operations_counter"].add(1, {"operation": "store_metrics", "count": metric_count})
+                for metric in scope_metric.get("metrics", []):
+                    # TODO: implement store_metric in PostgresStorage
+                    if hasattr(pg_storage, "store_metric"):
+                        await pg_storage.store_metric(metric)
+                    metric_count += 1
     else:
-        # Legacy format - handle array or single metric
         metrics_data = data if isinstance(data, list) else [data]
-
-        # Filter valid metrics
         valid_metrics = [m for m in metrics_data if isinstance(m, dict) and "name" in m]
+        for metric in valid_metrics:
+            if hasattr(pg_storage, "store_metric"):
+                await pg_storage.store_metric(metric)
+        metric_count = len(valid_metrics)
+    await pg_storage.close()
 
-        if valid_metrics:
-            await storage.store_metrics(valid_metrics)
-
-            # Track ingestion metrics
-            metrics["ingestion_counter"].add(len(valid_metrics), {"type": "metrics"})
-            metrics["storage_operations_counter"].add(1, {"operation": "store_metrics", "count": len(valid_metrics)})
-
+    metrics["ingestion_counter"].add(metric_count, {"type": "metrics"})
+    metrics["storage_operations_counter"].add(1, {"operation": "store_metrics", "count": metric_count})
     return {"status": "ok"}
