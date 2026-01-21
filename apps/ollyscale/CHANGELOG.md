@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.3.4](https://github.com/ryanfaircloth/ollyscale/compare/ollyscale-v2.3.3...ollyscale-v2.3.4) (2026-01-21)
+
+
+### Bug Fixes
+
+* service map deduplication, dagre-d3 UI arrowhead bug, legend, and backend test ([1c535d6](https://github.com/ryanfaircloth/ollyscale/commit/1c535d685beb2dc1729701903a86bcc30a66fa38))
+
 ## [2.3.3](https://github.com/ryanfaircloth/ollyscale/compare/ollyscale-v2.3.2...ollyscale-v2.3.3) (2026-01-20)
 
 
