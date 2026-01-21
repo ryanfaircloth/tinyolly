@@ -16,16 +16,40 @@ class Storage:
         self.pg_db = os.environ.get("PG_DB", "postgres")
 
     async def store_trace(self, trace: Any) -> None:
-        # TODO: Implement Postgres logic
-        pass
+        dsn = (
+            self.pg_dsn or f"postgresql://{self.pg_user}:{self.pg_password}@{self.pg_host}:{self.pg_port}/{self.pg_db}"
+        )
+        async with asyncpg.create_pool(dsn=dsn, min_size=1, max_size=2) as pool, pool.acquire() as conn:
+            await conn.execute(
+                """
+                    INSERT INTO trace (data) VALUES ($1)
+                    """,
+                trace,
+            )
 
     async def store_log(self, log: Any) -> None:
-        # TODO: Implement Postgres logic
-        pass
+        dsn = (
+            self.pg_dsn or f"postgresql://{self.pg_user}:{self.pg_password}@{self.pg_host}:{self.pg_port}/{self.pg_db}"
+        )
+        async with asyncpg.create_pool(dsn=dsn, min_size=1, max_size=2) as pool, pool.acquire() as conn:
+            await conn.execute(
+                """
+                    INSERT INTO log (data) VALUES ($1)
+                    """,
+                log,
+            )
 
     async def store_metric(self, metric: Any) -> None:
-        # TODO: Implement Postgres logic
-        pass
+        dsn = (
+            self.pg_dsn or f"postgresql://{self.pg_user}:{self.pg_password}@{self.pg_host}:{self.pg_port}/{self.pg_db}"
+        )
+        async with asyncpg.create_pool(dsn=dsn, min_size=1, max_size=2) as pool, pool.acquire() as conn:
+            await conn.execute(
+                """
+                    INSERT INTO metric (data) VALUES ($1)
+                    """,
+                metric,
+            )
 
     async def health(self) -> dict:
         dsn = (
