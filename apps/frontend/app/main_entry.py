@@ -1,9 +1,11 @@
-
 import os
+
 from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
+
 from app.models.otel import OTLPLogRequest, OTLPMetricRequest, OTLPTraceRequest
 from app.storage import Storage
+
 
 def get_app():
     MODE = os.environ.get("OLLYSCALE_MODE", "frontend").lower()
@@ -11,6 +13,7 @@ def get_app():
     storage = Storage()
 
     if MODE == "frontend":
+
         @app.get("/healthz")
         async def healthz():
             return {"status": "ok"}
@@ -20,6 +23,7 @@ def get_app():
             return await storage.health()
 
     if MODE == "receiver":
+
         @app.post("/otlp", status_code=200)
         async def otlp_receiver(request: Request):
             body = await request.json()

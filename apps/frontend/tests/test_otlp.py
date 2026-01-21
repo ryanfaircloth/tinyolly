@@ -1,10 +1,11 @@
+import os
+
 import pytest
 from httpx import ASGITransport, AsyncClient
 
-
-import os
 os.environ["OLLYSCALE_MODE"] = "receiver"
 from app.main_entry import get_app
+
 app = get_app()
 
 
