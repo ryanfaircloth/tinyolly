@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.11](https://github.com/ryanfaircloth/ollyscale/compare/chart-ollyscale-v0.1.10...chart-ollyscale-v0.1.11) (2026-01-21)
+
+
+### Bug Fixes
+
+* service map deduplication, dagre-d3 UI arrowhead bug, legend, and backend test ([1c535d6](https://github.com/ryanfaircloth/ollyscale/commit/1c535d685beb2dc1729701903a86bcc30a66fa38))
+
 ## [0.1.10](https://github.com/ryanfaircloth/ollyscale/compare/chart-ollyscale-v0.1.9...chart-ollyscale-v0.1.10) (2026-01-20)
 
 

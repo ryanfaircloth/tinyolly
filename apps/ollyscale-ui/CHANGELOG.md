@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.4.0](https://github.com/ryanfaircloth/ollyscale/compare/ollyscale-ui-v1.3.0...ollyscale-ui-v1.4.0) (2026-01-21)
+
+
+### Features
+
+* **ui:** refactor navigation to left sidebar layout ([f1cd191](https://github.com/ryanfaircloth/ollyscale/commit/f1cd1910a18cf85a89c77d961e7850eeb5c89f69))
+* **ui:** update sidebar icons to use better metaphors (activity, layers, book, network, sliders) ([fda4ade](https://github.com/ryanfaircloth/ollyscale/commit/fda4adeae8433b05019cbd6b8a2783a6e802bc8c))
+
+
+### Bug Fixes
+
+* service map deduplication, dagre-d3 UI arrowhead bug, legend, and backend test ([1c535d6](https://github.com/ryanfaircloth/ollyscale/commit/1c535d685beb2dc1729701903a86bcc30a66fa38))
+* **ui:** finalize Cytoscape service map improvements before Dagre-D3 migration ([87073cb](https://github.com/ryanfaircloth/ollyscale/commit/87073cb8eb4bd49aea3608f1647f3d8fc019536f))
+* **ui:** improve service map accessibility, add legend tooltips, and deterministic node layout ([39987c0](https://github.com/ryanfaircloth/ollyscale/commit/39987c098e2500ee77b9895f794a35621367b60f))
+
 ## [1.3.0](https://github.com/ryanfaircloth/ollyscale/compare/ollyscale-ui-v1.2.3...ollyscale-ui-v1.3.0) (2026-01-20)
 
 
