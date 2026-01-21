@@ -47,6 +47,9 @@ ignore = [
     "PLR0915",  # Too many statements
     "PLR2004",  # Magic value used in comparison
     "PLR0911",  # Too many return statements
+    "B008",     # Do not perform function call in argument defaults (FastAPI Depends pattern)
+    "PLW0603",  # Using global statement (singleton pattern in dependencies.py)
+    "SIM108",   # Use ternary operator (less readable for this case)
     "TCH001",   # Move import into type-checking block
     "TCH002",   # Move import into type-checking block
     "TCH003",   # Move import into type-checking block

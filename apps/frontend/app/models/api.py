@@ -200,21 +200,20 @@ class MetricSearchResponse(BaseModel):
 
 
 class Service(BaseModel):
-    """Service catalog entry."""
+    """Service catalog entry with RED metrics."""
 
-    id: int
-    name: str
+    name: str = Field(..., description="Service name")
+    request_count: int = Field(0, description="Total request count in time range")
+    error_count: int = Field(0, description="Total error count in time range")
+    error_rate: float = Field(0.0, description="Error rate percentage")
+    p50_latency_ms: float = Field(0.0, description="P50 latency in milliseconds")
+    p95_latency_ms: float = Field(0.0, description="P95 latency in milliseconds")
+    first_seen: int = Field(..., description="First seen timestamp (nanoseconds)")
+    last_seen: int = Field(..., description="Last seen timestamp (nanoseconds)")
+    # Optional attributes for extensibility
     namespace: str | None = None
     version: str | None = None
     attributes: dict[str, Any] | None = None
-    first_seen: str
-    last_seen: str
-    # RED metrics
-    request_rate: float | None = None
-    error_rate: float | None = None
-    p50_duration_ms: float | None = None
-    p95_duration_ms: float | None = None
-    p99_duration_ms: float | None = None
 
 
 class ServiceListResponse(BaseModel):
