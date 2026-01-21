@@ -93,7 +93,61 @@ class PostgresStorage:
                 span.get("connection_id"),
             )
 
-    # Add similar methods for logs_fact and metrics_fact as needed
+    # --- Fact table inserts for logs and metrics ---
+    async def insert_log_fact(
+        self, log: dict, service_id: int | None = None, operation_id: int | None = None, resource_id: int | None = None
+    ):
+        sql = """
+        INSERT INTO logs_fact (
+            time_unix_nano, observed_time, trace_id, span_id, service_id, operation_id, resource_id,
+            severity_number, severity_text, body, attributes, resource_jsonb, flags, dropped_attrs
+        ) VALUES (
+            $1, $2, $3, $4, $5, $6, $7,
+            $8, $9, $10, $11, $12, $13, $14
+        )
+        ON CONFLICT (span_id) DO NOTHING;
+        """
+        async with self.pool.acquire() as conn:
+            await conn.execute(
+                sql,
+                log.get("time_unix_nano"),
+                log.get("observed_time"),
+                log.get("traceId"),
+                log.get("spanId"),
+                service_id,
+                operation_id,
+                resource_id,
+                log.get("severityNumber"),
+                log.get("severityText"),
+                log.get("body"),
+                log.get("attributes"),
+                log.get("resource"),
+                log.get("flags"),
+                log.get("droppedAttributesCount"),
+            )
+
+    async def insert_metric_fact(self, metric: dict, resource_id: int | None = None):
+        sql = """
+        INSERT INTO metrics_fact (
+            metric_name, metric_type, unit, description, data_points, attributes, resource_id, time_unix_nano, start_time_unix_nano
+        ) VALUES (
+            $1, $2, $3, $4, $5, $6, $7, $8, $9
+        )
+        ON CONFLICT (metric_name, time_unix_nano) DO NOTHING;
+        """
+        async with self.pool.acquire() as conn:
+            await conn.execute(
+                sql,
+                metric.get("name"),
+                metric.get("type"),
+                metric.get("unit"),
+                metric.get("description"),
+                metric.get("dataPoints"),
+                metric.get("attributes"),
+                resource_id,
+                metric.get("time_unix_nano"),
+                metric.get("start_time_unix_nano"),
+            )
 
     # --- High-level ingest helpers ---
     async def store_trace(self, span: dict):
@@ -103,4 +157,23 @@ class PostgresStorage:
         resource_id = await self.upsert_resource(span.get("resource", {}))
         await self.insert_span_fact(span, service_id, operation_id, resource_id)
 
-    # Add store_log and store_metric as needed
+    async def store_log(self, log: dict):
+        await self.connect()
+        # Optional: upsert service/operation/resource if present in log
+        service_id = None
+        operation_id = None
+        resource_id = None
+        if "service_name" in log:
+            service_id = await self.upsert_service(log["service_name"])
+        if "operation_name" in log:
+            operation_id = await self.upsert_operation(log["operation_name"])
+        if "resource" in log:
+            resource_id = await self.upsert_resource(log["resource"])
+        await self.insert_log_fact(log, service_id, operation_id, resource_id)
+
+    async def store_metric(self, metric: dict):
+        await self.connect()
+        resource_id = None
+        if "resource" in metric:
+            resource_id = await self.upsert_resource(metric["resource"])
+        await self.insert_metric_fact(metric, resource_id)
