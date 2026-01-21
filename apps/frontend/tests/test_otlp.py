@@ -1,7 +1,11 @@
-
 import pytest
-from httpx import AsyncClient, ASGITransport
-from app.main import app
+from httpx import ASGITransport, AsyncClient
+
+
+import os
+os.environ["OLLYSCALE_MODE"] = "receiver"
+from app.main_entry import get_app
+app = get_app()
 
 
 def valid_trace_payload():
@@ -28,7 +32,6 @@ def invalid_payload():
     return {"foo": "bar"}
 
 
-
 @pytest.mark.asyncio
 async def test_otlp_trace_valid():
     transport = ASGITransport(app=app)
@@ -36,7 +39,6 @@ async def test_otlp_trace_valid():
         resp = await ac.post("/otlp", json=valid_trace_payload())
     assert resp.status_code == 200
     assert resp.json()["type"] == "trace"
-
 
 
 @pytest.mark.asyncio
