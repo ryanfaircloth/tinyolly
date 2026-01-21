@@ -2,7 +2,7 @@
 
 import os
 
-from app.storage import InMemoryStorage, PostgresStorage, StorageBackend
+from app.storage import PostgresStorage, StorageBackend
 
 # Global storage instance
 _storage: StorageBackend | None = None
@@ -12,16 +12,20 @@ async def get_storage() -> StorageBackend:
     """
     Get storage backend instance.
 
-    Returns PostgresStorage if DATABASE_HOST is set, otherwise InMemoryStorage.
+    Requires DATABASE_HOST environment variable to be set.
+
+    Raises:
+        RuntimeError: If DATABASE_HOST is not configured
     """
     global _storage
 
     if _storage is None:
-        # Determine storage backend from environment
-        if os.getenv("DATABASE_HOST"):
-            _storage = PostgresStorage()
-        else:
-            _storage = InMemoryStorage()
+        # Require DATABASE_HOST to be set
+        if not os.getenv("DATABASE_HOST"):
+            msg = "DATABASE_HOST environment variable must be set. PostgresStorage is required."
+            raise RuntimeError(msg)
+
+        _storage = PostgresStorage()
 
         # Connect to storage
         await _storage.connect()
