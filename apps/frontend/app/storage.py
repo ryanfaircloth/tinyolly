@@ -4,7 +4,8 @@
 from typing import Any
 
 
-class StorageV2:
+
+class Storage:
     """Abstract storage interface for traces, logs, metrics."""
 
     async def store_trace(self, trace: Any) -> None:

@@ -4,11 +4,11 @@ from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
 
 from app.models.otel import OTLPLogRequest, OTLPMetricRequest, OTLPTraceRequest
-from app.storage import StorageV2
+from app.storage import Storage
 
 MODE = os.environ.get("OLLYSCALE_MODE", "frontend").lower()
 app = FastAPI(title=f"ollyScale v2 API ({MODE} mode)")
-storage = StorageV2()
+storage = Storage()
 
 if MODE == "frontend":
 
