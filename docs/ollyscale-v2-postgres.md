@@ -17,7 +17,7 @@ providing persistent, queryable observability data with OTEL-aligned schema desi
 
 ### Technology Stack
 
-- **Database**: PostgreSQL 15+ via Zalando Postgres Operator
+- **Database**: PostgreSQL 18+ via Zalando Postgres Operator
 - **App Framework**: FastAPI with async SQLAlchemy
 - **Migration Tool**: Alembic
 - **Exposure**: Kubernetes Gateway API (HTTPRoutes)

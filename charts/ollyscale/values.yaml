@@ -500,3 +500,29 @@ otlpReceiver:
   nodeSelector: {}
   tolerations: []
   affinity: {}
+
+# Postgresql database for v2 frontend (required)
+postgresql:
+  teamId: ollyscale
+  numberOfInstances: 2
+  volume:
+    size: 10Gi
+    storageClass: ''
+  databases:
+    ollyscale: ollyscale
+  users:
+    ollyscale:
+      - superuser
+      - createdb
+  postgresql:
+    version: '18'
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+  patroni:
+    synchronous_mode: true
+    synchronous_mode_strict: false

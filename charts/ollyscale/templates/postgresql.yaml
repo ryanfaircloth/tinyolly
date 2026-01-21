@@ -1,0 +1,63 @@
+apiVersion: acid.zalan.do/v1
+kind: postgresql
+metadata:
+  name: {{ include "ollyscale.fullname" . }}-db
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "ollyscale.labels" . | nindent 4 }}
+    app.kubernetes.io/component: database
+spec:
+  teamId: {{ .Values.postgresql.teamId | quote }}
+  numberOfInstances: {{ .Values.postgresql.numberOfInstances }}
+
+  postgresql:
+    version: {{ .Values.postgresql.postgresql.version | quote }}
+
+  volume:
+    size: {{ .Values.postgresql.volume.size }}
+    {{- if .Values.postgresql.volume.storageClass }}
+    storageClass: {{ .Values.postgresql.volume.storageClass }}
+    {{- end }}
+
+  {{- if .Values.postgresql.databases }}
+  databases:
+    {{- range $db, $owner := .Values.postgresql.databases }}
+    {{ $db }}: {{ $owner }}
+    {{- end }}
+  {{- end }}
+
+  {{- if .Values.postgresql.users }}
+  users:
+    {{- range $user, $permissions := .Values.postgresql.users }}
+    {{ $user }}:
+      {{- range $permissions }}
+      - {{ . }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
+
+  resources:
+    requests:
+      cpu: {{ .Values.postgresql.resources.requests.cpu }}
+      memory: {{ .Values.postgresql.resources.requests.memory }}
+    limits:
+      cpu: {{ .Values.postgresql.resources.limits.cpu }}
+      memory: {{ .Values.postgresql.resources.limits.memory }}
+
+  patroni:
+    synchronous_mode: {{ .Values.postgresql.patroni.synchronous_mode }}
+    synchronous_mode_strict: {{ .Values.postgresql.patroni.synchronous_mode_strict }}
+
+  # Connection pooler (optional but recommended)
+  enableConnectionPooler: true
+  connectionPooler:
+    numberOfInstances: 2
+    mode: transaction
+    dockerImage: registry.opensource.zalan.do/acid/pgbouncer:master-32
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 256Mi

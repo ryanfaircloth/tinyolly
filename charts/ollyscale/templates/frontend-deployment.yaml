@@ -52,6 +52,22 @@ spec:
           value: {{ .Values.redis.host | quote }}
         - name: REDIS_PORT
           value: {{ .Values.redis.port | quote }}
+        - name: DATABASE_HOST
+          value: "{{ include "ollyscale.fullname" . }}-db-pooler"
+        - name: DATABASE_PORT
+          value: "5432"
+        - name: DATABASE_NAME
+          value: "ollyscale"
+        - name: DATABASE_USER
+          valueFrom:
+            secretKeyRef:
+              name: ollyscale.{{ include "ollyscale.fullname" . }}-db.credentials.postgresql.acid.zalan.do
+              key: username
+        - name: DATABASE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: ollyscale.{{ include "ollyscale.fullname" . }}-db.credentials.postgresql.acid.zalan.do
+              key: password
         - name: OTEL_SERVICE_NAME
           value: "ollyscale-frontend"
         - name: OPAMP_SERVER_URL
