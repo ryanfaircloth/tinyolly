@@ -184,9 +184,7 @@ async def ingest_logs(request: Request):
     pg_storage = PostgresStorage(dsn="postgresql://postgres:postgres@localhost:5432/ollyscale")
     await pg_storage.connect()
     for log in valid_logs:
-        # TODO: implement store_log in PostgresStorage
-        if hasattr(pg_storage, "store_log"):
-            await pg_storage.store_log(log)
+        await pg_storage.store_log(log)
     await pg_storage.close()
 
     metrics["ingestion_counter"].add(len(valid_logs), {"type": "logs"})
@@ -249,16 +247,13 @@ async def ingest_metrics(request: Request):
         for resource_metric in data.get("resourceMetrics", []):
             for scope_metric in resource_metric.get("scopeMetrics", []):
                 for metric in scope_metric.get("metrics", []):
-                    # TODO: implement store_metric in PostgresStorage
-                    if hasattr(pg_storage, "store_metric"):
-                        await pg_storage.store_metric(metric)
+                    await pg_storage.store_metric(metric)
                     metric_count += 1
     else:
         metrics_data = data if isinstance(data, list) else [data]
         valid_metrics = [m for m in metrics_data if isinstance(m, dict) and "name" in m]
         for metric in valid_metrics:
-            if hasattr(pg_storage, "store_metric"):
-                await pg_storage.store_metric(metric)
+            await pg_storage.store_metric(metric)
         metric_count = len(valid_metrics)
     await pg_storage.close()
 
