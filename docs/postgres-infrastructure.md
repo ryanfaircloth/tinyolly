@@ -140,11 +140,23 @@ helm upgrade --install ollyscale ./ollyscale \
   --create-namespace
 ```
 
+**Migration Strategy**: Database schema migrations run automatically as a Kubernetes Job:
+
+- Helm hook: `pre-upgrade,pre-install` (runs before deployment updates)
+- Hook weight: `-5` (runs early in the upgrade sequence)
+- Uses same image as frontend but executes `alembic upgrade head`
+- Runs exactly once per deployment (no race conditions between replicas)
+- Failed migrations block the rollout (safety mechanism)
+- Auto-cleanup after 5 minutes on success
+
 ### Verify Deployment
 
 ```bash
 # Check operator
 kubectl get pods -n postgres-operator
+
+# Check migration job (only exists during upgrade)
+kubectl get jobs -n ollyscale | grep migration
 
 # Check database cluster
 kubectl get postgresql -n ollyscale

@@ -1,0 +1,70 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "ollyscale.fullname" . }}-migration-{{ .Release.Revision }}
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "ollyscale.labels" . | nindent 4 }}
+    app.kubernetes.io/component: migration
+  annotations:
+    # Run before upgrade/install, delete after success
+    helm.sh/hook: pre-upgrade,pre-install
+    helm.sh/hook-weight: "-5"
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+spec:
+  ttlSecondsAfterFinished: 300  # Clean up after 5 minutes
+  backoffLimit: 3
+  template:
+    metadata:
+      labels:
+        {{- include "ollyscale.labels" . | nindent 8 }}
+        app.kubernetes.io/component: migration
+    spec:
+      restartPolicy: Never
+      {{- with .Values.image.pullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "ollyscale.frontend.serviceAccountName" . }}
+      containers:
+      - name: alembic-migration
+        image: "{{ .Values.frontend.image.repository }}:{{ .Values.frontend.image.tag }}"
+        imagePullPolicy: {{ include "ollyscale.imagePullPolicy" (dict "component" .Values.frontend.image "global" .) }}
+        command:
+          - /bin/sh
+          - -c
+          - |
+            set -e
+            echo "Starting database migration..."
+            cd /app
+            alembic upgrade head
+            echo "Migration completed successfully!"
+        env:
+        - name: DATABASE_HOST
+          value: "{{ include "ollyscale.fullname" . }}-db-pooler"
+        - name: DATABASE_PORT
+          value: "5432"
+        - name: DATABASE_NAME
+          value: "ollyscale"
+        - name: DATABASE_USER
+          valueFrom:
+            secretKeyRef:
+              name: ollyscale.{{ include "ollyscale.fullname" . }}-db.credentials.postgresql.acid.zalan.do
+              key: username
+        - name: DATABASE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: ollyscale.{{ include "ollyscale.fullname" . }}-db.credentials.postgresql.acid.zalan.do
+              key: password
+        {{- if .Values.migration.resources }}
+        resources:
+          {{- toYaml .Values.migration.resources | nindent 10 }}
+        {{- end }}
+      {{- with .Values.migration.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.migration.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
