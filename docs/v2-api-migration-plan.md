@@ -16,13 +16,13 @@ All OTEL / Postgres / operator references remain aligned with current practices.
 ## Implementation Status
 
 **Branch:** `storage-improvements`  
-**Progress:** Phases 1-9 Complete (as of January 21, 2026)
+**Progress:** Phases 1-10 Complete (as of January 21, 2026)
 
 ### ✅ Completed Phases
 
 | Phase | Status | Commits | Notes |
 | ----- | ------ | ------- | ----- |
-| **Phase 1: Frontend Skeleton** | ✅ Complete | a79d7fc | FastAPI structure, StorageBackend, OTEL models, InMemoryStorage |
+| **Phase 1: Frontend Skeleton** | ✅ Complete | a79d7fc | FastAPI structure, StorageBackend, OTEL models |
 | **Phase 2: PostgreSQL Infrastructure** | ✅ Complete | 1968d7f | Zalando Operator, Postgresql CR (2 replicas + PgBouncer) |
 | **Phase 3: Alembic OTEL Schema** | ✅ Complete | 96ee885, 0143588 | Async Alembic, partitioned fact tables, dimension tables |
 | **Phase 4: Partition Management** | ✅ Complete | d773d6b | create_partitions(), drop_old_partitions(), daily CronJob |
@@ -30,11 +30,13 @@ All OTEL / Postgres / operator references remain aligned with current practices.
 | **Phase 6: Query API** | ✅ Complete | e289095 | Dependency injection, all query endpoints implemented |
 | **Phase 7: Ingestion API** | ✅ Complete | af670d3 | Ingest endpoints with validation, error handling |
 | **Phase 8: Migration Job** | ✅ Complete | 0143588 | Helm pre-upgrade Job runs Alembic migrations |
-| **Phase 9: Integration Testing** | ✅ Complete | Current | 25/31 tests passing (InMemoryStorage fully functional) |
+| **Phase 9: Testing** | ✅ Complete | a89e9de, 19e55ef | 22 unit tests passing, 6 integration tests (require live DB) |
+| **Phase 10: Documentation** | ✅ Complete | 1327624, 19e55ef | Status table, testing strategy documented |
 
-### 🔄 In Progress
+### 🔧 Refactoring Complete
 
-- **Phase 10: Documentation** - Updating docs with deployment procedures
+- **InMemoryStorage Removal** | a89e9de | Removed dual-mode operation, PostgresStorage required in production
+- **Bug Fixes** | 19e55ef | Fixed TimeRange attribute names (start_time/end_time), fixed _upsert methods
 
 ### 📋 Remaining Phases
 
@@ -47,7 +49,8 @@ All OTEL / Postgres / operator references remain aligned with current practices.
 
 **Storage Architecture:**
 
-- Dual-mode operation: InMemoryStorage (local dev) vs PostgresStorage (production)
+- Single-mode operation: PostgresStorage required (DATABASE_HOST must be set)
+- InMemoryStorage removed for production safety (was not in original plan)
 - Dependency injection pattern with `get_storage()` for clean separation
 - PostgreSQL 18 with native partitioning (daily intervals on `time_unix_nano`)
 
