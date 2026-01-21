@@ -537,3 +537,19 @@ migration:
       memory: 128Mi
   nodeSelector: {}
   tolerations: []
+
+# Partition maintenance CronJob (creates future partitions, drops old ones)
+partitionMaintenance:
+  enabled: true
+  # Run at 2 AM every day
+  schedule: "0 2 * * *"
+  # Create partitions this many days ahead
+  daysAhead: 7
+  resources:
+    limits:
+      memory: 256Mi
+    requests:
+      cpu: 50m
+      memory: 128Mi
+  nodeSelector: {}
+  tolerations: []
