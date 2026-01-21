@@ -112,3 +112,6 @@ This is the API backend. The web UI is served by the ollyscale-ui nginx containe
 
 # Create app instance
 app = create_app()
+
+# Alias for test compatibility
+get_app = create_app
