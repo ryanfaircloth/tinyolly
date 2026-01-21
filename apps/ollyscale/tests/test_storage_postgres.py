@@ -33,7 +33,15 @@ class TestPostgresStorage:
     async def test_upsert_service(self, mock_create_pool):
         mock_conn = AsyncMock()
         mock_conn.fetchrow.return_value = {"service_id": 42}
-        self.storage.pool.acquire = AsyncMock(return_value=mock_conn)
+
+        class AcquireCtx:
+            async def __aenter__(self):
+                return mock_conn
+
+            async def __aexit__(self, exc_type, exc, tb):
+                pass
+
+        self.storage.pool.acquire = AcquireCtx
         service_id = await self.storage.upsert_service("svc")
         assert service_id == 42
         mock_conn.fetchrow.assert_awaited()
@@ -42,7 +50,15 @@ class TestPostgresStorage:
     async def test_upsert_operation(self, mock_create_pool):
         mock_conn = AsyncMock()
         mock_conn.fetchrow.return_value = {"operation_id": 7}
-        self.storage.pool.acquire = AsyncMock(return_value=mock_conn)
+
+        class AcquireCtx:
+            async def __aenter__(self):
+                return mock_conn
+
+            async def __aexit__(self, exc_type, exc, tb):
+                pass
+
+        self.storage.pool.acquire = AcquireCtx
         op_id = await self.storage.upsert_operation("op")
         assert op_id == 7
         mock_conn.fetchrow.assert_awaited()
@@ -51,7 +67,15 @@ class TestPostgresStorage:
     async def test_upsert_resource(self, mock_create_pool):
         mock_conn = AsyncMock()
         mock_conn.fetchrow.return_value = {"resource_id": 99}
-        self.storage.pool.acquire = AsyncMock(return_value=mock_conn)
+
+        class AcquireCtx:
+            async def __aenter__(self):
+                return mock_conn
+
+            async def __aexit__(self, exc_type, exc, tb):
+                pass
+
+        self.storage.pool.acquire = AcquireCtx
         res_id = await self.storage.upsert_resource({"foo": "bar"})
         assert res_id == 99
         mock_conn.fetchrow.assert_awaited()
@@ -59,7 +83,15 @@ class TestPostgresStorage:
     @patch("app.storage.asyncpg.create_pool", new_callable=AsyncMock)
     async def test_insert_span_fact(self, mock_create_pool):
         mock_conn = AsyncMock()
-        self.storage.pool.acquire = AsyncMock(return_value=mock_conn)
+
+        class AcquireCtx:
+            async def __aenter__(self):
+                return mock_conn
+
+            async def __aexit__(self, exc_type, exc, tb):
+                pass
+
+        self.storage.pool.acquire = AcquireCtx
         span = {
             "trace_id": "abc",
             "span_id": "def",
