@@ -53,7 +53,7 @@ def test_search_traces_valid(mock_storage):
         "/api/traces/search",
         json={
             "time_range": {"start_time": 1000000000, "end_time": 2000000000},
-            "filters": {},
+            "filters": [],
             "pagination": {"limit": 100},
         },
     )
@@ -75,7 +75,7 @@ def test_search_traces_with_filters(mock_storage):
         "/api/traces/search",
         json={
             "time_range": {"start_time": 1000000000, "end_time": 2000000000},
-            "filters": {"service_name": "backend"},
+            "filters": [{"field": "service.name", "operator": "eq", "value": "backend"}],
             "pagination": {"limit": 50},
         },
     )
@@ -85,7 +85,9 @@ def test_search_traces_with_filters(mock_storage):
 
     # Verify filters passed to storage
     call_args = mock_storage.search_traces.await_args
-    assert call_args.kwargs["filters"]["service_name"] == "backend"
+    assert len(call_args.kwargs["filters"]) == 1
+    assert call_args.kwargs["filters"][0].field == "service.name"
+    assert call_args.kwargs["filters"][0].value == "backend"
 
 
 def test_search_traces_with_pagination(mock_storage):
@@ -172,10 +174,9 @@ def test_search_logs_valid(mock_storage):
     mock_storage.search_logs.return_value = (
         [
             {
-                "timestamp": 1000000000,
-                "severity": "INFO",
+                "time_unix_nano": 1000000000,
+                "severity_text": "INFO",
                 "body": "Request received",
-                "service_name": "backend",
                 "trace_id": None,
                 "span_id": None,
             }
@@ -188,7 +189,7 @@ def test_search_logs_valid(mock_storage):
         "/api/logs/search",
         json={
             "time_range": {"start_time": 1000000000, "end_time": 2000000000},
-            "filters": {},
+            "filters": [],
             "pagination": {"limit": 100},
         },
     )
@@ -205,7 +206,7 @@ def test_search_logs_with_trace_correlation(mock_storage):
     mock_storage.search_logs.return_value = (
         [
             {
-                "timestamp": 1000000000,
+                "time_unix_nano": 1000000000,
                 "body": "Log from trace",
                 "trace_id": "0102030405060708090a0b0c0d0e0f10",
                 "span_id": "0102030405060708",
@@ -219,7 +220,7 @@ def test_search_logs_with_trace_correlation(mock_storage):
         "/api/logs/search",
         json={
             "time_range": {"start_time": 1000000000, "end_time": 2000000000},
-            "filters": {"trace_id": "0102030405060708090a0b0c0d0e0f10"},
+            "filters": [{"field": "trace_id", "operator": "eq", "value": "0102030405060708090a0b0c0d0e0f10"}],
             "pagination": {"limit": 100},
         },
     )
@@ -239,7 +240,7 @@ def test_search_logs_with_severity_filter(mock_storage):
         "/api/logs/search",
         json={
             "time_range": {"start_time": 1000000000, "end_time": 2000000000},
-            "filters": {"severity": "ERROR"},
+            "filters": [{"field": "severity", "operator": "eq", "value": "ERROR"}],
             "pagination": {"limit": 100},
         },
     )
@@ -248,7 +249,9 @@ def test_search_logs_with_severity_filter(mock_storage):
 
     # Verify filter passed correctly
     call_args = mock_storage.search_logs.await_args
-    assert call_args.kwargs["filters"]["severity"] == "ERROR"
+    assert len(call_args.kwargs["filters"]) == 1
+    assert call_args.kwargs["filters"][0].field == "severity"
+    assert call_args.kwargs["filters"][0].value == "ERROR"
 
 
 # --- METRIC QUERY TESTS ---
@@ -259,10 +262,9 @@ def test_search_metrics_valid(mock_storage):
     mock_storage.search_metrics.return_value = (
         [
             {
-                "metric_name": "http.requests.active",
-                "timestamp": 1000000000,
-                "value": 42,
-                "labels": {"host": "server1"},
+                "name": "http.requests.active",
+                "metric_type": "gauge",
+                "data_points": [{"time_unix_nano": 1000000000, "value": 42}],
             }
         ],
         False,
@@ -274,7 +276,7 @@ def test_search_metrics_valid(mock_storage):
         json={
             "time_range": {"start_time": 1000000000, "end_time": 2000000000},
             "metric_names": ["http.requests.active"],
-            "filters": {},
+            "filters": [],
             "pagination": {"limit": 100},
         },
     )
@@ -283,16 +285,25 @@ def test_search_metrics_valid(mock_storage):
     data = response.json()
 
     assert len(data["metrics"]) == 1
-    assert data["metrics"][0]["metric_name"] == "http.requests.active"
-    assert data["metrics"][0]["value"] == 42
+    assert data["metrics"][0]["name"] == "http.requests.active"
+    assert data["metrics"][0]["metric_type"] == "gauge"
+    assert data["metrics"][0]["data_points"][0]["value"] == 42
 
 
 def test_search_metrics_multiple_names(mock_storage):
     """Test POST /api/metrics/search with multiple metric names."""
     mock_storage.search_metrics.return_value = (
         [
-            {"metric_name": "cpu.usage", "value": 45.2},
-            {"metric_name": "memory.usage", "value": 1024},
+            {
+                "name": "cpu.usage",
+                "metric_type": "gauge",
+                "data_points": [{"time_unix_nano": 1000000000, "value": 45.2}],
+            },
+            {
+                "name": "memory.usage",
+                "metric_type": "gauge",
+                "data_points": [{"time_unix_nano": 1000000000, "value": 1024}],
+            },
         ],
         False,
         None,
@@ -322,7 +333,7 @@ def test_search_metrics_with_label_filter(mock_storage):
         json={
             "time_range": {"start_time": 1000000000, "end_time": 2000000000},
             "metric_names": ["http.requests"],
-            "filters": {"labels": {"host": "server1"}},
+            "filters": [{"field": "host", "operator": "eq", "value": "server1"}],
             "pagination": {"limit": 100},
         },
     )
@@ -331,7 +342,9 @@ def test_search_metrics_with_label_filter(mock_storage):
 
     # Verify filters passed
     call_args = mock_storage.search_metrics.await_args
-    assert call_args.kwargs["filters"]["labels"]["host"] == "server1"
+    assert len(call_args.kwargs["filters"]) == 1
+    assert call_args.kwargs["filters"][0].field == "host"
+    assert call_args.kwargs["filters"][0].value == "server1"
 
 
 # --- SERVICE CATALOG TESTS ---
@@ -341,18 +354,24 @@ def test_list_services_no_time_range(mock_storage):
     """Test GET /api/services without time range."""
     mock_storage.get_services.return_value = [
         {
-            "service_name": "frontend",
-            "request_rate": 125.5,
+            "name": "frontend",
+            "request_count": 12550,
+            "error_count": 251,
             "error_rate": 0.02,
             "p50_latency_ms": 45.2,
             "p95_latency_ms": 120.8,
+            "first_seen": 1000000000,
+            "last_seen": 2000000000,
         },
         {
-            "service_name": "backend",
-            "request_rate": 98.3,
+            "name": "backend",
+            "request_count": 9830,
+            "error_count": 98,
             "error_rate": 0.01,
             "p50_latency_ms": 32.1,
             "p95_latency_ms": 85.4,
+            "first_seen": 1000000000,
+            "last_seen": 2000000000,
         },
     ]
 
@@ -363,12 +382,23 @@ def test_list_services_no_time_range(mock_storage):
 
     assert data["total_count"] == 2
     assert len(data["services"]) == 2
-    assert data["services"][0]["service_name"] == "frontend"
+    assert data["services"][0]["name"] == "frontend"
 
 
 def test_list_services_with_time_range(mock_storage):
     """Test GET /api/services with time range query params."""
-    mock_storage.get_services.return_value = [{"service_name": "frontend", "request_rate": 100.0}]
+    mock_storage.get_services.return_value = [
+        {
+            "name": "frontend",
+            "request_count": 10000,
+            "error_count": 0,
+            "error_rate": 0.0,
+            "p50_latency_ms": 50.0,
+            "p95_latency_ms": 100.0,
+            "first_seen": 1000000000,
+            "last_seen": 2000000000,
+        }
+    ]
 
     response = client.get("/api/services?start_time=1000000000&end_time=2000000000")
 
@@ -403,8 +433,8 @@ def test_get_service_map_valid(mock_storage):
     """Test POST /api/service-map with valid time range."""
     mock_storage.get_service_map.return_value = (
         [
-            {"id": "frontend", "type": "service", "metrics": {}},
-            {"id": "backend", "type": "service", "metrics": {}},
+            {"id": "frontend", "name": "frontend", "type": "service", "attributes": {}},
+            {"id": "backend", "name": "backend", "type": "service", "attributes": {}},
         ],
         [{"source": "frontend", "target": "backend", "call_count": 1250}],
     )
@@ -427,10 +457,10 @@ def test_get_service_map_complex_topology(mock_storage):
     """Test POST /api/service-map with complex service topology."""
     mock_storage.get_service_map.return_value = (
         [
-            {"id": "frontend", "type": "service"},
-            {"id": "backend", "type": "service"},
-            {"id": "database", "type": "database"},
-            {"id": "cache", "type": "database"},
+            {"id": "frontend", "name": "frontend", "type": "service"},
+            {"id": "backend", "name": "backend", "type": "service"},
+            {"id": "database", "name": "database", "type": "database"},
+            {"id": "cache", "name": "cache", "type": "database"},
         ],
         [
             {"source": "frontend", "target": "backend", "call_count": 500},
@@ -458,8 +488,10 @@ def test_get_service_map_complex_topology(mock_storage):
 # --- EDGE CASES & ERROR HANDLING ---
 
 
-def test_search_traces_invalid_time_range():
+def test_search_traces_invalid_time_range(mock_storage):
     """Test POST /api/traces/search with invalid time range."""
+    mock_storage.search_traces.return_value = ([], False, None)
+
     response = client.post(
         "/api/traces/search",
         json={

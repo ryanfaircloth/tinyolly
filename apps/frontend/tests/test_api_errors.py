@@ -70,8 +70,11 @@ def test_get_trace_db_connection_lost(mock_storage):
 # --- INVALID PAYLOADS ---
 
 
-def test_ingest_traces_invalid_hex_ids():
+def test_ingest_traces_invalid_hex_ids(mock_storage):
     """Test POST /api/traces with non-hex trace/span IDs."""
+    # Configure mock to return success if called
+    mock_storage.store_traces.return_value = None
+
     invalid_span = {
         "traceId": "not-a-hex-string",  # Invalid hex
         "spanId": "also-invalid",
@@ -97,8 +100,11 @@ def test_ingest_traces_invalid_hex_ids():
     assert response.status_code in (202, 422)
 
 
-def test_ingest_logs_missing_body():
+def test_ingest_logs_missing_body(mock_storage):
     """Test POST /api/logs with log record missing body."""
+    # Configure mock to return success if called
+    mock_storage.store_logs.return_value = None
+
     invalid_log = {
         "timeUnixNano": 1000000000,
         "observedTimeUnixNano": 1000000000,
@@ -123,8 +129,11 @@ def test_ingest_logs_missing_body():
     assert response.status_code in (202, 422)
 
 
-def test_ingest_metrics_invalid_metric_type():
+def test_ingest_metrics_invalid_metric_type(mock_storage):
     """Test POST /api/metrics with unsupported metric type."""
+    # Configure mock to return success if called
+    mock_storage.store_metrics.return_value = None
+
     invalid_metric = {
         "name": "test.metric",
         "description": "Test",
@@ -247,8 +256,10 @@ def test_ingest_traces_no_body():
     # Should report missing required field
 
 
-def test_search_logs_missing_pagination():
+def test_search_logs_missing_pagination(mock_storage):
     """Test POST /api/logs/search without pagination field."""
+    mock_storage.search_logs.return_value = ([], False, None)
+
     response = client.post(
         "/api/logs/search",
         json={"time_range": {"start_time": 1000000000, "end_time": 2000000000}},  # pagination intentionally missing
@@ -275,8 +286,10 @@ def test_ingest_traces_wrong_type():
     assert response.status_code == 422
 
 
-def test_search_traces_time_as_string():
+def test_search_traces_time_as_string(mock_storage):
     """Test POST /api/traces/search with time as string instead of int."""
+    mock_storage.search_traces.return_value = ([], False, None)
+
     response = client.post(
         "/api/traces/search",
         json={
