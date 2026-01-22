@@ -282,8 +282,8 @@ frontend:
     readOnlyRootFilesystem: false
   service:
     type: ClusterIP
-    port: 5002
-    targetPort: 5002
+    port: 8000
+    targetPort: 8000
     nodePort: null
     annotations: {}
   httpRoute:
@@ -297,7 +297,7 @@ frontend:
   livenessProbe:
     httpGet:
       path: /health
-      port: 5002
+      port: 8000
     initialDelaySeconds: 30
     periodSeconds: 10
     timeoutSeconds: 5
@@ -305,7 +305,7 @@ frontend:
   readinessProbe:
     httpGet:
       path: /health
-      port: 5002
+      port: 8000
     initialDelaySeconds: 10
     periodSeconds: 5
     timeoutSeconds: 3

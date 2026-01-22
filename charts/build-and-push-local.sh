@@ -105,7 +105,19 @@ $CONTAINER_CMD build \
 echo "✓ OpAMP Server image built"
 echo ""
 
-echo "Step 4/4: Building Unified Demo Image"
+echo "Step 4/4: Building Frontend API (v2 PostgreSQL backend)"
+echo "-----------------------------------------------------------"
+$CONTAINER_CMD build \
+  -f apps/frontend/Dockerfile \
+  -t $IMAGE_ORG/frontend:latest \
+  -t $IMAGE_ORG/frontend:$VERSION \
+  -t $EXTERNAL_REGISTRY/$IMAGE_ORG/frontend:latest \
+  -t $EXTERNAL_REGISTRY/$IMAGE_ORG/frontend:$VERSION \
+  apps/frontend/
+echo "✓ Frontend API image built"
+echo ""
+
+echo "Step 5/5: Building Unified Demo Image"
 echo "-----------------------------------------------------------"
 $CONTAINER_CMD build \
   -f apps/demo/Dockerfile \
@@ -131,6 +143,12 @@ echo "Pushing $IMAGE_ORG-ui..."
 $CONTAINER_CMD push $PUSH_FLAGS $EXTERNAL_REGISTRY/$IMAGE_ORG/ollyscale-ui:latest
 $CONTAINER_CMD push $PUSH_FLAGS $EXTERNAL_REGISTRY/$IMAGE_ORG/ollyscale-ui:$VERSION
 echo "✓ $IMAGE_ORG-ui pushed"
+echo ""
+
+echo "Pushing Frontend API..."
+$CONTAINER_CMD push $PUSH_FLAGS $EXTERNAL_REGISTRY/$IMAGE_ORG/frontend:latest
+$CONTAINER_CMD push $PUSH_FLAGS $EXTERNAL_REGISTRY/$IMAGE_ORG/frontend:$VERSION
+echo "✓ Frontend API pushed"
 echo ""
 
 echo "Pushing OpAMP Server..."
@@ -192,11 +210,8 @@ cat > "$SCRIPT_DIR/values-local-dev.yaml" <<EOF
 
 frontend:
   image:
-    repository: $INTERNAL_REGISTRY/$IMAGE_ORG/ollyscale
+    repository: $INTERNAL_REGISTRY/$IMAGE_ORG/frontend
     tag: $VERSION
-  env:
-    - name: MODE
-      value: "ui"
 
 webui:
   image:
