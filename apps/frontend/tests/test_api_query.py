@@ -1,0 +1,531 @@
+"""API integration tests for query endpoints.
+
+Tests search endpoints with various filters, pagination, and time ranges.
+"""
+
+from unittest.mock import AsyncMock
+
+import pytest
+from fastapi.testclient import TestClient
+
+from app.dependencies import get_storage
+from app.main import app
+
+client = TestClient(app)
+
+
+@pytest.fixture(autouse=True)
+def mock_storage():
+    """Mock storage backend for all tests in this module."""
+    storage = AsyncMock()
+
+    # Override the dependency
+    app.dependency_overrides[get_storage] = lambda: storage
+
+    yield storage
+
+    # Clean up
+    app.dependency_overrides.clear()
+
+
+# --- TRACE QUERY TESTS ---
+
+
+def test_search_traces_valid(mock_storage):
+    """Test POST /api/traces/search with valid request."""
+    # Mock search results
+    mock_storage.search_traces.return_value = (
+        [
+            {
+                "trace_id": "0102030405060708090a0b0c0d0e0f10",
+                "root_span_name": "GET /api/users",
+                "service_name": "frontend",
+                "start_time": 1000000000,
+                "duration_ms": 125.5,
+                "span_count": 3,
+            }
+        ],
+        False,  # has_more
+        None,  # next_cursor
+    )
+
+    response = client.post(
+        "/api/traces/search",
+        json={
+            "time_range": {"start_time": 1000000000, "end_time": 2000000000},
+            "filters": {},
+            "pagination": {"limit": 100},
+        },
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+
+    assert len(data["traces"]) == 1
+    assert data["traces"][0]["trace_id"] == "0102030405060708090a0b0c0d0e0f10"
+    assert data["pagination"]["has_more"] is False
+    assert data["pagination"]["total_count"] == 1
+
+
+def test_search_traces_with_filters(mock_storage):
+    """Test POST /api/traces/search with service filter."""
+    mock_storage.search_traces.return_value = ([], False, None)
+
+    response = client.post(
+        "/api/traces/search",
+        json={
+            "time_range": {"start_time": 1000000000, "end_time": 2000000000},
+            "filters": {"service_name": "backend"},
+            "pagination": {"limit": 50},
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["traces"] == []
+
+    # Verify filters passed to storage
+    call_args = mock_storage.search_traces.await_args
+    assert call_args.kwargs["filters"]["service_name"] == "backend"
+
+
+def test_search_traces_with_pagination(mock_storage):
+    """Test POST /api/traces/search with pagination."""
+    mock_storage.search_traces.return_value = (
+        [{"trace_id": f"trace-{i}"} for i in range(50)],
+        True,  # has_more
+        "cursor-abc123",  # next_cursor
+    )
+
+    response = client.post(
+        "/api/traces/search",
+        json={
+            "time_range": {"start_time": 1000000000, "end_time": 2000000000},
+            "pagination": {"limit": 50, "cursor": None},
+        },
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+
+    assert len(data["traces"]) == 50
+    assert data["pagination"]["has_more"] is True
+    assert data["pagination"]["next_cursor"] == "cursor-abc123"
+
+
+def test_search_traces_next_page(mock_storage):
+    """Test POST /api/traces/search with cursor for next page."""
+    mock_storage.search_traces.return_value = (
+        [{"trace_id": f"trace-{i}"} for i in range(50, 75)],
+        False,
+        None,
+    )
+
+    response = client.post(
+        "/api/traces/search",
+        json={
+            "time_range": {"start_time": 1000000000, "end_time": 2000000000},
+            "pagination": {"limit": 50, "cursor": "cursor-abc123"},
+        },
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+
+    assert len(data["traces"]) == 25
+    assert data["pagination"]["has_more"] is False
+
+
+def test_get_trace_by_id_found(mock_storage):
+    """Test GET /api/traces/{trace_id} when trace exists."""
+    mock_storage.get_trace_by_id.return_value = {
+        "trace_id": "0102030405060708090a0b0c0d0e0f10",
+        "spans": [
+            {"span_id": "01", "name": "root"},
+            {"span_id": "02", "name": "child"},
+        ],
+    }
+
+    response = client.get("/api/traces/0102030405060708090a0b0c0d0e0f10")
+
+    assert response.status_code == 200
+    data = response.json()
+
+    assert data["trace_id"] == "0102030405060708090a0b0c0d0e0f10"
+    assert len(data["spans"]) == 2
+
+
+def test_get_trace_by_id_not_found(mock_storage):
+    """Test GET /api/traces/{trace_id} when trace doesn't exist."""
+    mock_storage.get_trace_by_id.return_value = None
+
+    response = client.get("/api/traces/nonexistent-trace-id")
+
+    assert response.status_code == 404
+    assert "not found" in response.json()["detail"].lower()
+
+
+# --- LOG QUERY TESTS ---
+
+
+def test_search_logs_valid(mock_storage):
+    """Test POST /api/logs/search with valid request."""
+    mock_storage.search_logs.return_value = (
+        [
+            {
+                "timestamp": 1000000000,
+                "severity": "INFO",
+                "body": "Request received",
+                "service_name": "backend",
+                "trace_id": None,
+                "span_id": None,
+            }
+        ],
+        False,
+        None,
+    )
+
+    response = client.post(
+        "/api/logs/search",
+        json={
+            "time_range": {"start_time": 1000000000, "end_time": 2000000000},
+            "filters": {},
+            "pagination": {"limit": 100},
+        },
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+
+    assert len(data["logs"]) == 1
+    assert data["logs"][0]["body"] == "Request received"
+
+
+def test_search_logs_with_trace_correlation(mock_storage):
+    """Test POST /api/logs/search filtered by trace_id."""
+    mock_storage.search_logs.return_value = (
+        [
+            {
+                "timestamp": 1000000000,
+                "body": "Log from trace",
+                "trace_id": "0102030405060708090a0b0c0d0e0f10",
+                "span_id": "0102030405060708",
+            }
+        ],
+        False,
+        None,
+    )
+
+    response = client.post(
+        "/api/logs/search",
+        json={
+            "time_range": {"start_time": 1000000000, "end_time": 2000000000},
+            "filters": {"trace_id": "0102030405060708090a0b0c0d0e0f10"},
+            "pagination": {"limit": 100},
+        },
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+
+    assert len(data["logs"]) == 1
+    assert data["logs"][0]["trace_id"] == "0102030405060708090a0b0c0d0e0f10"
+
+
+def test_search_logs_with_severity_filter(mock_storage):
+    """Test POST /api/logs/search filtered by severity."""
+    mock_storage.search_logs.return_value = ([], False, None)
+
+    response = client.post(
+        "/api/logs/search",
+        json={
+            "time_range": {"start_time": 1000000000, "end_time": 2000000000},
+            "filters": {"severity": "ERROR"},
+            "pagination": {"limit": 100},
+        },
+    )
+
+    assert response.status_code == 200
+
+    # Verify filter passed correctly
+    call_args = mock_storage.search_logs.await_args
+    assert call_args.kwargs["filters"]["severity"] == "ERROR"
+
+
+# --- METRIC QUERY TESTS ---
+
+
+def test_search_metrics_valid(mock_storage):
+    """Test POST /api/metrics/search with valid request."""
+    mock_storage.search_metrics.return_value = (
+        [
+            {
+                "metric_name": "http.requests.active",
+                "timestamp": 1000000000,
+                "value": 42,
+                "labels": {"host": "server1"},
+            }
+        ],
+        False,
+        None,
+    )
+
+    response = client.post(
+        "/api/metrics/search",
+        json={
+            "time_range": {"start_time": 1000000000, "end_time": 2000000000},
+            "metric_names": ["http.requests.active"],
+            "filters": {},
+            "pagination": {"limit": 100},
+        },
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+
+    assert len(data["metrics"]) == 1
+    assert data["metrics"][0]["metric_name"] == "http.requests.active"
+    assert data["metrics"][0]["value"] == 42
+
+
+def test_search_metrics_multiple_names(mock_storage):
+    """Test POST /api/metrics/search with multiple metric names."""
+    mock_storage.search_metrics.return_value = (
+        [
+            {"metric_name": "cpu.usage", "value": 45.2},
+            {"metric_name": "memory.usage", "value": 1024},
+        ],
+        False,
+        None,
+    )
+
+    response = client.post(
+        "/api/metrics/search",
+        json={
+            "time_range": {"start_time": 1000000000, "end_time": 2000000000},
+            "metric_names": ["cpu.usage", "memory.usage"],
+            "pagination": {"limit": 100},
+        },
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+
+    assert len(data["metrics"]) == 2
+
+
+def test_search_metrics_with_label_filter(mock_storage):
+    """Test POST /api/metrics/search with label filter."""
+    mock_storage.search_metrics.return_value = ([], False, None)
+
+    response = client.post(
+        "/api/metrics/search",
+        json={
+            "time_range": {"start_time": 1000000000, "end_time": 2000000000},
+            "metric_names": ["http.requests"],
+            "filters": {"labels": {"host": "server1"}},
+            "pagination": {"limit": 100},
+        },
+    )
+
+    assert response.status_code == 200
+
+    # Verify filters passed
+    call_args = mock_storage.search_metrics.await_args
+    assert call_args.kwargs["filters"]["labels"]["host"] == "server1"
+
+
+# --- SERVICE CATALOG TESTS ---
+
+
+def test_list_services_no_time_range(mock_storage):
+    """Test GET /api/services without time range."""
+    mock_storage.get_services.return_value = [
+        {
+            "service_name": "frontend",
+            "request_rate": 125.5,
+            "error_rate": 0.02,
+            "p50_latency_ms": 45.2,
+            "p95_latency_ms": 120.8,
+        },
+        {
+            "service_name": "backend",
+            "request_rate": 98.3,
+            "error_rate": 0.01,
+            "p50_latency_ms": 32.1,
+            "p95_latency_ms": 85.4,
+        },
+    ]
+
+    response = client.get("/api/services")
+
+    assert response.status_code == 200
+    data = response.json()
+
+    assert data["total_count"] == 2
+    assert len(data["services"]) == 2
+    assert data["services"][0]["service_name"] == "frontend"
+
+
+def test_list_services_with_time_range(mock_storage):
+    """Test GET /api/services with time range query params."""
+    mock_storage.get_services.return_value = [{"service_name": "frontend", "request_rate": 100.0}]
+
+    response = client.get("/api/services?start_time=1000000000&end_time=2000000000")
+
+    assert response.status_code == 200
+    data = response.json()
+
+    assert data["total_count"] == 1
+
+    # Verify time_range passed to storage
+    call_args = mock_storage.get_services.await_args
+    assert call_args.kwargs["time_range"] is not None
+    assert call_args.kwargs["time_range"].start_time == 1000000000
+
+
+def test_list_services_empty(mock_storage):
+    """Test GET /api/services when no services exist."""
+    mock_storage.get_services.return_value = []
+
+    response = client.get("/api/services")
+
+    assert response.status_code == 200
+    data = response.json()
+
+    assert data["total_count"] == 0
+    assert data["services"] == []
+
+
+# --- SERVICE MAP TESTS ---
+
+
+def test_get_service_map_valid(mock_storage):
+    """Test POST /api/service-map with valid time range."""
+    mock_storage.get_service_map.return_value = (
+        [
+            {"id": "frontend", "type": "service", "metrics": {}},
+            {"id": "backend", "type": "service", "metrics": {}},
+        ],
+        [{"source": "frontend", "target": "backend", "call_count": 1250}],
+    )
+
+    response = client.post(
+        "/api/service-map",
+        json={"start_time": 1000000000, "end_time": 2000000000},
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+
+    assert len(data["nodes"]) == 2
+    assert len(data["edges"]) == 1
+    assert data["edges"][0]["call_count"] == 1250
+    assert data["time_range"]["start_time"] == 1000000000
+
+
+def test_get_service_map_complex_topology(mock_storage):
+    """Test POST /api/service-map with complex service topology."""
+    mock_storage.get_service_map.return_value = (
+        [
+            {"id": "frontend", "type": "service"},
+            {"id": "backend", "type": "service"},
+            {"id": "database", "type": "database"},
+            {"id": "cache", "type": "database"},
+        ],
+        [
+            {"source": "frontend", "target": "backend", "call_count": 500},
+            {"source": "backend", "target": "database", "call_count": 450},
+            {"source": "backend", "target": "cache", "call_count": 300},
+        ],
+    )
+
+    response = client.post(
+        "/api/service-map",
+        json={"start_time": 1000000000, "end_time": 2000000000},
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+
+    assert len(data["nodes"]) == 4
+    assert len(data["edges"]) == 3
+
+    # Verify database nodes identified
+    db_nodes = [n for n in data["nodes"] if n["type"] == "database"]
+    assert len(db_nodes) == 2
+
+
+# --- EDGE CASES & ERROR HANDLING ---
+
+
+def test_search_traces_invalid_time_range():
+    """Test POST /api/traces/search with invalid time range."""
+    response = client.post(
+        "/api/traces/search",
+        json={
+            "time_range": {"start_time": 2000000000, "end_time": 1000000000},  # Reversed
+            "pagination": {"limit": 100},
+        },
+    )
+
+    # Pydantic should validate or storage should handle
+    # Accept either 422 (validation error) or 200 (storage handles gracefully)
+    assert response.status_code in (200, 422)
+
+
+def test_search_logs_missing_time_range():
+    """Test POST /api/logs/search without time_range."""
+    response = client.post(
+        "/api/logs/search",
+        json={"pagination": {"limit": 100}},
+    )
+
+    # Should fail validation for missing required field
+    assert response.status_code == 422
+
+
+def test_search_metrics_empty_metric_names(mock_storage):
+    """Test POST /api/metrics/search with empty metric_names array."""
+    mock_storage.search_metrics.return_value = ([], False, None)
+
+    response = client.post(
+        "/api/metrics/search",
+        json={
+            "time_range": {"start_time": 1000000000, "end_time": 2000000000},
+            "metric_names": [],  # Empty array
+            "pagination": {"limit": 100},
+        },
+    )
+
+    # Should be valid - means "return all metrics"
+    assert response.status_code == 200
+
+
+def test_search_traces_zero_limit(mock_storage):
+    """Test POST /api/traces/search with limit=0."""
+    mock_storage.search_traces.return_value = ([], False, None)
+
+    response = client.post(
+        "/api/traces/search",
+        json={
+            "time_range": {"start_time": 1000000000, "end_time": 2000000000},
+            "pagination": {"limit": 0},  # Edge case
+        },
+    )
+
+    # Should either return empty results or validation error
+    assert response.status_code in (200, 422)
+
+
+def test_search_traces_negative_limit():
+    """Test POST /api/traces/search with negative limit."""
+    response = client.post(
+        "/api/traces/search",
+        json={
+            "time_range": {"start_time": 1000000000, "end_time": 2000000000},
+            "pagination": {"limit": -10},
+        },
+    )
+
+    # Should fail validation
+    assert response.status_code == 422

@@ -40,10 +40,39 @@ All OTEL / Postgres / operator references remain aligned with current practices.
 
 ### 📋 Remaining Phases
 
-- **Phase 11:** eBPF Agent Integration - Verify trace format compatibility
+- **Phase 11:** Integration Testing - API contract tests with FastAPI TestClient (see section 11 below)
 - **Phase 12:** Performance Benchmarking - Load test ingestion/queries, optimize indexes
 - **Phase 13:** Observability - Add metrics for storage operations, partition status
 - **Phase 14:** Deployment & Rollback - Deploy to test environment, verify migration
+
+### Phase 11 Status Update (January 21, 2026)
+
+**Integration Testing Framework Added:**
+
+- **Test Fixtures** (`tests/fixtures.py`): Reusable OTLP data generators for ResourceSpans, ResourceLogs, ResourceMetrics
+- **Ingestion Tests** (`tests/test_api_ingest.py`): 17 tests covering POST /api/traces, /api/logs, /api/metrics - ALL PASSING ✅
+- **Query Tests** (`tests/test_api_query.py`): 21 tests for search endpoints, pagination, filters (mock data structure fixes needed)
+- **Error Tests** (`tests/test_api_errors.py`): 26 tests for error handling, large payloads, concurrent requests
+- **Health Tests** (`tests/test_health.py`): 18 comprehensive health endpoint tests - ALL PASSING ✅
+
+**Testing Philosophy:**
+
+- **Unit Tests**: Mock database completely, test business logic and error handling
+- **Integration Tests**: Use FastAPI TestClient with mocked StorageBackend to test API contracts
+- **Dependency Override Pattern**: `app.dependency_overrides[get_storage] = lambda: mock_storage`
+- **No Live DB Required**: All tests use AsyncMock for storage, fast execution (~0.5s for 108 tests)
+
+**Current Status:**
+
+- 86 tests passing, 22 tests need mock data structure fixes to match Pydantic models
+- Deprecation warning fixed: `HTTP_422_UNPROCESSABLE_ENTITY` → `HTTP_422_UNPROCESSABLE_CONTENT`
+- Removed obsolete `test_storage.py` (tested removed InMemoryStorage)
+
+**Next Steps:**
+
+- Fix mock data structures in query/error tests to match actual Service, Metric, ServiceMapNode models
+- Add test coverage for edge cases (time range validation, pagination cursors)
+- Consider adding property-based testing with Hypothesis for OTLP data validation
 
 ### Key Technical Decisions
 

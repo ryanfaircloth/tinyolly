@@ -28,7 +28,7 @@ async def ingest_traces(
     """
     if not request.resource_spans:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="resource_spans cannot be empty",
         )
 
@@ -61,7 +61,7 @@ async def ingest_logs(
     """
     if not request.resource_logs:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="resource_logs cannot be empty",
         )
 
@@ -94,7 +94,7 @@ async def ingest_metrics(
     """
     if not request.resource_metrics:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="resource_metrics cannot be empty",
         )
 
