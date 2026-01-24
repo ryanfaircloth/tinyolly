@@ -3,9 +3,15 @@ ollyScale v2 - Unified Entry Point
 Runs in either frontend mode or OTLP receiver mode based on MODE environment variable.
 """
 
+import contextlib
 import logging
 import os
 import sys
+
+import uvicorn
+from opentelemetry.instrumentation.logging import LoggingInstrumentor
+
+from receiver.server import start_receiver
 
 # Configure logging early
 logging.basicConfig(
@@ -23,16 +29,10 @@ def start_frontend_mode():
     os.environ.setdefault("OTEL_SERVICE_NAME", "ollyscale-frontend")
     os.environ.setdefault("OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED", "true")
 
-    try:
-        from opentelemetry.instrumentation.logging import LoggingInstrumentor
-
+    with contextlib.suppress(ImportError):
         LoggingInstrumentor().instrument()
-    except ImportError:
-        pass
 
-    import uvicorn
-
-    port = int(os.environ.get("PORT", 8000))
+    port = int(os.environ.get("PORT", "8000"))
     logger.info("Starting ollyScale v2 Frontend...")
     logger.info(f"✓ HTTP API: http://0.0.0.0:{port}")
     logger.info(f"✓ OpenAPI docs: http://0.0.0.0:{port}/docs")
@@ -48,16 +48,10 @@ def start_receiver_mode():
     os.environ.setdefault("OTEL_EXPORTER_OTLP_PROTOCOL", "http/protobuf")
     os.environ.setdefault("OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED", "true")
 
-    try:
-        from opentelemetry.instrumentation.logging import LoggingInstrumentor
-
+    with contextlib.suppress(ImportError):
         LoggingInstrumentor().instrument()
-    except ImportError:
-        pass
 
-    from receiver.server import start_receiver
-
-    port = int(os.environ.get("PORT", 4343))
+    port = int(os.environ.get("PORT", "4343"))
     logger.info("Starting ollyScale v2 OTLP Receiver...")
     logger.info(f"✓ gRPC endpoint: 0.0.0.0:{port}")
     logger.info("✓ Storage: PostgreSQL")

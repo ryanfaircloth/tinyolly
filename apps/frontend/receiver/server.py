@@ -10,6 +10,7 @@ import logging
 from concurrent import futures
 
 import grpc
+from google.protobuf.json_format import MessageToDict
 from opentelemetry.proto.collector.logs.v1 import logs_service_pb2, logs_service_pb2_grpc
 from opentelemetry.proto.collector.metrics.v1 import metrics_service_pb2, metrics_service_pb2_grpc
 from opentelemetry.proto.collector.trace.v1 import trace_service_pb2, trace_service_pb2_grpc
@@ -32,8 +33,6 @@ def _convert_to_dict(proto_obj):
     Returns:
         Dictionary representation of the protobuf message
     """
-    from google.protobuf.json_format import MessageToDict
-
     return MessageToDict(proto_obj, preserving_proto_field_name=True)
 
 
