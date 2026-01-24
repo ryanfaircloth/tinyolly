@@ -151,16 +151,15 @@ class PostgresStorage:
         await session.commit()
         return resource_id
 
-    async def store_traces(self, data: dict) -> int:
+    async def store_traces(self, resource_spans: list[dict]) -> int:
         """Store OTLP traces using SQLModel ORM.
 
         Args:
-            data: OTLP JSON trace data with resource_spans
+            resource_spans: List of OTLP ResourceSpans (matches interface)
 
         Returns:
             Number of spans stored
         """
-        resource_spans = data.get("resource_spans", data.get("resourceSpans", []))
         if not resource_spans:
             return 0
 
@@ -253,16 +252,15 @@ class PostgresStorage:
 
         return len(spans_to_insert)
 
-    async def store_logs(self, data: dict) -> int:
+    async def store_logs(self, resource_logs: list[dict]) -> int:
         """Store OTLP logs using SQLModel ORM.
 
         Args:
-            data: OTLP JSON log data with resource_logs
+            resource_logs: List of OTLP ResourceLogs (matches interface)
 
         Returns:
             Number of log records stored
         """
-        resource_logs = data.get("resource_logs", data.get("resourceLogs", []))
         if not resource_logs:
             return 0
 

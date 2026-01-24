@@ -79,83 +79,87 @@ async def test_store_traces_with_scope_spans():
     """Test that store_traces correctly handles scope_spans (snake_case).
 
     This is the key test - verifies we're using the correct field name.
+    Tests with list input (matches receiver usage).
     """
     storage = PostgresStorage("postgresql+asyncpg://localhost/test")
 
     # OTLP data with scope_spans (snake_case, not camelCase!)
-    otlp_data = {
-        "resource_spans": [
-            {
-                "resource": {
-                    "attributes": [
-                        {"key": "service.name", "value": {"stringValue": "test-service"}},
-                    ]
-                },
-                "scope_spans": [  # Snake case!
-                    {
-                        "scope": {"name": "test-scope"},
-                        "spans": [
-                            {
-                                "traceId": "AAAAAAAAAAAAAAAAAAAAAA==",
-                                "spanId": "AAAAAAAAAAA=",
-                                "name": "test-span",
-                                "kind": 2,
-                                "startTimeUnixNano": "1000000",
-                                "endTimeUnixNano": "2000000",
-                                "attributes": [],
-                            }
-                        ],
-                    }
-                ],
-            }
-        ]
-    }
+    # Pass as list directly, matching receiver usage
+    resource_spans = [
+        {
+            "resource": {
+                "attributes": [
+                    {"key": "service.name", "value": {"stringValue": "test-service"}},
+                ]
+            },
+            "scope_spans": [  # Snake case!
+                {
+                    "scope": {"name": "test-scope"},
+                    "spans": [
+                        {
+                            "traceId": "AAAAAAAAAAAAAAAAAAAAAA==",
+                            "spanId": "AAAAAAAAAAA=",
+                            "name": "test-span",
+                            "kind": 2,
+                            "startTimeUnixNano": "1000000",
+                            "endTimeUnixNano": "2000000",
+                            "attributes": [],
+                        }
+                    ],
+                }
+            ],
+        }
+    ]
 
-    # This should not raise KeyError for "scopeSpans"
+    # This should not raise KeyError for "scopeSpans" or list attribute errors
     # Note: Will fail to connect to DB, but we're testing parsing logic
     try:
-        count = await storage.store_traces(otlp_data)
+        count = await storage.store_traces(resource_spans)
         assert count == 1
     except Exception as e:
-        # Expected to fail on DB connection, but not on field parsing
+        # Expected to fail on DB connection, but not on signature/parsing
+        assert "'list' object has no attribute 'get'" not in str(e)
         assert "scopeSpans" not in str(e)
         assert "KeyError" not in str(e)
 
 
 @pytest.mark.asyncio
 async def test_store_logs_with_scope_logs():
-    """Test that store_logs correctly handles scope_logs (snake_case)."""
+    """Test that store_logs correctly handles scope_logs (snake_case).
+
+    Tests with list input (matches receiver usage).
+    """
     storage = PostgresStorage("postgresql+asyncpg://localhost/test")
 
-    otlp_data = {
-        "resource_logs": [
-            {
-                "resource": {
-                    "attributes": [
-                        {"key": "service.name", "value": {"stringValue": "test-service"}},
-                    ]
-                },
-                "scope_logs": [  # Snake case!
-                    {
-                        "scope": {"name": "test-scope"},
-                        "logRecords": [
-                            {
-                                "timeUnixNano": "1000000",
-                                "severityNumber": 9,
-                                "body": {"stringValue": "test log"},
-                                "attributes": [],
-                            }
-                        ],
-                    }
-                ],
-            }
-        ]
-    }
+    # Pass as list directly, matching receiver usage
+    resource_logs = [
+        {
+            "resource": {
+                "attributes": [
+                    {"key": "service.name", "value": {"stringValue": "test-service"}},
+                ]
+            },
+            "scope_logs": [  # Snake case!
+                {
+                    "scope": {"name": "test-scope"},
+                    "logRecords": [
+                        {
+                            "timeUnixNano": "1000000",
+                            "severityNumber": 9,
+                            "body": {"stringValue": "test log"},
+                            "attributes": [],
+                        }
+                    ],
+                }
+            ],
+        }
+    ]
 
-    # This should not raise KeyError for "scopeLogs"
+    # This should not raise KeyError for "scopeLogs" or list attribute errors
     try:
-        count = await storage.store_logs(otlp_data)
+        count = await storage.store_logs(resource_logs)
         assert count == 1
     except Exception as e:
+        assert "'list' object has no attribute 'get'" not in str(e)
         assert "scopeLogs" not in str(e)
         assert "KeyError" not in str(e)
