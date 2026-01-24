@@ -86,6 +86,27 @@ class PostgresStorage:
         return 0
 
     @staticmethod
+    def _normalize_status_code(code: int | str | None) -> int | None:
+        """Convert status code to integer.
+
+        Handles both integer values and string constants like 'STATUS_CODE_ERROR'.
+        Returns None for null values.
+        """
+        if code is None:
+            return None
+        if isinstance(code, int):
+            return code
+        if isinstance(code, str):
+            # Map from OTLP string constants to integers
+            code_map = {
+                "STATUS_CODE_UNSET": 0,
+                "STATUS_CODE_OK": 1,
+                "STATUS_CODE_ERROR": 2,
+            }
+            return code_map.get(code, 0)
+        return 0
+
+    @staticmethod
     def _extract_string_value(attr_value: dict) -> str | None:
         """Extract string from OTLP attribute value (stringValue, intValue, etc.)."""
         if "stringValue" in attr_value:
@@ -210,9 +231,9 @@ class PostgresStorage:
                         # Upsert operation
                         operation_id = await self._upsert_operation(session, service_id, name, kind)
 
-                        # Status
+                        # Status - normalize status_code to integer
                         status = span.get("status", {})
-                        status_code = status.get("code")
+                        status_code = self._normalize_status_code(status.get("code"))
                         status_message = status.get("message")
 
                         # Attributes (convert OTLP format to dict)
