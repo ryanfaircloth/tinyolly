@@ -97,12 +97,12 @@ async def test_store_traces_with_scope_spans():
                     "scope": {"name": "test-scope"},
                     "spans": [
                         {
-                            "traceId": "AAAAAAAAAAAAAAAAAAAAAA==",
-                            "spanId": "AAAAAAAAAAA=",
+                            "trace_id": "AAAAAAAAAAAAAAAAAAAAAA==",
+                            "span_id": "AAAAAAAAAAA=",
                             "name": "test-span",
-                            "kind": 2,
-                            "startTimeUnixNano": "1000000",
-                            "endTimeUnixNano": "2000000",
+                            "kind": "SPAN_KIND_SERVER",  # MessageToDict converts to enum string
+                            "start_time_unix_nano": "1000000",  # MessageToDict converts int64 to string
+                            "end_time_unix_nano": "2000000",
                             "attributes": [],
                         }
                     ],
@@ -142,11 +142,11 @@ async def test_store_logs_with_scope_logs():
             "scope_logs": [  # Snake case!
                 {
                     "scope": {"name": "test-scope"},
-                    "logRecords": [
+                    "log_records": [  # Snake case!
                         {
-                            "timeUnixNano": "1000000",
-                            "severityNumber": 9,
-                            "body": {"stringValue": "test log"},
+                            "time_unix_nano": "1000000",  # MessageToDict converts int64 to string
+                            "severity_number": 9,
+                            "body": {"string_value": "test log"},  # Snake case!
                             "attributes": [],
                         }
                     ],

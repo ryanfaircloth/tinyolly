@@ -225,12 +225,12 @@ class PostgresStorage:
                         name = span.get("name", "unknown")
                         kind_raw = span.get("kind", 0)
                         kind = self._normalize_span_kind(kind_raw)
-                        start_time = int(span.get("startTimeUnixNano", 0))
-                        end_time = int(span.get("endTimeUnixNano", 0))
-
-                        # Skip spans with zero or missing start time (can't partition)
-                        if start_time == 0:
-                            continue
+                        
+                        # Parse timestamps - MessageToDict converts int64 to string
+                        start_time_raw = span.get("start_time_unix_nano", "0")
+                        end_time_raw = span.get("end_time_unix_nano", "0")
+                        start_time = int(start_time_raw) if start_time_raw else 0
+                        end_time = int(end_time_raw) if end_time_raw else 0
 
                         # Upsert operation
                         operation_id = await self._upsert_operation(session, service_id, name, kind)
@@ -311,19 +311,15 @@ class PostgresStorage:
                         if span_id:
                             span_id = self._base64_to_hex(span_id)
 
-                        # Timing
-                        time_unix_nano = int(log_record.get("timeUnixNano", 0))
-                        observed_time_unix_nano = log_record.get("observedTimeUnixNano")
-                        if observed_time_unix_nano:
-                            observed_time_unix_nano = int(observed_time_unix_nano)
-
-                        # Skip logs with zero or missing timestamps (can't partition)
-                        if time_unix_nano == 0:
-                            continue
+                        # Timing - MessageToDict converts int64 to string
+                        time_unix_nano_raw = log_record.get("time_unix_nano", "0")
+                        observed_time_unix_nano_raw = log_record.get("observed_time_unix_nano")
+                        time_unix_nano = int(time_unix_nano_raw) if time_unix_nano_raw else 0
+                        observed_time_unix_nano = int(observed_time_unix_nano_raw) if observed_time_unix_nano_raw else None
 
                         # Severity
-                        severity_number = log_record.get("severityNumber")
-                        severity_text = log_record.get("severityText")
+                        severity_number = log_record.get("severity_number")
+                        severity_text = log_record.get("severity_text")
 
                         # Body (can be string or structured)
                         body = log_record.get("body", {})
