@@ -58,20 +58,47 @@ def test_base64_to_hex_conversion():
 
 
 def test_extract_string_value():
-    """Test OTLP attribute value extraction."""
+    """Test OTLP attribute value extraction.
+
+    MessageToDict with preserving_proto_field_name=True uses snake_case.
+    """
     storage = PostgresStorage("postgresql+asyncpg://test")
 
-    # String value
-    assert storage._extract_string_value({"stringValue": "test"}) == "test"
+    # String value (snake_case from MessageToDict)
+    assert storage._extract_string_value({"string_value": "test"}) == "test"
 
-    # Int value
-    assert storage._extract_string_value({"intValue": 42}) == "42"
+    # Int value (snake_case)
+    assert storage._extract_string_value({"int_value": "42"}) == "42"  # MessageToDict converts int64 to string
 
-    # Bool value
-    assert storage._extract_string_value({"boolValue": True}) == "True"
+    # Bool value (snake_case)
+    assert storage._extract_string_value({"bool_value": True}) == "True"
 
     # No value
     assert storage._extract_string_value({}) is None
+
+
+def test_normalize_severity_number():
+    """Test severity number normalization from MessageToDict format."""
+    storage = PostgresStorage("postgresql+asyncpg://test")
+
+    # Integer values (pass through)
+    assert storage._normalize_severity_number(9) == 9
+    assert storage._normalize_severity_number(17) == 17
+
+    # String enum names from MessageToDict
+    assert storage._normalize_severity_number("SEVERITY_NUMBER_UNSPECIFIED") == 0
+    assert storage._normalize_severity_number("SEVERITY_NUMBER_TRACE") == 1
+    assert storage._normalize_severity_number("SEVERITY_NUMBER_DEBUG") == 5
+    assert storage._normalize_severity_number("SEVERITY_NUMBER_INFO") == 9
+    assert storage._normalize_severity_number("SEVERITY_NUMBER_WARN") == 13
+    assert storage._normalize_severity_number("SEVERITY_NUMBER_ERROR") == 17
+    assert storage._normalize_severity_number("SEVERITY_NUMBER_FATAL") == 21
+
+    # None value
+    assert storage._normalize_severity_number(None) is None
+
+    # Unknown string (default to 0)
+    assert storage._normalize_severity_number("UNKNOWN") == 0
 
 
 @pytest.mark.asyncio

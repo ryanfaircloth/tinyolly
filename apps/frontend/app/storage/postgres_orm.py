@@ -107,16 +107,72 @@ class PostgresStorage:
         return 0
 
     @staticmethod
+    def _normalize_severity_number(severity: int | str | None) -> int | None:
+        """Convert severity number to integer.
+
+        Handles both integer values and string constants like 'SEVERITY_NUMBER_INFO'.
+        Returns None for null values.
+
+        OTLP severity numbers range from 0-24:
+        - 0: UNSPECIFIED
+        - 1-4: TRACE
+        - 5-8: DEBUG
+        - 9-12: INFO
+        - 13-16: WARN
+        - 17-20: ERROR
+        - 21-24: FATAL
+        """
+        if severity is None:
+            return None
+        if isinstance(severity, int):
+            return severity
+        if isinstance(severity, str):
+            # Map from OTLP string constants to integers
+            severity_map = {
+                "SEVERITY_NUMBER_UNSPECIFIED": 0,
+                "SEVERITY_NUMBER_TRACE": 1,
+                "SEVERITY_NUMBER_TRACE2": 2,
+                "SEVERITY_NUMBER_TRACE3": 3,
+                "SEVERITY_NUMBER_TRACE4": 4,
+                "SEVERITY_NUMBER_DEBUG": 5,
+                "SEVERITY_NUMBER_DEBUG2": 6,
+                "SEVERITY_NUMBER_DEBUG3": 7,
+                "SEVERITY_NUMBER_DEBUG4": 8,
+                "SEVERITY_NUMBER_INFO": 9,
+                "SEVERITY_NUMBER_INFO2": 10,
+                "SEVERITY_NUMBER_INFO3": 11,
+                "SEVERITY_NUMBER_INFO4": 12,
+                "SEVERITY_NUMBER_WARN": 13,
+                "SEVERITY_NUMBER_WARN2": 14,
+                "SEVERITY_NUMBER_WARN3": 15,
+                "SEVERITY_NUMBER_WARN4": 16,
+                "SEVERITY_NUMBER_ERROR": 17,
+                "SEVERITY_NUMBER_ERROR2": 18,
+                "SEVERITY_NUMBER_ERROR3": 19,
+                "SEVERITY_NUMBER_ERROR4": 20,
+                "SEVERITY_NUMBER_FATAL": 21,
+                "SEVERITY_NUMBER_FATAL2": 22,
+                "SEVERITY_NUMBER_FATAL3": 23,
+                "SEVERITY_NUMBER_FATAL4": 24,
+            }
+            return severity_map.get(severity, 0)
+        return 0
+
+    @staticmethod
     def _extract_string_value(attr_value: dict) -> str | None:
-        """Extract string from OTLP attribute value (stringValue, intValue, etc.)."""
-        if "stringValue" in attr_value:
-            return attr_value["stringValue"]
-        if "intValue" in attr_value:
-            return str(attr_value["intValue"])
-        if "doubleValue" in attr_value:
-            return str(attr_value["doubleValue"])
-        if "boolValue" in attr_value:
-            return str(attr_value["boolValue"])
+        """Extract string from OTLP attribute value.
+
+        MessageToDict with preserving_proto_field_name=True uses snake_case.
+        Also converts int64 to string, so int_value will be a string.
+        """
+        if "string_value" in attr_value:
+            return attr_value["string_value"]
+        if "int_value" in attr_value:
+            return str(attr_value["int_value"])
+        if "double_value" in attr_value:
+            return str(attr_value["double_value"])
+        if "bool_value" in attr_value:
+            return str(attr_value["bool_value"])
         return None
 
     async def _upsert_service(self, session: AsyncSession, name: str, namespace: str | None = None) -> int:
@@ -225,7 +281,7 @@ class PostgresStorage:
                         name = span.get("name", "unknown")
                         kind_raw = span.get("kind", 0)
                         kind = self._normalize_span_kind(kind_raw)
-                        
+
                         # Parse timestamps - MessageToDict converts int64 to string
                         start_time_raw = span.get("start_time_unix_nano", "0")
                         end_time_raw = span.get("end_time_unix_nano", "0")
@@ -315,10 +371,12 @@ class PostgresStorage:
                         time_unix_nano_raw = log_record.get("time_unix_nano", "0")
                         observed_time_unix_nano_raw = log_record.get("observed_time_unix_nano")
                         time_unix_nano = int(time_unix_nano_raw) if time_unix_nano_raw else 0
-                        observed_time_unix_nano = int(observed_time_unix_nano_raw) if observed_time_unix_nano_raw else None
+                        observed_time_unix_nano = (
+                            int(observed_time_unix_nano_raw) if observed_time_unix_nano_raw else None
+                        )
 
-                        # Severity
-                        severity_number = log_record.get("severity_number")
+                        # Severity - normalize enum strings to integers
+                        severity_number = self._normalize_severity_number(log_record.get("severity_number"))
                         severity_text = log_record.get("severity_text")
 
                         # Body (can be string or structured)
@@ -352,17 +410,17 @@ class PostgresStorage:
 
         return len(logs_to_insert)
 
-    async def store_metrics(self, data: dict) -> int:
+    async def store_metrics(self, _data: dict) -> int:
         """Store OTLP metrics (stub implementation)."""
         # TODO: Implement metrics storage with SQLModel
         return 0
 
-    async def search_traces(self, filters: dict) -> list[dict]:
+    async def search_traces(self, _filters: dict) -> list[dict]:
         """Search traces (stub - implement with SQLAlchemy queries)."""
         # TODO: Implement with session.execute(select(...))
         return []
 
-    async def search_logs(self, filters: dict) -> list[dict]:
+    async def search_logs(self, _filters: dict) -> list[dict]:
         """Search logs (stub - implement with SQLAlchemy queries)."""
         # TODO: Implement with session.execute(select(...))
         return []
@@ -372,7 +430,7 @@ class PostgresStorage:
         # TODO: Implement with session.execute(select(...))
         return []
 
-    async def get_service_map(self, start_time: int, end_time: int) -> dict:
+    async def get_service_map(self, _start_time: int, _end_time: int) -> dict:
         """Get service map (stub - implement with SQLAlchemy queries)."""
         # TODO: Implement with session.execute(select(...))
         return {"nodes": [], "edges": []}
