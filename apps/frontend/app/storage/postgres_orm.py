@@ -14,7 +14,7 @@ from sqlalchemy import text
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
 
-from app.models.database import LogsFact, OperationDim, ResourceDim, ServiceDim, SpansFact
+from app.models.database import LogsFact, MetricsFact, OperationDim, ResourceDim, ServiceDim, SpansFact
 
 
 class PostgresStorage:
@@ -410,10 +410,102 @@ class PostgresStorage:
 
         return len(logs_to_insert)
 
-    async def store_metrics(self, _data: dict) -> int:
-        """Store OTLP metrics (stub implementation)."""
-        # TODO: Implement metrics storage with SQLModel
-        return 0
+    async def store_metrics(self, resource_metrics: list[dict]) -> int:
+        """Store OTLP metrics using SQLModel ORM.
+
+        Args:
+            resource_metrics: List of OTLP ResourceMetrics (matches interface)
+
+        Returns:
+            Number of metric data points stored
+        """
+        if not resource_metrics:
+            return 0
+
+        metrics_to_insert = []
+
+        async with AsyncSession(self.engine) as session:
+            for resource_metric in resource_metrics:
+                # Extract resource attributes - convert OTLP attribute list to dict
+                resource = resource_metric.get("resource", {})
+                resource_attrs_list = resource.get("attributes", [])
+                resource_dict = {attr["key"]: attr.get("value") for attr in resource_attrs_list}
+
+                # Process scope_metrics (snake_case!)
+                for scope_metric in resource_metric.get("scope_metrics", []):
+                    scope = scope_metric.get("scope", {})
+
+                    # Process metrics
+                    for metric in scope_metric.get("metrics", []):
+                        metric_name = metric.get("name", "unknown")
+                        unit = metric.get("unit", "")
+                        description = metric.get("description", "")
+
+                        # Determine metric type and get data_points
+                        metric_type = None
+                        data_points_list = []
+                        temporality = None
+                        is_monotonic = None
+
+                        if "gauge" in metric:
+                            metric_type = "gauge"
+                            data_points_list = metric["gauge"].get("data_points", [])
+                        elif "sum" in metric:
+                            metric_type = "sum"
+                            sum_data = metric["sum"]
+                            data_points_list = sum_data.get("data_points", [])
+                            # Strip AGGREGATION_TEMPORALITY_ prefix to fit VARCHAR(32)
+                            temporality_raw = sum_data.get("aggregation_temporality", "")
+                            temporality = (
+                                temporality_raw.replace("AGGREGATION_TEMPORALITY_", "") if temporality_raw else None
+                            )
+                            is_monotonic = sum_data.get("is_monotonic", False)
+                        elif "histogram" in metric:
+                            metric_type = "histogram"
+                            histogram_data = metric["histogram"]
+                            data_points_list = histogram_data.get("data_points", [])
+                            # Strip AGGREGATION_TEMPORALITY_ prefix to fit VARCHAR(32)
+                            temporality_raw = histogram_data.get("aggregation_temporality", "")
+                            temporality = (
+                                temporality_raw.replace("AGGREGATION_TEMPORALITY_", "") if temporality_raw else None
+                            )
+
+                        # Insert each data point as a separate row
+                        for dp in data_points_list:
+                            # Extract timing (snake_case strings from MessageToDict)
+                            time_unix_nano_str = dp.get("time_unix_nano", "0")
+                            time_unix_nano = int(time_unix_nano_str) if time_unix_nano_str else 0
+
+                            start_time_unix_nano_str = dp.get("start_time_unix_nano")
+                            start_time_unix_nano = int(start_time_unix_nano_str) if start_time_unix_nano_str else None
+
+                            # Extract data point attributes - convert list to dict
+                            dp_attrs_list = dp.get("attributes", [])
+                            dp_attributes = {attr["key"]: attr.get("value") for attr in dp_attrs_list}
+
+                            # Create MetricsFact model instance using SQLModel ORM
+                            metric_obj = MetricsFact(
+                                metric_name=metric_name,
+                                metric_type=metric_type,
+                                unit=unit,
+                                description=description,
+                                time_unix_nano=time_unix_nano,
+                                start_time_unix_nano=start_time_unix_nano,
+                                resource=resource_dict,
+                                scope=scope,
+                                attributes=dp_attributes,
+                                data_points=dp,  # Store entire data point as JSONB
+                                temporality=temporality,
+                                is_monotonic=is_monotonic,
+                            )
+                            metrics_to_insert.append(metric_obj)
+
+            # Bulk insert using ORM
+            if metrics_to_insert:
+                session.add_all(metrics_to_insert)
+                await session.commit()
+
+        return len(metrics_to_insert)
 
     async def search_traces(self, _filters: dict) -> list[dict]:
         """Search traces (stub - implement with SQLAlchemy queries)."""

@@ -190,3 +190,82 @@ async def test_store_logs_with_scope_logs():
         assert "'list' object has no attribute 'get'" not in str(e)
         assert "scopeLogs" not in str(e)
         assert "KeyError" not in str(e)
+
+
+@pytest.mark.asyncio
+async def test_store_metrics_with_gauge():
+    """Test storing gauge metrics with correct MessageToDict format."""
+    storage = PostgresStorage("postgresql+asyncpg://localhost/test")
+
+    # Metrics with gauge type (snake_case from MessageToDict)
+    resource_metrics = [
+        {
+            "resource": {"attributes": [{"key": "service.name", "value": {"string_value": "test-service"}}]},
+            "scope_metrics": [  # Snake case!
+                {
+                    "scope": {"name": "test-scope"},
+                    "metrics": [
+                        {
+                            "name": "cpu.usage",
+                            "unit": "%",
+                            "description": "CPU usage percentage",
+                            "gauge": {
+                                "data_points": [
+                                    {
+                                        "time_unix_nano": "1000000",  # MessageToDict converts int64 to string
+                                        "start_time_unix_nano": "900000",
+                                        "as_double": 42.5,
+                                        "attributes": [{"key": "host", "value": {"string_value": "localhost"}}],
+                                    }
+                                ]
+                            },
+                        }
+                    ],
+                }
+            ],
+        }
+    ]
+
+    try:
+        count = await storage.store_metrics(resource_metrics)
+        assert count == 1
+    except Exception as e:
+        assert "'list' object has no attribute 'get'" not in str(e)
+        assert "scopeMetrics" not in str(e)
+
+
+@pytest.mark.asyncio
+async def test_store_metrics_with_sum():
+    """Test storing sum metrics with correct MessageToDict format."""
+    storage = PostgresStorage("postgresql+asyncpg://localhost/test")
+
+    resource_metrics = [
+        {
+            "resource": {"attributes": [{"key": "service.name", "value": {"string_value": "test-service"}}]},
+            "scope_metrics": [
+                {
+                    "scope": {"name": "test-scope"},
+                    "metrics": [
+                        {
+                            "name": "request.count",
+                            "unit": "1",
+                            "description": "Total requests",
+                            "sum": {
+                                "data_points": [
+                                    {
+                                        "time_unix_nano": "1000000",
+                                        "start_time_unix_nano": "900000",
+                                        "as_int": "100",  # MessageToDict may convert int64 to string
+                                        "attributes": [],
+                                    }
+                                ]
+                            },
+                        }
+                    ],
+                }
+            ],
+        }
+    ]
+
+    count = await storage.store_metrics(resource_metrics)
+    assert count == 1

@@ -149,13 +149,16 @@ class LogsFact(SQLModel, table=True):
 
 
 class MetricsFact(SQLModel, table=True):
-    """Metric fact table (partitioned by time_unix_nano)."""
+    """Metric fact table (partitioned by time_unix_nano).
+
+    Schema matches the Alembic migration (29f08ce99e6e).
+    """
 
     __tablename__ = "metrics_fact"
     __table_args__ = (
         Index("idx_metrics_time", "time_unix_nano"),
         Index("idx_metrics_name", "metric_name"),
-        Index("idx_metrics_labels", "labels", postgresql_using="gin"),
+        Index("idx_metrics_attributes", "attributes", postgresql_using="gin"),
     )
 
     id: int | None = Field(default=None, sa_column=Column(BigInteger, primary_key=True))
@@ -168,29 +171,19 @@ class MetricsFact(SQLModel, table=True):
 
     # Metric identity
     metric_name: str = Field(max_length=1024, nullable=False)
-    metric_type: str = Field(max_length=64, nullable=False)
-    metric_unit: str | None = Field(default=None, max_length=64)
+    metric_type: str = Field(max_length=32, nullable=False)
+    unit: str | None = Field(default=None, max_length=64)
     description: str | None = Field(default=None, sa_column=Column(Text))
 
-    # Labels/Attributes
-    labels: dict | None = Field(default=None, sa_column=Column(JSONB))
+    # OTEL structures (stored as JSONB in database)
     resource: dict | None = Field(default=None, sa_column=Column(JSONB))
     scope: dict | None = Field(default=None, sa_column=Column(JSONB))
-
-    # Values (only one will be populated based on metric_type)
-    value_gauge: float | None = Field(default=None)
-    value_sum: float | None = Field(default=None)
-    value_count: int | None = Field(default=None, sa_column=Column(BigInteger))
-    value_min: float | None = Field(default=None)
-    value_max: float | None = Field(default=None)
-    quantile_values: dict | None = Field(default=None, sa_column=Column(JSONB))
+    attributes: dict | None = Field(default=None, sa_column=Column(JSONB))
+    data_points: dict | None = Field(default=None, sa_column=Column(JSONB))
 
     # Aggregation metadata
-    aggregation_temporality: int | None = Field(default=None, sa_column=Column(SmallInteger))
-    is_monotonic: bool = Field(default=False)
-
-    # Flags
-    flags: int = Field(default=0, sa_column=Column(Integer))
+    temporality: str | None = Field(default=None, max_length=32)
+    is_monotonic: bool | None = Field(default=None)
 
     # Metadata
     created_at: datetime = Field(default_factory=datetime.utcnow)
