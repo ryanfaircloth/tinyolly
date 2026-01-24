@@ -48,12 +48,16 @@ spec:
           containerPort: {{ .Values.frontend.service.targetPort }}
           protocol: TCP
         env:
+        - name: MODE
+          value: "frontend"
+        - name: PORT
+          value: {{ .Values.frontend.service.targetPort | quote }}
         - name: REDIS_HOST
           value: {{ .Values.redis.host | quote }}
         - name: REDIS_PORT
           value: {{ .Values.redis.port | quote }}
         - name: DATABASE_HOST
-          value: "{{ include "ollyscale.fullname" . }}-db-pooler"
+          value: "{{ include "ollyscale.fullname" . }}-db-rw"
         - name: DATABASE_PORT
           value: "5432"
         - name: DATABASE_NAME
@@ -61,12 +65,12 @@ spec:
         - name: DATABASE_USER
           valueFrom:
             secretKeyRef:
-              name: ollyscale.{{ include "ollyscale.fullname" . }}-db.credentials.postgresql.acid.zalan.do
+              name: {{ include "ollyscale.fullname" . }}-db-app
               key: username
         - name: DATABASE_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: ollyscale.{{ include "ollyscale.fullname" . }}-db.credentials.postgresql.acid.zalan.do
+              name: {{ include "ollyscale.fullname" . }}-db-app
               key: password
         - name: OTEL_SERVICE_NAME
           value: "ollyscale-frontend"

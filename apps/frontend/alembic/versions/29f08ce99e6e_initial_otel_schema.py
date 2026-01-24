@@ -36,7 +36,7 @@ def upgrade() -> None:
             id SERIAL PRIMARY KEY,
             tenant_id VARCHAR(255) NOT NULL DEFAULT 'default',
             name VARCHAR(255) NOT NULL,
-            namespace VARCHAR(255),
+            namespace VARCHAR(255) NOT NULL DEFAULT '',
             version VARCHAR(255),
             attributes JSONB,
             first_seen TIMESTAMP WITH TIME ZONE DEFAULT NOW(),

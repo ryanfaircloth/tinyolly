@@ -70,43 +70,60 @@ class PostgresStorage(StorageBackend):
 
     # ==================== Helper Methods ====================
 
-    async def _upsert_service(self, session, service_name: str) -> int:
-        """Upsert service dimension and return service_id."""
+    async def _upsert_service(self, session, service_name: str, namespace: str | None = None) -> int:
+        """Upsert service dimension and return service id."""
         query = text("""
-            INSERT INTO service_dim (service_name)
-            VALUES (:service_name)
-            ON CONFLICT (service_name)
-            DO UPDATE SET service_name = EXCLUDED.service_name
-            RETURNING service_id
+            INSERT INTO service_dim (name, namespace, tenant_id)
+            VALUES (:name, :namespace, :tenant_id)
+            ON CONFLICT (tenant_id, name, namespace)
+            DO UPDATE SET last_seen = NOW()
+            RETURNING id
         """)
 
-        result = await session.execute(query, {"service_name": service_name})
+        result = await session.execute(
+            query,
+            {
+                "name": service_name,
+                "namespace": namespace or "",  # Store empty string for missing namespace
+                "tenant_id": "default",
+            },
+        )
         return result.scalar()
 
-    async def _upsert_operation(self, session, operation_name: str) -> int:
-        """Upsert operation dimension and return operation_id."""
+    async def _upsert_operation(self, session, service_id: int, operation_name: str, span_kind: int) -> int:
+        """Upsert operation dimension and return operation id."""
         query = text("""
-            INSERT INTO operation_dim (operation_name)
-            VALUES (:operation_name)
-            ON CONFLICT (operation_name)
-            DO UPDATE SET operation_name = EXCLUDED.operation_name
-            RETURNING operation_id
+            INSERT INTO operation_dim (name, service_id, span_kind, tenant_id)
+            VALUES (:name, :service_id, :span_kind, :tenant_id)
+            ON CONFLICT (tenant_id, service_id, name, span_kind)
+            DO UPDATE SET last_seen = NOW()
+            RETURNING id
         """)
 
-        result = await session.execute(query, {"operation_name": operation_name})
+        result = await session.execute(
+            query, {"name": operation_name, "service_id": service_id, "span_kind": span_kind, "tenant_id": "default"}
+        )
         return result.scalar()
 
-    async def _upsert_resource(self, session, resource_jsonb: dict) -> int:
-        """Upsert resource dimension and return resource_id."""
+    async def _upsert_resource(self, session, resource_attrs: dict) -> int:
+        """Upsert resource dimension and return resource id."""
+        import hashlib
+
+        # Create hash of resource attributes for uniqueness
+        resource_json = json.dumps(resource_attrs, sort_keys=True)
+        resource_hash = hashlib.sha256(resource_json.encode()).hexdigest()
+
         query = text("""
-            INSERT INTO resource_dim (resource_jsonb)
-            VALUES (:resource_jsonb)
-            ON CONFLICT (resource_jsonb)
-            DO UPDATE SET resource_jsonb = EXCLUDED.resource_jsonb
-            RETURNING resource_id
+            INSERT INTO resource_dim (resource_hash, attributes, tenant_id)
+            VALUES (:resource_hash, :attributes, :tenant_id)
+            ON CONFLICT (tenant_id, resource_hash)
+            DO UPDATE SET last_seen = NOW()
+            RETURNING id
         """)
 
-        result = await session.execute(query, {"resource_jsonb": json.dumps(resource_jsonb)})
+        result = await session.execute(
+            query, {"resource_hash": resource_hash, "attributes": json.dumps(resource_attrs), "tenant_id": "default"}
+        )
         return result.scalar()
 
     def _hex_to_bytes(self, hex_str: str) -> bytes:
@@ -134,94 +151,113 @@ class PostgresStorage(StorageBackend):
 
         spans_to_insert = []
 
-        async with self.db.session() as session:
-            for resource_span in resource_spans:
-                resource = resource_span.get("resource", {})
-                resource_attrs = resource.get("attributes", [])
-                resource_dict = {attr.get("key"): attr.get("value") for attr in resource_attrs}
+        try:
+            import logging
 
-                # Get service name from resource attributes
-                service_name = "unknown"
-                for attr in resource_attrs:
-                    if attr.get("key") == "service.name":
+            logging.info(f"store_traces called with {len(resource_spans)} resource_spans")
+            if resource_spans:
+                logging.info(f"First resource_span keys: {list(resource_spans[0].keys())}")
+
+            async with self.db.session() as session:
+                for resource_span in resource_spans:
+                    resource = resource_span.get("resource", {})
+                    resource_attrs = resource.get("attributes", [])
+                    resource_dict = {attr.get("key"): attr.get("value") for attr in resource_attrs}
+
+                    # Extract service.name and service.namespace from resource attributes (OTEL semantic conventions)
+                    service_name = "unknown"
+                    service_namespace = None
+                    for attr in resource_attrs:
+                        key = attr.get("key")
                         value = attr.get("value", {})
-                        service_name = value.get("stringValue", "unknown")
-                        break
+                        if key == "service.name":
+                            service_name = value.get("stringValue", "unknown")
+                        elif key == "service.namespace":
+                            service_namespace = value.get("stringValue")
 
-                # Upsert service
-                service_id = await self._upsert_service(session, service_name)
-                resource_id = await self._upsert_resource(session, resource_dict)
+                    # Upsert service with namespace
+                    service_id = await self._upsert_service(session, service_name, service_namespace)
+                    resource_id = await self._upsert_resource(session, resource_dict)
 
-                for scope_span in resource_span.get("scopeSpans", []):
-                    for span in scope_span.get("spans", []):
-                        # Parse span IDs
-                        trace_id_b64 = span.get("traceId", "")
-                        span_id_b64 = span.get("spanId", "")
-                        parent_span_id_b64 = span.get("parentSpanId", "")
+                    for scope_span in resource_span.get("scope_spans", []):
+                        for span in scope_span.get("spans", []):
+                            # Parse span IDs
+                            trace_id_b64 = span.get("traceId", "")
+                            span_id_b64 = span.get("spanId", "")
+                            parent_span_id_b64 = span.get("parentSpanId", "")
 
-                        trace_id = self._base64_to_hex(trace_id_b64) if trace_id_b64 else None
-                        span_id = self._base64_to_hex(span_id_b64) if span_id_b64 else None
-                        parent_span_id = self._base64_to_hex(parent_span_id_b64) if parent_span_id_b64 else None
+                            trace_id = self._base64_to_hex(trace_id_b64) if trace_id_b64 else None
+                            span_id = self._base64_to_hex(span_id_b64) if span_id_b64 else None
+                            parent_span_id = self._base64_to_hex(parent_span_id_b64) if parent_span_id_b64 else None
 
-                        # Get operation name
-                        operation_name = span.get("name", "unknown")
-                        operation_id = await self._upsert_operation(session, operation_name)
+                            # Get operation name and span kind
+                            operation_name = span.get("name", "unknown")
+                            span_kind = span.get("kind", 0)  # 0=UNSPECIFIED, 1=INTERNAL, 2=SERVER, 3=CLIENT, etc.
+                            operation_id = await self._upsert_operation(session, service_id, operation_name, span_kind)
 
-                        # Parse attributes
-                        attributes = {}
-                        for attr in span.get("attributes", []):
-                            key = attr.get("key")
-                            value = attr.get("value", {})
-                            # Extract value based on type
-                            if "stringValue" in value:
-                                attributes[key] = value["stringValue"]
-                            elif "intValue" in value:
-                                attributes[key] = value["intValue"]
-                            elif "doubleValue" in value:
-                                attributes[key] = value["doubleValue"]
-                            elif "boolValue" in value:
-                                attributes[key] = value["boolValue"]
+                            # Parse attributes
+                            attributes = {}
+                            for attr in span.get("attributes", []):
+                                key = attr.get("key")
+                                value = attr.get("value", {})
+                                # Extract value based on type
+                                if "stringValue" in value:
+                                    attributes[key] = value["stringValue"]
+                                elif "intValue" in value:
+                                    attributes[key] = value["intValue"]
+                                elif "doubleValue" in value:
+                                    attributes[key] = value["doubleValue"]
+                                elif "boolValue" in value:
+                                    attributes[key] = value["boolValue"]
 
-                        # Parse status
-                        status = span.get("status", {})
-                        status_code = status.get("code", 0)  # 0=UNSET, 1=OK, 2=ERROR
+                            # Parse status
+                            status = span.get("status", {})
+                            status_code = status.get("code", 0)  # 0=UNSET, 1=OK, 2=ERROR
 
-                        # Prepare span data
-                        span_data = {
-                            "trace_id": trace_id,
-                            "span_id": span_id,
-                            "parent_span_id": parent_span_id,
-                            "service_id": service_id,
-                            "operation_id": operation_id,
-                            "resource_id": resource_id,
-                            "start_time_ns": int(span.get("startTimeUnixNano", 0)),
-                            "end_time_ns": int(span.get("endTimeUnixNano", 0)),
-                            "duration_ns": int(span.get("endTimeUnixNano", 0)) - int(span.get("startTimeUnixNano", 0)),
-                            "status_code": status_code,
-                            "kind": span.get("kind", 0),  # 0=UNSPECIFIED, 1=INTERNAL, 2=SERVER, 3=CLIENT, etc.
-                            "tenant_id": "default",
-                            "attributes": json.dumps(attributes),
-                            "events": json.dumps(span.get("events", [])),
-                            "links": json.dumps(span.get("links", [])),
-                        }
-                        spans_to_insert.append(span_data)
+                            # Prepare span data (using schema column names)
+                            span_data = {
+                                "trace_id": trace_id,
+                                "span_id": span_id,
+                                "parent_span_id": parent_span_id,
+                                "name": operation_name,
+                                "kind": span_kind,
+                                "service_id": service_id,
+                                "operation_id": operation_id,
+                                "resource_id": resource_id,
+                                "start_time_unix_nano": int(span.get("startTimeUnixNano", 0)),
+                                "end_time_unix_nano": int(span.get("endTimeUnixNano", 0)),
+                                "status_code": status_code,
+                                "status_message": span.get("status", {}).get("message"),
+                                "tenant_id": "default",
+                                "attributes": json.dumps(attributes),
+                                "events": json.dumps(span.get("events", [])),
+                                "links": json.dumps(span.get("links", [])),
+                                "resource": json.dumps(resource_dict),
+                                "scope": json.dumps(scope_span.get("scope", {})),
+                            }
+                            spans_to_insert.append(span_data)
 
-            # Batch insert spans
-            if spans_to_insert:
-                insert_stmt = text("""
-                    INSERT INTO spans_fact (
-                        trace_id, span_id, parent_span_id, service_id, operation_id, resource_id,
-                        start_time_ns, end_time_ns, duration_ns, status_code, kind,
-                        tenant_id, attributes, events, links
-                    ) VALUES (
-                        :trace_id, :span_id, :parent_span_id, :service_id, :operation_id, :resource_id,
-                        :start_time_ns, :end_time_ns, :duration_ns, :status_code, :kind,
-                        :tenant_id, :attributes::jsonb, :events::jsonb, :links::jsonb
-                    )
-                """)
-                await session.execute(insert_stmt, spans_to_insert)
+                # Batch insert spans
+                if spans_to_insert:
+                    insert_stmt = text("""
+                        INSERT INTO spans_fact (
+                            trace_id, span_id, parent_span_id, name, kind, service_id, operation_id, resource_id,
+                            start_time_unix_nano, end_time_unix_nano, status_code, status_message,
+                            tenant_id, attributes, events, links, resource, scope
+                        ) VALUES (
+                            :trace_id, :span_id, :parent_span_id, :name, :kind, :service_id, :operation_id, :resource_id,
+                            :start_time_unix_nano, :end_time_unix_nano, :status_code, :status_message,
+                            :tenant_id, :attributes::jsonb, :events::jsonb, :links::jsonb, :resource::jsonb, :scope::jsonb
+                        )
+                    """)
+                    await session.execute(insert_stmt, spans_to_insert)
 
-        return len(spans_to_insert)
+            return len(spans_to_insert)
+        except Exception as e:
+            import logging
+
+            logging.error(f"Failed to store traces: {e}", exc_info=True)
+            return 0
 
     async def search_traces(
         self,
@@ -239,8 +275,8 @@ class PostgresStorage(StorageBackend):
             query = text("""
                 SELECT DISTINCT trace_id
                 FROM spans_fact
-                WHERE start_time_ns >= :start_ns
-                  AND start_time_ns < :end_ns
+                WHERE start_time_unix_nano >= :start_ns
+                  AND start_time_unix_nano < :end_ns
                   AND tenant_id = :tenant_id
             """)
 
@@ -286,15 +322,15 @@ class PostgresStorage(StorageBackend):
         async with self.db.session() as session:
             query = text("""
                 SELECT
-                    s.span_id, s.parent_span_id, s.start_time_ns, s.end_time_ns, s.duration_ns,
+                    s.span_id, s.parent_span_id, s.start_time_unix_nano, s.end_time_unix_nano, s.duration,
                     s.status_code, s.kind, s.attributes, s.events, s.links,
-                    srv.service_name, op.operation_name, res.resource_jsonb
+                    srv.name, op.name, res.attributes
                 FROM spans_fact s
-                JOIN service_dim srv ON s.service_id = srv.service_id
-                JOIN operation_dim op ON s.operation_id = op.operation_id
-                JOIN resource_dim res ON s.resource_id = res.resource_id
+                JOIN service_dim srv ON s.service_id = srv.id
+                JOIN operation_dim op ON s.operation_id = op.id
+                JOIN resource_dim res ON s.resource_id = res.id
                 WHERE s.trace_id = :trace_id
-                ORDER BY s.start_time_ns
+                ORDER BY s.start_time_unix_nano
             """)
 
             result = await session.execute(query, {"trace_id": trace_id})
@@ -340,74 +376,83 @@ class PostgresStorage(StorageBackend):
 
         logs_to_insert = []
 
-        async with self.db.session() as session:
-            for resource_log in resource_logs:
-                resource = resource_log.get("resource", {})
-                resource_attrs = resource.get("attributes", [])
-                resource_dict = {attr.get("key"): attr.get("value") for attr in resource_attrs}
+        try:
+            async with self.db.session() as session:
+                for resource_log in resource_logs:
+                    resource = resource_log.get("resource", {})
+                    resource_attrs = resource.get("attributes", [])
+                    resource_dict = {attr.get("key"): attr.get("value") for attr in resource_attrs}
 
-                # Get service name
-                service_name = "unknown"
-                for attr in resource_attrs:
-                    if attr.get("key") == "service.name":
+                    # Extract service.name and service.namespace from resource attributes
+                    service_name = "unknown"
+                    service_namespace = None
+                    for attr in resource_attrs:
+                        key = attr.get("key")
                         value = attr.get("value", {})
-                        service_name = value.get("stringValue", "unknown")
-                        break
+                        if key == "service.name":
+                            service_name = value.get("stringValue", "unknown")
+                        elif key == "service.namespace":
+                            service_namespace = value.get("stringValue")
 
-                service_id = await self._upsert_service(session, service_name)
-                resource_id = await self._upsert_resource(session, resource_dict)
+                    service_id = await self._upsert_service(session, service_name, service_namespace)
+                    resource_id = await self._upsert_resource(session, resource_dict)
 
-                for scope_log in resource_log.get("scopeLogs", []):
-                    for log in scope_log.get("logRecords", []):
-                        # Parse log attributes
-                        attributes = {}
-                        for attr in log.get("attributes", []):
-                            key = attr.get("key")
-                            value = attr.get("value", {})
-                            if "stringValue" in value:
-                                attributes[key] = value["stringValue"]
-                            elif "intValue" in value:
-                                attributes[key] = value["intValue"]
+                    for scope_log in resource_log.get("scope_logs", []):
+                        for log in scope_log.get("logRecords", []):
+                            # Parse log attributes
+                            attributes = {}
+                            for attr in log.get("attributes", []):
+                                key = attr.get("key")
+                                value = attr.get("value", {})
+                                if "stringValue" in value:
+                                    attributes[key] = value["stringValue"]
+                                elif "intValue" in value:
+                                    attributes[key] = value["intValue"]
 
-                        # Get trace/span context if present
-                        trace_id = self._base64_to_hex(log.get("traceId", "")) if log.get("traceId") else None
-                        span_id = self._base64_to_hex(log.get("spanId", "")) if log.get("spanId") else None
+                            # Get trace/span context if present
+                            trace_id = self._base64_to_hex(log.get("traceId", "")) if log.get("traceId") else None
+                            span_id = self._base64_to_hex(log.get("spanId", "")) if log.get("spanId") else None
 
-                        # Get body
-                        body = log.get("body", {})
-                        body_text = body.get("stringValue", "") if body else ""
+                            # Get body
+                            body = log.get("body", {})
+                            body_text = body.get("stringValue", "") if body else ""
 
-                        log_data = {
-                            "timestamp_ns": int(log.get("timeUnixNano", 0)),
-                            "observed_timestamp_ns": int(log.get("observedTimeUnixNano", 0)),
-                            "service_id": service_id,
-                            "resource_id": resource_id,
-                            "severity_number": log.get("severityNumber", 0),
-                            "severity_text": log.get("severityText", ""),
-                            "body": body_text,
-                            "attributes": json.dumps(attributes),
-                            "trace_id": trace_id,
-                            "span_id": span_id,
-                            "tenant_id": "default",
-                        }
-                        logs_to_insert.append(log_data)
+                            log_data = {
+                                "time_unix_nano": int(log.get("timeUnixNano", 0)),
+                                "observed_time_unix_nano": int(log.get("observedTimeUnixNano", 0)),
+                                "severity_number": log.get("severityNumber", 0),
+                                "severity_text": log.get("severityText", ""),
+                                "body": json.dumps({"stringValue": body_text}),
+                                "attributes": json.dumps(attributes),
+                                "resource": json.dumps(resource_dict),
+                                "scope": json.dumps(scope_log.get("scope", {})),
+                                "trace_id": trace_id,
+                                "span_id": span_id,
+                                "tenant_id": "default",
+                            }
+                            logs_to_insert.append(log_data)
 
-            # Batch insert logs
-            if logs_to_insert:
-                insert_stmt = text("""
-                    INSERT INTO logs_fact (
-                        timestamp_ns, observed_timestamp_ns, service_id, resource_id,
-                        severity_number, severity_text, body, attributes,
-                        trace_id, span_id, tenant_id
-                    ) VALUES (
-                        :timestamp_ns, :observed_timestamp_ns, :service_id, :resource_id,
-                        :severity_number, :severity_text, :body, :attributes::jsonb,
-                        :trace_id, :span_id, :tenant_id
-                    )
-                """)
-                await session.execute(insert_stmt, logs_to_insert)
+                # Batch insert logs
+                if logs_to_insert:
+                    insert_stmt = text("""
+                        INSERT INTO logs_fact (
+                            time_unix_nano, observed_time_unix_nano,
+                            severity_number, severity_text, body, attributes, resource, scope,
+                            trace_id, span_id, tenant_id
+                        ) VALUES (
+                            :time_unix_nano, :observed_time_unix_nano,
+                            :severity_number, :severity_text, :body::jsonb, :attributes::jsonb, :resource::jsonb, :scope::jsonb,
+                            :trace_id, :span_id, :tenant_id
+                        )
+                    """)
+                    await session.execute(insert_stmt, logs_to_insert)
 
-        return len(logs_to_insert)
+            return len(logs_to_insert)
+        except Exception as e:
+            import logging
+
+            logging.error(f"Failed to store logs: {e}", exc_info=True)
+            return 0
 
     async def search_logs(
         self,
@@ -419,17 +464,14 @@ class PostgresStorage(StorageBackend):
         async with self.db.session() as session:
             query = text("""
                 SELECT
-                    l.log_id, l.timestamp_ns, l.observed_timestamp_ns,
+                    l.id, l.time_unix_nano, l.observed_time_unix_nano,
                     l.severity_number, l.severity_text, l.body, l.attributes,
-                    l.trace_id, l.span_id,
-                    srv.service_name, res.resource_jsonb
+                    l.trace_id, l.span_id, l.resource
                 FROM logs_fact l
-                JOIN service_dim srv ON l.service_id = srv.service_id
-                JOIN resource_dim res ON l.resource_id = res.resource_id
-                WHERE l.timestamp_ns >= :start_ns
-                  AND l.timestamp_ns < :end_ns
+                WHERE l.time_unix_nano >= :start_ns
+                  AND l.time_unix_nano < :end_ns
                   AND l.tenant_id = :tenant_id
-                ORDER BY l.timestamp_ns DESC
+                ORDER BY l.time_unix_nano DESC
                 LIMIT :limit
             """)
 
@@ -450,18 +492,22 @@ class PostgresStorage(StorageBackend):
 
             logs = []
             for row in rows:
+                # Parse body JSONB
+                body_jsonb = json.loads(row[5]) if row[5] else {}
+                body_text = body_jsonb.get("stringValue", "") if isinstance(body_jsonb, dict) else str(body_jsonb)
+
                 log_record = LogRecord(
                     log_id=str(row[0]),
                     timestamp_ns=row[1],
                     observed_timestamp_ns=row[2],
                     severity_number=row[3],
                     severity_text=row[4],
-                    body=row[5],
+                    body=body_text,
                     attributes=json.loads(row[6]) if row[6] else {},
                     trace_id=row[7],
                     span_id=row[8],
-                    service_name=row[9],
-                    resource=row[10],
+                    service_name="unknown",  # Extract from resource if needed
+                    resource=row[9],
                 )
                 logs.append(log_record)
 
@@ -498,23 +544,23 @@ class PostgresStorage(StorageBackend):
             params = {}
 
             if time_range:
-                where_clause += " AND s.start_time_ns >= :start_ns AND s.start_time_ns < :end_ns"
+                where_clause += " AND s.start_time_unix_nano >= :start_ns AND s.start_time_unix_nano < :end_ns"
                 params["start_ns"] = time_range.start_time
                 params["end_ns"] = time_range.end_time
 
             query = text(f"""
                 SELECT
-                    srv.service_name,
+                    srv.name,
                     COUNT(*) AS request_count,
                     COUNT(*) FILTER (WHERE s.status_code = 2) AS error_count,
-                    PERCENTILE_CONT(0.50) WITHIN GROUP (ORDER BY s.duration_ns) AS p50_duration_ns,
-                    PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY s.duration_ns) AS p95_duration_ns,
-                    MIN(s.start_time_ns) AS first_seen_ns,
-                    MAX(s.start_time_ns) AS last_seen_ns
+                    PERCENTILE_CONT(0.50) WITHIN GROUP (ORDER BY s.duration) AS p50_duration_ns,
+                    PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY s.duration) AS p95_duration_ns,
+                    MIN(s.start_time_unix_nano) AS first_seen_ns,
+                    MAX(s.start_time_unix_nano) AS last_seen_ns
                 FROM spans_fact s
-                JOIN service_dim srv ON s.service_id = srv.service_id
+                JOIN service_dim srv ON s.service_id = srv.id
                 {where_clause}
-                GROUP BY srv.service_name
+                GROUP BY srv.name
                 ORDER BY request_count DESC
             """)
 
@@ -549,19 +595,19 @@ class PostgresStorage(StorageBackend):
             # Get service-to-service edges
             query = text("""
                 SELECT
-                    srv_parent.service_name AS source,
-                    srv_child.service_name AS target,
+                    srv_parent.name AS source,
+                    srv_child.name AS target,
                     COUNT(*) AS call_count
                 FROM spans_fact s_child
                 JOIN spans_fact s_parent ON s_child.parent_span_id = s_parent.span_id
                     AND s_child.trace_id = s_parent.trace_id
-                JOIN service_dim srv_child ON s_child.service_id = srv_child.service_id
-                JOIN service_dim srv_parent ON s_parent.service_id = srv_parent.service_id
-                WHERE s_child.start_time_ns >= :start_ns
-                  AND s_child.start_time_ns < :end_ns
+                JOIN service_dim srv_child ON s_child.service_id = srv_child.id
+                JOIN service_dim srv_parent ON s_parent.service_id = srv_parent.id
+                WHERE s_child.start_time_unix_nano >= :start_ns
+                  AND s_child.start_time_unix_nano < :end_ns
                   AND s_child.tenant_id = :tenant_id
-                  AND srv_child.service_name != srv_parent.service_name
-                GROUP BY srv_parent.service_name, srv_child.service_name
+                  AND srv_child.name != srv_parent.name
+                GROUP BY srv_parent.name, srv_child.name
             """)
 
             result = await session.execute(

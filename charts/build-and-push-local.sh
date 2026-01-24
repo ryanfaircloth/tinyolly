@@ -108,6 +108,7 @@ echo ""
 echo "Step 4/4: Building Frontend API (v2 PostgreSQL backend)"
 echo "-----------------------------------------------------------"
 $CONTAINER_CMD build \
+  --no-cache \
   -f apps/frontend/Dockerfile \
   -t $IMAGE_ORG/frontend:latest \
   -t $IMAGE_ORG/frontend:$VERSION \
@@ -225,7 +226,7 @@ opampServer:
 
 otlpReceiver:
   image:
-    repository: $INTERNAL_REGISTRY/$IMAGE_ORG/ollyscale
+    repository: $INTERNAL_REGISTRY/$IMAGE_ORG/frontend
     tag: $VERSION
   env:
     - name: MODE

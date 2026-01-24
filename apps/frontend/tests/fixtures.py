@@ -107,7 +107,7 @@ def make_resource_spans(service_name: str = "test-service", spans: list[dict] | 
 
     return {
         "resource": make_resource(service_name),
-        "scopeSpans": [{"scope": {"name": "test-scope", "version": "1.0.0"}, "spans": spans}],
+        "scope_spans": [{"scope": {"name": "test-scope", "version": "1.0.0"}, "spans": spans}],
     }
 
 
@@ -173,7 +173,7 @@ def make_resource_logs(service_name: str = "test-service", log_records: list[dic
 
     return {
         "resource": make_resource(service_name),
-        "scopeLogs": [{"scope": {"name": "test-scope", "version": "1.0.0"}, "logRecords": log_records}],
+        "scope_logs": [{"scope": {"name": "test-scope", "version": "1.0.0"}, "logRecords": log_records}],
     }
 
 
@@ -268,7 +268,7 @@ def make_empty_resource_spans() -> dict:
     """Create ResourceSpans with no spans."""
     return {
         "resource": make_resource("empty-service"),
-        "scopeSpans": [{"scope": {"name": "test-scope"}, "spans": []}],
+        "scope_spans": [{"scope": {"name": "test-scope"}, "spans": []}],
     }
 
 

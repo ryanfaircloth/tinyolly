@@ -262,7 +262,7 @@ ebpfAgent:
 frontend:
   replicaCount: 1
   image:
-    repository: ghcr.io/ryanfaircloth/ollyscale
+    repository: docker-registry.registry.svc.cluster.local:5000/ollyscale/frontend
     tag: 0.1.10
     pullPolicy: ''
   serviceAccount:
@@ -296,7 +296,7 @@ frontend:
       memory: 256Mi
   livenessProbe:
     httpGet:
-      path: /health
+      path: /health/
       port: 8000
     initialDelaySeconds: 30
     periodSeconds: 10
@@ -304,15 +304,13 @@ frontend:
     failureThreshold: 3
   readinessProbe:
     httpGet:
-      path: /health
+      path: /health/
       port: 8000
     initialDelaySeconds: 10
     periodSeconds: 5
     timeoutSeconds: 3
     failureThreshold: 3
   env:
-    - name: MODE
-      value: ui
     - name: DEPLOYMENT_ENV
       value: kubernetes
     - name: OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED
@@ -490,10 +488,6 @@ otlpReceiver:
     timeoutSeconds: 3
     failureThreshold: 3
   env:
-    - name: MODE
-      value: receiver
-    - name: PORT
-      value: '4343'
     - name: OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED
       value: 'true'
   extraEnv: {}
@@ -515,7 +509,7 @@ postgresql:
       - superuser
       - createdb
   postgresql:
-    version: '18'
+    version: '17'
   resources:
     requests:
       cpu: 100m

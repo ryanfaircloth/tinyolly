@@ -1,5 +1,5 @@
-apiVersion: acid.zalan.do/v1
-kind: postgresql
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
 metadata:
   name: {{ include "ollyscale.fullname" . }}-db
   namespace: {{ .Values.global.namespace }}
@@ -7,34 +7,23 @@ metadata:
     {{- include "ollyscale.labels" . | nindent 4 }}
     app.kubernetes.io/component: database
 spec:
-  teamId: {{ .Values.postgresql.teamId | quote }}
-  numberOfInstances: {{ .Values.postgresql.numberOfInstances }}
+  instances: {{ .Values.postgresql.numberOfInstances }}
 
   postgresql:
-    version: {{ .Values.postgresql.postgresql.version | quote }}
+    parameters:
+      max_connections: "200"
+      shared_buffers: "256MB"
 
-  volume:
+  bootstrap:
+    initdb:
+      database: {{ .Values.postgresql.databases.ollyscale | default "ollyscale" }}
+      owner: {{ .Values.postgresql.databases.ollyscale | default "ollyscale" }}
+
+  storage:
     size: {{ .Values.postgresql.volume.size }}
     {{- if .Values.postgresql.volume.storageClass }}
     storageClass: {{ .Values.postgresql.volume.storageClass }}
     {{- end }}
-
-  {{- if .Values.postgresql.databases }}
-  databases:
-    {{- range $db, $owner := .Values.postgresql.databases }}
-    {{ $db }}: {{ $owner }}
-    {{- end }}
-  {{- end }}
-
-  {{- if .Values.postgresql.users }}
-  users:
-    {{- range $user, $permissions := .Values.postgresql.users }}
-    {{ $user }}:
-      {{- range $permissions }}
-      - {{ . }}
-      {{- end }}
-    {{- end }}
-  {{- end }}
 
   resources:
     requests:
@@ -44,20 +33,11 @@ spec:
       cpu: {{ .Values.postgresql.resources.limits.cpu }}
       memory: {{ .Values.postgresql.resources.limits.memory }}
 
-  patroni:
-    synchronous_mode: {{ .Values.postgresql.patroni.synchronous_mode }}
-    synchronous_mode_strict: {{ .Values.postgresql.patroni.synchronous_mode_strict }}
-
-  # Connection pooler (optional but recommended)
-  enableConnectionPooler: true
-  connectionPooler:
-    numberOfInstances: 2
-    mode: transaction
-    dockerImage: registry.opensource.zalan.do/acid/pgbouncer:master-32
-    resources:
-      requests:
-        cpu: 100m
-        memory: 128Mi
-      limits:
-        cpu: 500m
-        memory: 256Mi
+  # Connection pooler with PgBouncer
+  enablePgBouncer: true
+  pgBouncer:
+    replicas: 2
+    poolMode: transaction
+    parameters:
+      max_client_conn: "1000"
+      default_pool_size: "25"

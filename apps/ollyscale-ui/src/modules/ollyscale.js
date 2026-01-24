@@ -31,7 +31,7 @@
  */
 
 import { initTabs, startAutoRefresh, switchTab, toggleAutoRefresh } from './tabs.js';
-import { loadStats, loadLogs, loadSpans } from './api.js';
+import { loadLogs, loadSpans } from './api.js';
 import { initTheme, toggleTheme } from './theme.js';
 import { initHideOllyScaleToggle, toggleHideOllyScale } from './filter.js';
 import {
@@ -84,7 +84,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Tab initialization now handles URL parameters internally
         initTabs();
-        loadStats();
 
         // Attach log search event listener with debounce
         const logSearch = document.getElementById('log-search');

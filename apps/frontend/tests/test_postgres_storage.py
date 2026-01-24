@@ -68,7 +68,7 @@ async def test_store_and_retrieve_traces(storage):
                     {"key": "service.name", "value": {"stringValue": "test-service"}},
                 ]
             },
-            "scopeSpans": [
+            "scope_spans": [
                 {
                     "scope": {"name": "test-scope"},
                     "spans": [
@@ -145,7 +145,7 @@ async def test_store_and_search_logs(storage):
                     {"key": "service.name", "value": {"stringValue": "log-service"}},
                 ]
             },
-            "scopeLogs": [
+            "scope_logs": [
                 {
                     "scope": {"name": "test-logger"},
                     "logRecords": [
@@ -202,7 +202,7 @@ async def test_get_services(storage):
                     {"key": "service.name", "value": {"stringValue": "catalog-service"}},
                 ]
             },
-            "scopeSpans": [
+            "scope_spans": [
                 {
                     "scope": {"name": "test-scope"},
                     "spans": [
@@ -269,7 +269,7 @@ async def test_get_service_map(storage):
                     {"key": "service.name", "value": {"stringValue": "frontend"}},
                 ]
             },
-            "scopeSpans": [
+            "scope_spans": [
                 {
                     "scope": {"name": "test-scope"},
                     "spans": [
@@ -292,7 +292,7 @@ async def test_get_service_map(storage):
                     {"key": "service.name", "value": {"stringValue": "backend"}},
                 ]
             },
-            "scopeSpans": [
+            "scope_spans": [
                 {
                     "scope": {"name": "test-scope"},
                     "spans": [
@@ -369,7 +369,7 @@ async def test_batch_insert_performance(storage):
                     {"key": "service.name", "value": {"stringValue": "batch-service"}},
                 ]
             },
-            "scopeSpans": [
+            "scope_spans": [
                 {
                     "scope": {"name": "test-scope"},
                     "spans": spans,

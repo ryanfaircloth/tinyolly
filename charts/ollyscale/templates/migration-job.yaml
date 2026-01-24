@@ -6,11 +6,6 @@ metadata:
   labels:
     {{- include "ollyscale.labels" . | nindent 4 }}
     app.kubernetes.io/component: migration
-  annotations:
-    # Run before upgrade/install, delete after success
-    helm.sh/hook: pre-upgrade,pre-install
-    helm.sh/hook-weight: "-5"
-    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
 spec:
   ttlSecondsAfterFinished: 300  # Clean up after 5 minutes
   backoffLimit: 3
@@ -25,7 +20,7 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "ollyscale.frontend.serviceAccountName" . }}
+      serviceAccountName: {{ include "ollyscale.fullname" . }}-migration
       containers:
       - name: alembic-migration
         image: "{{ .Values.frontend.image.repository }}:{{ .Values.frontend.image.tag }}"
@@ -37,11 +32,11 @@ spec:
             set -e
             echo "Starting database migration..."
             cd /app
-            alembic upgrade head
+            /app/venv/bin/alembic upgrade head
             echo "Migration completed successfully!"
         env:
         - name: DATABASE_HOST
-          value: "{{ include "ollyscale.fullname" . }}-db-pooler"
+          value: "{{ include "ollyscale.fullname" . }}-db-rw"
         - name: DATABASE_PORT
           value: "5432"
         - name: DATABASE_NAME
@@ -49,12 +44,12 @@ spec:
         - name: DATABASE_USER
           valueFrom:
             secretKeyRef:
-              name: ollyscale.{{ include "ollyscale.fullname" . }}-db.credentials.postgresql.acid.zalan.do
+              name: {{ include "ollyscale.fullname" . }}-db-app
               key: username
         - name: DATABASE_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: ollyscale.{{ include "ollyscale.fullname" . }}-db.credentials.postgresql.acid.zalan.do
+              name: {{ include "ollyscale.fullname" . }}-db-app
               key: password
         {{- if .Values.migration.resources }}
         resources:

@@ -176,15 +176,3 @@ export function filterOllyScaleMetric(metric) {
 
     return true;
 }
-
-/**
- * Filter metric series - exclude series from ollyScale internal services
- */
-export function filterOllyScaleMetricSeries(series) {
-    if (!hideollyScale) return series;
-
-    return series.filter(s => {
-        const serviceName = s.resources && s.resources['service.name'];
-        return !isOllyScaleService(serviceName);
-    });
-}

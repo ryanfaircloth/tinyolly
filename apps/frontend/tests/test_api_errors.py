@@ -89,7 +89,7 @@ def test_ingest_traces_invalid_hex_ids(mock_storage):
             "resource_spans": [
                 {
                     "resource": {"attributes": [{"key": "service.name", "value": {"stringValue": "test"}}]},
-                    "scopeSpans": [{"scope": {"name": "test"}, "spans": [invalid_span]}],
+                    "scope_spans": [{"scope": {"name": "test"}, "spans": [invalid_span]}],
                 }
             ]
         },
@@ -119,7 +119,7 @@ def test_ingest_logs_missing_body(mock_storage):
             "resource_logs": [
                 {
                     "resource": {"attributes": [{"key": "service.name", "value": {"stringValue": "test"}}]},
-                    "scopeLogs": [{"scope": {"name": "test"}, "logRecords": [invalid_log]}],
+                    "scope_logs": [{"scope": {"name": "test"}, "logRecords": [invalid_log]}],
                 }
             ]
         },

@@ -34,10 +34,12 @@ COPY --from=builder /app/venv /app/venv
 # Add virtual environment to PATH
 ENV PATH="/app/venv/bin:$PATH"
 
-# Copy application code and migrations
+# Copy application code, receiver, and migrations
 COPY --chown=1000:1000 app/ app/
+COPY --chown=1000:1000 receiver/ receiver/
 COPY --chown=1000:1000 alembic/ alembic/
 COPY --chown=1000:1000 alembic.ini .
+COPY --chown=1000:1000 main.py .
 
 # Create non-root user
 RUN useradd -u 1000 -m ollyscale && \
@@ -56,5 +58,5 @@ ENV PYTHONUNBUFFERED=1
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health').read()"
 
-# Default command: run uvicorn
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Default command: run main.py (supports MODE env var: frontend or receiver)
+CMD ["python", "main.py"]

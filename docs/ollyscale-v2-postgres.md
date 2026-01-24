@@ -183,7 +183,7 @@ CREATE TABLE service_dim (
     id SERIAL PRIMARY KEY,
     tenant_id VARCHAR(255) NOT NULL DEFAULT 'default',
     name VARCHAR(255) NOT NULL,
-    namespace VARCHAR(255),
+    namespace VARCHAR(255) NOT NULL DEFAULT '',
     version VARCHAR(255),
     attributes JSONB,
     first_seen TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
@@ -191,6 +191,8 @@ CREATE TABLE service_dim (
     UNIQUE(tenant_id, name, namespace)
 );
 ```
+
+**Note on namespace**: Per OTEL spec, `service.namespace` is optional. We store empty string `''` when not provided (rather than NULL) so the UNIQUE constraint works correctly. OTEL spec states: "If service.namespace is not specified then service.name is expected to be unique for all services that have no explicit namespace defined (so the empty/unspecified namespace is simply one more valid namespace)."
 
 #### operation_dim
 
