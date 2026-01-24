@@ -228,6 +228,10 @@ class PostgresStorage:
                         start_time = int(span.get("startTimeUnixNano", 0))
                         end_time = int(span.get("endTimeUnixNano", 0))
 
+                        # Skip spans with zero or missing start time (can't partition)
+                        if start_time == 0:
+                            continue
+
                         # Upsert operation
                         operation_id = await self._upsert_operation(session, service_id, name, kind)
 
@@ -312,6 +316,10 @@ class PostgresStorage:
                         observed_time_unix_nano = log_record.get("observedTimeUnixNano")
                         if observed_time_unix_nano:
                             observed_time_unix_nano = int(observed_time_unix_nano)
+
+                        # Skip logs with zero or missing timestamps (can't partition)
+                        if time_unix_nano == 0:
+                            continue
 
                         # Severity
                         severity_number = log_record.get("severityNumber")
