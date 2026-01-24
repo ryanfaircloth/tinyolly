@@ -55,11 +55,13 @@ POST /api/service-map              → Service map (requires POST body)
 Create GET endpoint wrappers in v2 that translate query parameters to POST requests internally.
 
 **Pros:**
+
 - No UI changes required
 - Gradual migration path
 - Both APIs coexist
 
 **Cons:**
+
 - Code duplication
 - Maintenance overhead
 
@@ -68,10 +70,12 @@ Create GET endpoint wrappers in v2 that translate query parameters to POST reque
 Rewrite UI to use POST-based search endpoints.
 
 **Pros:**
+
 - Cleaner API design
 - Better for complex filters
 
 **Cons:**
+
 - Breaks existing UI patterns
 - More refactoring required
 - Harder to debug
@@ -111,6 +115,7 @@ async def get_stats(storage: Storage = Depends(get_storage)):
 ```
 
 **Dependencies:**
+
 - Implement `count_*` methods in Storage class
 - Add database queries for counts
 
@@ -142,12 +147,13 @@ async def get_spans(
         filters=[Filter(field="service.name", operator="eq", value=service)] if service else [],
         pagination=PaginationRequest(limit=limit)
     )
-    
+
     result = await storage.search_spans(search_req)
     return result.spans
 ```
 
 **Dependencies:**
+
 - Implement `search_spans()` method in Storage
 - Add Span model and SpanSearchRequest schema
 - Database query for spans table
@@ -173,12 +179,12 @@ async def get_traces_simple(
 ):
     """Get recent traces - simple GET interface for UI compatibility."""
     now_ns = time.time_ns()
-    
+
     # Build filters
     filters = []
     if service:
         filters.append(Filter(field="service.name", operator="eq", value=service))
-    
+
     # Convert to search request
     search_req = TraceSearchRequest(
         time_range=TimeRange(
@@ -188,7 +194,7 @@ async def get_traces_simple(
         filters=filters if filters else None,
         pagination=PaginationRequest(limit=limit)
     )
-    
+
     # Use existing search logic
     result = await search_traces(search_req, storage)
     return result.traces
@@ -213,12 +219,12 @@ async def get_logs_simple(
 ):
     """Get recent logs - simple GET interface for UI compatibility."""
     now_ns = time.time_ns()
-    
+
     # Build filters
     filters = []
     if trace_id:
         filters.append(Filter(field="trace_id", operator="eq", value=trace_id))
-    
+
     # Convert to search request
     search_req = LogSearchRequest(
         time_range=TimeRange(
@@ -228,7 +234,7 @@ async def get_logs_simple(
         filters=filters if filters else None,
         pagination=PaginationRequest(limit=limit)
     )
-    
+
     # Use existing search logic
     result = await search_logs(search_req, storage)
     return result.logs
@@ -253,7 +259,7 @@ async def get_metrics_simple(
 ):
     """Get recent metrics - simple GET interface for UI compatibility."""
     now_ns = time.time_ns()
-    
+
     # Convert to search request
     search_req = MetricSearchRequest(
         time_range=TimeRange(
@@ -263,7 +269,7 @@ async def get_metrics_simple(
         metric_names=[metric_name] if metric_name else None,
         pagination=PaginationRequest(limit=limit)
     )
-    
+
     # Use existing search logic
     result = await search_metrics(search_req, storage)
     return result.metrics
@@ -287,13 +293,13 @@ async def get_service_map_simple(
 ):
     """Get service dependency map - simple GET interface for UI compatibility."""
     now_ns = time.time_ns()
-    
+
     # Convert to TimeRange request
     time_range = TimeRange(
         start_time=now_ns - (30 * 60 * 10**9),  # Last 30 minutes
         end_time=now_ns
     )
-    
+
     # Use existing POST logic
     return await get_service_map(time_range, storage)
 ```
@@ -363,6 +369,7 @@ async def test_get_logs_with_trace_filter(client: AsyncClient):
 
 1. **Deploy v2 frontend**
 2. **Test each endpoint** with curl:
+
    ```bash
    curl http://ollyscale.test/api/stats
    curl http://ollyscale.test/api/traces?limit=10
@@ -461,11 +468,13 @@ async def get_newest_timestamp(self) -> int:
 ### Sprint 1: Critical GET Endpoints (3-5 days)
 
 **Files to modify:**
+
 - `apps/frontend/app/routers/query.py` - Add GET wrapper endpoints
 - `apps/frontend/app/services/storage.py` - Add count/stats methods
 - `apps/frontend/app/models.py` - Add any missing models (Span, SpanSearchRequest, etc.)
 
 **Deliverables:**
+
 1. ✅ GET /api/stats
 2. ✅ GET /api/spans?limit=X&service=Y
 3. ✅ GET /api/traces?limit=X
@@ -474,6 +483,7 @@ async def get_newest_timestamp(self) -> int:
 6. ✅ GET /api/service-map?limit=X
 
 **Testing:**
+
 - Unit tests for each endpoint
 - Manual curl tests
 - OpenAPI docs verify endpoints exist
@@ -483,12 +493,15 @@ async def get_newest_timestamp(self) -> int:
 ### Sprint 2: UI Updates (1-2 days)
 
 **Files to modify:**
+
 - `apps/ollyscale-ui/src/modules/api.js` - Update service-catalog call
 
 **Deliverables:**
+
 1. ✅ Change `/api/service-catalog` → `/api/services`
 
 **Testing:**
+
 - Browser DevTools shows no 404s
 - All tabs load data correctly
 - Service Map renders
@@ -499,16 +512,19 @@ async def get_newest_timestamp(self) -> int:
 ### Sprint 3: Database Schema & Queries (2-3 days)
 
 **Files to modify:**
+
 - `apps/frontend/app/services/storage.py` - Add missing query methods
 - `apps/frontend/alembic/versions/` - Add migration for spans table (if needed)
 
 **Deliverables:**
+
 1. ✅ Implement `count_*` methods
 2. ✅ Implement `search_spans()` method
 3. ✅ Add database indexes for performance
 4. ✅ Ensure spans table exists with correct schema
 
 **Testing:**
+
 - Database migrations run successfully
 - Queries return data
 - Performance benchmarks (queries < 100ms)
@@ -518,6 +534,7 @@ async def get_newest_timestamp(self) -> int:
 ### Sprint 4: Integration Testing (1-2 days)
 
 **Deliverables:**
+
 1. ✅ End-to-end tests with demo apps
 2. ✅ Load testing (simulate 1000+ spans/traces/logs)
 3. ✅ UI verification in all tabs
@@ -564,6 +581,7 @@ If v2 frontend has issues:
 4. **Re-deploy when ready**
 
 Command:
+
 ```bash
 kubectl patch httproute ollyscale -n ollyscale --type=merge -p '
 spec:
@@ -606,4 +624,3 @@ spec:
 - **Keep POST endpoints** - they're better for advanced features
 - **GET wrappers** are a bridge, not permanent architecture
 - **Future**: Migrate UI to use POST endpoints properly (optional)
-

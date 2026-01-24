@@ -78,11 +78,11 @@ async function postJSON(url, body) {
         },
         body: JSON.stringify(body)
     });
-    
+
     if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
-    
+
     return await response.json();
 }
 ```
@@ -92,6 +92,7 @@ async function postJSON(url, body) {
 ### Step 2: Update Trace Loading
 
 **Before:**
+
 ```javascript
 export async function loadTraces() {
     try {
@@ -107,16 +108,17 @@ export async function loadTraces() {
 ```
 
 **After:**
+
 ```javascript
 export async function loadTraces() {
     try {
         const requestBody = buildSearchRequest([], 50);
         const result = await postJSON('/api/traces/search', requestBody);
-        
+
         // V2 returns {traces: [...], pagination: {...}}
         let traces = result.traces || [];
         traces = traces.filter(filterOllyScaleTrace);
-        
+
         renderTraces(traces);
     } catch (error) {
         console.error('Error loading traces:', error);
@@ -130,6 +132,7 @@ export async function loadTraces() {
 ### Step 3: Update Span Loading
 
 **Before:**
+
 ```javascript
 export async function loadSpans(serviceName = null) {
     const container = document.getElementById('spans-container');
@@ -152,6 +155,7 @@ export async function loadSpans(serviceName = null) {
 ```
 
 **After:**
+
 ```javascript
 export async function loadSpans(serviceName = null) {
     const container = document.getElementById('spans-container');
@@ -167,11 +171,11 @@ export async function loadSpans(serviceName = null) {
                 value: serviceName
             });
         }
-        
+
         // Search traces and extract spans
         const requestBody = buildSearchRequest(filters, 100); // Get more traces to extract spans
         const result = await postJSON('/api/traces/search', requestBody);
-        
+
         // Extract spans from traces
         const allSpans = [];
         for (const trace of (result.traces || [])) {
@@ -179,7 +183,7 @@ export async function loadSpans(serviceName = null) {
                 allSpans.push(...trace.spans);
             }
         }
-        
+
         // Filter and limit
         const spans = allSpans.filter(filterOllyScaleData).slice(0, 50);
         renderSpans(spans);
@@ -195,6 +199,7 @@ export async function loadSpans(serviceName = null) {
 ### Step 4: Update Log Loading
 
 **Before:**
+
 ```javascript
 export async function loadLogs(filterTraceId = null) {
     try {
@@ -219,6 +224,7 @@ export async function loadLogs(filterTraceId = null) {
 ```
 
 **After:**
+
 ```javascript
 export async function loadLogs(filterTraceId = null) {
     try {
@@ -230,7 +236,7 @@ export async function loadLogs(filterTraceId = null) {
                 traceId = input.value.trim();
             }
         }
-        
+
         // Build filters
         const filters = [];
         if (traceId) {
@@ -240,14 +246,14 @@ export async function loadLogs(filterTraceId = null) {
                 value: traceId
             });
         }
-        
+
         const requestBody = buildSearchRequest(filters, 100);
         const result = await postJSON('/api/logs/search', requestBody);
-        
+
         // V2 returns {logs: [...], pagination: {...}}
         let logs = result.logs || [];
         logs = logs.filter(filterOllyScaleData);
-        
+
         renderLogs(logs, 'logs-container');
     } catch (error) {
         console.error('Error loading logs:', error);
@@ -261,6 +267,7 @@ export async function loadLogs(filterTraceId = null) {
 ### Step 5: Update Metrics Loading
 
 **Before:**
+
 ```javascript
 export async function loadMetrics() {
     const metricsTab = document.getElementById('metrics-content');
@@ -280,6 +287,7 @@ export async function loadMetrics() {
 ```
 
 **After:**
+
 ```javascript
 export async function loadMetrics() {
     const metricsTab = document.getElementById('metrics-content');
@@ -290,11 +298,11 @@ export async function loadMetrics() {
     try {
         const requestBody = buildSearchRequest([], 100);
         const result = await postJSON('/api/metrics/search', requestBody);
-        
+
         // V2 returns {metrics: [...], pagination: {...}}
         let metrics = result.metrics || [];
         metrics = metrics.filter(filterollyScaleMetric);
-        
+
         renderMetrics(metrics);
     } catch (error) {
         console.error('Error loading metrics:', error);
@@ -307,6 +315,7 @@ export async function loadMetrics() {
 ### Step 6: Update Service Map Loading
 
 **Before:**
+
 ```javascript
 export async function loadServiceMap() {
     const loadingEl = document.getElementById('map-loading');
@@ -315,7 +324,7 @@ export async function loadServiceMap() {
     try {
         const response = await fetch('/api/service-map?limit=500');
         let graph = await response.json();
-        
+
         // Filter logic...
         renderServiceMap(graph);
     } catch (error) {
@@ -326,6 +335,7 @@ export async function loadServiceMap() {
 ```
 
 **After:**
+
 ```javascript
 export async function loadServiceMap() {
     const loadingEl = document.getElementById('map-loading');
@@ -334,34 +344,34 @@ export async function loadServiceMap() {
     try {
         const timeRange = buildTimeRange(30); // Last 30 minutes
         const result = await postJSON('/api/service-map', timeRange);
-        
+
         // V2 returns {nodes: [...], edges: [...], time_range: {...}}
         let graph = {
             nodes: result.nodes || [],
             edges: result.edges || []
         };
-        
+
         // Filter ollyScale services if needed
         if (shouldHideOllyScale()) {
             const ollyscaleServices = ['ollyscale-ui', 'ollyscale-otlp-receiver', 'ollyscale-opamp-server'];
-            
-            graph.edges = graph.edges.filter(edge => 
-                !ollyscaleServices.includes(edge.source) && 
+
+            graph.edges = graph.edges.filter(edge =>
+                !ollyscaleServices.includes(edge.source) &&
                 !ollyscaleServices.includes(edge.target)
             );
-            
+
             const connectedNodes = new Set();
             graph.edges.forEach(edge => {
                 connectedNodes.add(edge.source);
                 connectedNodes.add(edge.target);
             });
-            
-            graph.nodes = graph.nodes.filter(node => 
-                !ollyscaleServices.includes(node.id) && 
+
+            graph.nodes = graph.nodes.filter(node =>
+                !ollyscaleServices.includes(node.id) &&
                 connectedNodes.has(node.id)
             );
         }
-        
+
         renderServiceMap(graph);
     } catch (error) {
         console.error('Error loading service map:', error);
@@ -375,6 +385,7 @@ export async function loadServiceMap() {
 ### Step 7: Update Service Catalog Loading
 
 **Before:**
+
 ```javascript
 export async function loadServiceCatalog() {
     try {
@@ -390,17 +401,18 @@ export async function loadServiceCatalog() {
 ```
 
 **After:**
+
 ```javascript
 export async function loadServiceCatalog() {
     try {
         // V2 uses /api/services (GET endpoint that already exists)
         const response = await fetch('/api/services');
         const result = await response.json();
-        
+
         // V2 returns {services: [...], total_count: N}
         let services = result.services || [];
         services = services.filter(filterOllyScaleData);
-        
+
         renderServiceCatalog(services);
     } catch (error) {
         console.error('Error loading service catalog:', error);
@@ -423,7 +435,7 @@ export async function loadStats() {
         // Get services to count
         const servicesResp = await fetch('/api/services');
         const servicesData = await servicesResp.json();
-        
+
         // Build stats from available data
         const stats = {
             service_count: servicesData.total_count || 0,
@@ -433,7 +445,7 @@ export async function loadStats() {
             log_count: 'N/A',
             metric_count: 'N/A'
         };
-        
+
         renderStats(stats);
     } catch (error) {
         console.error('Error loading stats:', error);
@@ -479,11 +491,13 @@ export async function loadStats() {
 If issues occur:
 
 1. **Revert JavaScript changes:**
+
    ```bash
    git checkout apps/ollyscale-ui/src/modules/api.js
    ```
 
 2. **Rebuild UI:**
+
    ```bash
    make deploy
    ```

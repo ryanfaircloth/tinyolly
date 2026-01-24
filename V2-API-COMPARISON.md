@@ -23,11 +23,13 @@
 ### 1. System Statistics
 
 #### V1 (Redis)
+
 ```http
 GET /api/stats
 ```
 
 **Response:**
+
 ```json
 {
   "trace_count": 1523,
@@ -41,11 +43,13 @@ GET /api/stats
 ```
 
 #### V2 (PostgreSQL)
+
 ```http
 ❌ MISSING - Needs implementation
 ```
 
 **Proposed Response:**
+
 ```json
 {
   "trace_count": 1523,
@@ -63,11 +67,13 @@ GET /api/stats
 ### 2. Traces
 
 #### V1 (Redis)
+
 ```http
 GET /api/traces?limit=50
 ```
 
 **Response:**
+
 ```json
 [
   {
@@ -83,6 +89,7 @@ GET /api/traces?limit=50
 ```
 
 #### V2 (PostgreSQL)
+
 ```http
 POST /api/traces/search
 
@@ -99,6 +106,7 @@ Body:
 ```
 
 **Response:**
+
 ```json
 {
   "traces": [
@@ -130,11 +138,13 @@ Body:
 ### 3. Single Trace Detail
 
 #### V1 (Redis)
+
 ```http
 GET /api/traces/{trace_id}
 ```
 
 **Response:**
+
 ```json
 {
   "trace_id": "abc123...",
@@ -156,11 +166,13 @@ GET /api/traces/{trace_id}
 ```
 
 #### V2 (PostgreSQL)
+
 ```http
 GET /api/traces/{trace_id}
 ```
 
 **Response:**
+
 ```json
 {
   "trace_id": "abc123...",
@@ -179,11 +191,13 @@ GET /api/traces/{trace_id}
 ### 4. Spans
 
 #### V1 (Redis)
+
 ```http
 GET /api/spans?limit=100&service=frontend
 ```
 
 **Response:**
+
 ```json
 [
   {
@@ -202,11 +216,13 @@ GET /api/spans?limit=100&service=frontend
 ```
 
 #### V2 (PostgreSQL)
+
 ```http
 ❌ MISSING - No spans endpoint exists
 ```
 
 **Proposed:**
+
 ```http
 POST /api/spans/search
 
@@ -227,11 +243,13 @@ Body:
 ### 5. Logs
 
 #### V1 (Redis)
+
 ```http
 GET /api/logs?limit=100&trace_id=abc123
 ```
 
 **Response:**
+
 ```json
 [
   {
@@ -248,6 +266,7 @@ GET /api/logs?limit=100&trace_id=abc123
 ```
 
 #### V2 (PostgreSQL)
+
 ```http
 POST /api/logs/search
 
@@ -262,6 +281,7 @@ Body:
 ```
 
 **Response:**
+
 ```json
 {
   "logs": [
@@ -292,11 +312,13 @@ Body:
 ### 6. Metrics
 
 #### V1 (Redis)
+
 ```http
 GET /api/metrics
 ```
 
 **Response:**
+
 ```json
 [
   {
@@ -318,6 +340,7 @@ GET /api/metrics
 ```
 
 #### V2 (PostgreSQL)
+
 ```http
 POST /api/metrics/search
 
@@ -329,6 +352,7 @@ Body:
 ```
 
 **Response:**
+
 ```json
 {
   "metrics": [
@@ -355,11 +379,13 @@ Body:
 ### 7. Service Map
 
 #### V1 (Redis)
+
 ```http
 GET /api/service-map?limit=500
 ```
 
 **Response:**
+
 ```json
 {
   "nodes": [
@@ -383,6 +409,7 @@ GET /api/service-map?limit=500
 ```
 
 #### V2 (PostgreSQL)
+
 ```http
 POST /api/service-map
 
@@ -394,6 +421,7 @@ Body:
 ```
 
 **Response:**
+
 ```json
 {
   "nodes": [
@@ -427,11 +455,13 @@ Body:
 ### 8. Service Catalog
 
 #### V1 (Redis)
+
 ```http
 GET /api/service-catalog
 ```
 
 **Response:**
+
 ```json
 [
   {
@@ -447,11 +477,13 @@ GET /api/service-catalog
 ```
 
 #### V2 (PostgreSQL)
+
 ```http
 GET /api/services?start_time=X&end_time=Y
 ```
 
 **Response:**
+
 ```json
 {
   "services": [
@@ -521,10 +553,10 @@ async def get_traces_simple(
         ),
         pagination=PaginationRequest(limit=limit)
     )
-    
+
     # Call POST handler internally
     result = await search_traces(search_req, storage)
-    
+
     # Return just the traces array (v1 format)
     return result.traces
 ```
@@ -576,12 +608,14 @@ const response = await fetch('/api/traces/search', {
 ## Conclusion
 
 **Hybrid Approach (Recommended):**
+
 - Keep v2 POST endpoints for advanced queries
 - Add v1-compatible GET wrappers for simple queries
 - UI works immediately with minimal changes
 - Future: Gradually migrate UI to use POST endpoints
 
 **Files to Create/Modify:**
+
 1. `apps/frontend/app/routers/query.py` - Add GET wrappers
 2. `apps/ollyscale-ui/src/modules/api.js` - Update service-catalog call
 3. `apps/frontend/app/services/storage.py` - Add count/stats methods
@@ -589,5 +623,6 @@ const response = await fetch('/api/traces/search', {
 ---
 
 **See Also:**
+
 - [V2-API-MIGRATION-PLAN.md](./V2-API-MIGRATION-PLAN.md) - Detailed implementation plan
 - [V2-MIGRATION-TRACKING.md](./V2-MIGRATION-TRACKING.md) - Progress tracking

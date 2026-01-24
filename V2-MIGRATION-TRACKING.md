@@ -30,28 +30,28 @@ The v2 frontend uses POST-based search endpoints while the UI expects v1-style G
   - [ ] Add endpoint to `apps/frontend/app/routers/query.py`
   - [ ] Implement `count_*()` methods in Storage
   - [ ] Test with curl
-  
+
 - [ ] **GET /api/spans** - Recent spans with optional service filter
   - [ ] Add endpoint to `apps/frontend/app/routers/query.py`
   - [ ] Implement `search_spans()` in Storage
   - [ ] Add Span model if missing
   - [ ] Test with `?service=X` filter
-  
+
 - [ ] **GET /api/traces** - Recent traces wrapper
   - [ ] Add GET endpoint wrapping `POST /api/traces/search`
   - [ ] Convert query params → TimeRange + filters
   - [ ] Test with `?limit=50`
-  
+
 - [ ] **GET /api/logs** - Recent logs wrapper
   - [ ] Add GET endpoint wrapping `POST /api/logs/search`
   - [ ] Support `?trace_id=X` filter
   - [ ] Test with and without trace_id
-  
+
 - [ ] **GET /api/metrics** - Recent metrics wrapper
   - [ ] Add GET endpoint wrapping `POST /api/metrics/search`
   - [ ] Support `?metric_name=X` filter
   - [ ] Test with metric filter
-  
+
 - [ ] **GET /api/service-map** - Service map wrapper
   - [ ] Add GET endpoint wrapping `POST /api/service-map`
   - [ ] Convert `?limit=X` → TimeRange
@@ -94,7 +94,7 @@ The v2 frontend uses POST-based search endpoints while the UI expects v1-style G
 - [ ] **Verify spans table exists** with correct schema
   - [ ] Check if migration needed
   - [ ] Add indexes for performance
-  
+
 - [ ] **Implement Storage methods**
   - [ ] `count_traces()` - Count distinct trace IDs
   - [ ] `count_spans()` - Count total spans
@@ -146,7 +146,7 @@ The v2 frontend uses POST-based search endpoints while the UI expects v1-style G
 1. **Frontend returns 404 for GET /api/stats**
    - **Impact:** UI cannot load stats page
    - **Resolution:** Implement GET /api/stats endpoint (Sprint 1)
-   
+
 2. **Frontend returns 404 for GET /api/spans**
    - **Impact:** Spans tab shows no data
    - **Resolution:** Implement GET /api/spans endpoint (Sprint 1)
@@ -236,19 +236,23 @@ kubectl exec -n ollyscale ollyscale-pg-cluster-1 -- psql -U app -d ollyscale -c 
 ## Success Metrics
 
 ### Phase 1 Success (Sprint 1)
+
 - [ ] All 6 GET endpoints return 200 OK
 - [ ] OpenAPI docs include new endpoints
 - [ ] Zero 404 errors in logs
 
 ### Phase 2 Success (Sprint 2)
+
 - [ ] UI tabs load without errors
 - [ ] Browser DevTools shows no 404s
 
 ### Phase 3 Success (Sprint 3)
+
 - [ ] Database queries < 100ms
 - [ ] All Storage methods implemented
 
 ### Phase 4 Success (Sprint 4)
+
 - [ ] End-to-end tests pass
 - [ ] UI auto-refresh works
 - [ ] Documentation updated

@@ -157,7 +157,7 @@ async def get_RESOURCE_simple(
 ):
     """Simple GET interface for UI compatibility."""
     now_ns = time.time_ns()
-    
+
     # Convert to POST request
     search_req = RESOURCESearchRequest(
         time_range=TimeRange(
@@ -166,10 +166,10 @@ async def get_RESOURCE_simple(
         ),
         pagination=PaginationRequest(limit=limit)
     )
-    
+
     # Call POST handler
     result = await search_RESOURCE(search_req, storage)
-    
+
     # Return array only (v1 format)
     return result.RESOURCE
 ```
@@ -240,6 +240,7 @@ async def count_RESOURCE(self) -> int:
 **Cause:** No data in database
 
 **Fix:** Deploy demo apps to generate telemetry:
+
 ```bash
 cd k8s-demo
 ./02-deploy.sh
@@ -254,6 +255,7 @@ cd k8s-demo
 **Cause:** Backend code error (SQL query, missing method, etc.)
 
 **Fix:** Check logs:
+
 ```bash
 kubectl logs -n ollyscale deployment/ollyscale-frontend -f
 ```
