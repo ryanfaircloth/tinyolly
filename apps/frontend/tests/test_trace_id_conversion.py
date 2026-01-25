@@ -31,14 +31,14 @@ class TestTraceIdConversion:
         """Verify base64 → hex conversion for trace_id (16 bytes → 32 hex)."""
         # 16 bytes: 0x01020304050607080901020304050607
         trace_bytes = bytes(range(1, 17))
-        trace_base64 = base64.b64encode(trace_bytes).decode('ascii')
-        
+        trace_base64 = base64.b64encode(trace_bytes).decode("ascii")
+
         # Should be 24 chars base64 (16 bytes * 8 bits / 6 bits per char)
         assert len(trace_base64) == 24
-        
+
         # Convert to hex
         result = PostgresStorage._base64_to_hex(trace_base64)
-        
+
         # Should be 32 hex chars
         assert len(result) == 32
         assert result == trace_bytes.hex()
@@ -48,14 +48,14 @@ class TestTraceIdConversion:
         """Verify base64 → hex conversion for span_id (8 bytes → 16 hex)."""
         # 8 bytes: 0x0102030405060708
         span_bytes = bytes(range(1, 9))
-        span_base64 = base64.b64encode(span_bytes).decode('ascii')
-        
+        span_base64 = base64.b64encode(span_bytes).decode("ascii")
+
         # Should be 12 chars base64 (8 bytes * 8 bits / 6 bits per char)
         assert len(span_base64) == 12
-        
+
         # Convert to hex
         result = PostgresStorage._base64_to_hex(span_base64)
-        
+
         # Should be 16 hex chars
         assert len(result) == 16
         assert result == span_bytes.hex()
@@ -64,20 +64,20 @@ class TestTraceIdConversion:
     def test_hex_passthrough_trace_id(self):
         """Verify hex trace_id (32 chars) passes through unchanged."""
         hex_trace = "0102030405060708090a0b0c0d0e0f10"
-        
+
         # If already 32 hex chars, should pass through
         result = PostgresStorage._base64_to_hex(hex_trace)
-        
+
         assert result == hex_trace
         assert len(result) == 32
 
     def test_hex_passthrough_span_id(self):
         """Verify hex span_id (16 chars) passes through unchanged."""
         hex_span = "0102030405060708"
-        
+
         # If already 16 hex chars, should pass through
         result = PostgresStorage._base64_to_hex(hex_span)
-        
+
         assert result == hex_span
         assert len(result) == 16
 
@@ -101,31 +101,32 @@ class TestTraceStorageWithRealOTLP:
         # Use real OTLP example from fixtures
         otlp_data = OTLP_EXAMPLES["traces"]["simple_span"]
         expected = otlp_data["expected"]
-        
+
         # Store the OTLP payload directly
         count = await postgres_storage.store_traces(otlp_data["resourceSpans"])
         assert count == 1
-        
+
         # Retrieve by hex trace_id
         trace_hex = expected["trace_id_hex"]
         trace = await postgres_storage.get_trace_by_id(trace_hex)
-        
+
         # Verify trace retrieved successfully
         assert trace is not None, f"Trace not found with ID {trace_hex}"
         assert trace["trace_id"] == trace_hex
         assert len(trace["trace_id"]) == 32
-        
+
         # Verify span IDs
         assert len(trace["spans"]) == 1
         span_result = trace["spans"][0]
-        assert span_result["span_id"] == expected["span_id_hex"], \
+        assert span_result["span_id"] == expected["span_id_hex"], (
             f"Expected span_id {expected['span_id_hex']}, got {span_result['span_id']}"
+        )
         assert len(span_result["span_id"]) == 16
-        
+
         # Verify NOT empty strings
         assert span_result["trace_id"] != "", "trace_id is empty string"
         assert span_result["span_id"] != "", "span_id is empty string"
-        
+
         # Verify span attributes preserved
         assert span_result["name"] == "test-span"
 
@@ -134,35 +135,30 @@ class TestTraceStorageWithRealOTLP:
         """Verify storage converts base64 IDs to hex in database."""
         # Use known-good base64 values from fixtures
         base64_examples = OTLP_EXAMPLES["traces"]["base64_ids"]
-        
+
         span = make_span(
-            trace_id=base64_examples["trace_id_base64"],
-            span_id=base64_examples["span_id_base64"],
-            name="test-span"
+            trace_id=base64_examples["trace_id_base64"], span_id=base64_examples["span_id_base64"], name="test-span"
         )
-        
-        resource_spans = make_resource_spans(
-            service_name="test-service",
-            spans=[span]
-        )
-        
+
+        resource_spans = make_resource_spans(service_name="test-service", spans=[span])
+
         # Store
         count = await postgres_storage.store_traces([resource_spans])
         assert count == 1
-        
+
         # Retrieve and verify conversion
         trace_hex = base64_examples["expected_trace_id_hex"]
         trace = await postgres_storage.get_trace_by_id(trace_hex)
-        
+
         assert trace is not None
         assert trace["trace_id"] == trace_hex
         assert len(trace["trace_id"]) == 32
-        
+
         assert len(trace["spans"]) == 1
         span_result = trace["spans"][0]
         assert span_result["span_id"] == base64_examples["expected_span_id_hex"]
         assert len(span_result["span_id"]) == 16
-        
+
         # Verify NOT empty strings
         assert span_result["trace_id"] != ""
         assert span_result["span_id"] != ""
@@ -172,25 +168,22 @@ class TestTraceStorageWithRealOTLP:
         """Verify storage handles already-hex IDs (from test fixtures)."""
         trace_hex = "0102030405060708090a0b0c0d0e0f10"
         span_hex = "0102030405060708"
-        
+
         span = make_span(
             trace_id=trace_hex,  # Pass hex directly
             span_id=span_hex,
-            name="test-span"
+            name="test-span",
         )
-        
-        resource_spans = make_resource_spans(
-            service_name="test-service",
-            spans=[span]
-        )
-        
+
+        resource_spans = make_resource_spans(service_name="test-service", spans=[span])
+
         # Store
         count = await postgres_storage.store_traces([resource_spans])
         assert count == 1
-        
+
         # Retrieve and verify IDs unchanged
         trace = await postgres_storage.get_trace_by_id(trace_hex)
-        
+
         assert trace is not None
         assert trace["trace_id"] == trace_hex
         assert trace["spans"][0]["span_id"] == span_hex
@@ -201,31 +194,25 @@ class TestTraceStorageWithRealOTLP:
         # Store a trace
         trace_hex = "aabbccddeeff00112233445566778899"
         span_hex = "aabbccddeeff0011"
-        
-        span = make_span(
-            trace_id=trace_hex,
-            span_id=span_hex,
-            name="search-test"
-        )
-        
+
+        span = make_span(trace_id=trace_hex, span_id=span_hex, name="search-test")
+
         resource_spans = make_resource_spans(spans=[span])
         await postgres_storage.store_traces([resource_spans])
-        
+
         # Search
         traces, has_more, cursor = await postgres_storage.search_traces(
-            time_range=time_range,
-            filters=None,
-            pagination=pagination
+            time_range=time_range, filters=None, pagination=pagination
         )
-        
+
         assert len(traces) > 0
-        
+
         # Verify all traces have valid IDs
         for trace in traces:
             assert "trace_id" in trace
             assert trace["trace_id"] != ""
             assert len(trace["trace_id"]) == 32 or trace["trace_id"] is None
-            
+
             for span in trace["spans"]:
                 assert span["span_id"] != ""
                 assert len(span["span_id"]) == 16
@@ -238,7 +225,7 @@ class TestBytesToHexConversion:
 
     def test_bytes_to_hex_conversion(self):
         """Verify bytes → hex conversion."""
-        test_bytes = b'\x01\x02\x03\x04\x05\x06\x07\x08'
+        test_bytes = b"\x01\x02\x03\x04\x05\x06\x07\x08"
         result = PostgresStorage._bytes_to_hex(test_bytes)
         assert result == "0102030405060708"
         assert len(result) == 16
@@ -255,5 +242,5 @@ class TestBytesToHexConversion:
 
     def test_empty_bytes_returns_empty_string(self):
         """Verify empty bytes returns empty string."""
-        result = PostgresStorage._bytes_to_hex(b'')
+        result = PostgresStorage._bytes_to_hex(b"")
         assert result == ""

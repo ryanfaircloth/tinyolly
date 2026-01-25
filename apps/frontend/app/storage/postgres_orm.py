@@ -10,7 +10,7 @@ import logging
 from base64 import b64decode
 from typing import Any
 
-from sqlalchemy import distinct, func, select
+from sqlalchemy import func, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
 
@@ -59,17 +59,17 @@ class PostgresStorage:
     @staticmethod
     def _base64_to_hex(b64_str: str) -> str:
         """Convert base64 trace/span ID to hex.
-        
+
         If input is already hex (all hex digits), return as-is.
         Otherwise, decode from base64 to bytes, then to hex.
         """
         if not b64_str:
             return b64_str
-            
+
         # Check if already hex (all chars are 0-9a-fA-F)
-        if all(c in '0123456789abcdefABCDEF' for c in b64_str):
+        if all(c in "0123456789abcdefABCDEF" for c in b64_str):
             return b64_str.lower()
-            
+
         # Otherwise decode from base64
         try:
             return b64decode(b64_str).hex()
@@ -236,19 +236,19 @@ class PostgresStorage:
                     for span in scope_span.get("spans", []):
                         trace_id_raw = span.get("traceId", "")
                         span_id_raw = span.get("spanId", "")
-                        
+
                         # OTLP spec: trace_id is 16 bytes (32 hex), span_id is 8 bytes (16 hex)
                         # If already hex (32 or 16 chars), use as-is. If base64, convert.
                         if len(trace_id_raw) == 32:
                             trace_id = trace_id_raw
                         else:
                             trace_id = self._base64_to_hex(trace_id_raw) if trace_id_raw else ""
-                            
+
                         if len(span_id_raw) == 16:
                             span_id = span_id_raw
                         else:
                             span_id = self._base64_to_hex(span_id_raw) if span_id_raw else ""
-                        
+
                         parent_span_id_raw = span.get("parentSpanId")
                         if parent_span_id_raw:
                             if len(parent_span_id_raw) == 16:
@@ -473,7 +473,9 @@ class PostgresStorage:
                                 attributes=dp_attributes,
                                 data_points=dp,
                                 temporality=temporality,
-                                is_monotonic=is_monotonic,                                service_id=service_id,                            )
+                                is_monotonic=is_monotonic,
+                                service_id=service_id,
+                            )
                             metrics_to_insert.append(metric_obj)
 
             if metrics_to_insert:

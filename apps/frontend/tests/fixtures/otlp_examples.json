@@ -1,9 +1,6 @@
 {
   "comment": "Real OTLP JSON examples from OpenTelemetry specification",
-  "sources": [
-    "https://opentelemetry.io/docs/specs/otlp/",
-    "https://github.com/open-telemetry/opentelemetry-proto"
-  ],
+  "sources": ["https://opentelemetry.io/docs/specs/otlp/", "https://github.com/open-telemetry/opentelemetry-proto"],
   "traces": {
     "simple_span": {
       "description": "Single span with base64-encoded IDs as per OTLP/JSON spec",

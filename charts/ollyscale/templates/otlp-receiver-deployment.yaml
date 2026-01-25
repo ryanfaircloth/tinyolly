@@ -40,7 +40,8 @@ spec:
         {{- with .Values.otlpReceiver.securityContext }}
         securityContext:
           {{- toYaml . | nindent 10 }}
-        {{- end         image: "{{ .Values.otlpReceiver.image.repository }}:{{ .Values.otlpReceiver.image.tag }}"
+        {{- end }}
+        image: "{{ .Values.otlpReceiver.image.repository }}:{{ .Values.otlpReceiver.image.tag }}"
         imagePullPolicy: {{ include "ollyscale.imagePullPolicy" (dict "component" .Values.otlpReceiver.image "global" .) }}
         ports:
         - name: grpc
