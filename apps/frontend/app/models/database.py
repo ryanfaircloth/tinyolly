@@ -116,7 +116,7 @@ class LogsFact(SQLModel, table=True):
         Index("idx_logs_attributes", "attributes", postgresql_using="gin"),
     )
 
-    id: int | None = Field(default=None, sa_column=Column(BigInteger, primary_key=True))
+    id: int | None = Field(default=None, sa_column=Column(BigInteger))
     tenant_id: str = Field(default="default", max_length=255, nullable=False)
     connection_id: str | None = Field(default=None, max_length=255)
 
@@ -125,7 +125,7 @@ class LogsFact(SQLModel, table=True):
     span_id: str | None = Field(default=None, max_length=16)
 
     # Timing
-    time_unix_nano: int = Field(sa_column=Column(BigInteger, nullable=False, primary_key=True))
+    time_unix_nano: int = Field(sa_column=Column(BigInteger, nullable=False))
     observed_time_unix_nano: int | None = Field(default=None, sa_column=Column(BigInteger))
 
     # Severity
@@ -134,6 +134,9 @@ class LogsFact(SQLModel, table=True):
 
     # Content
     body: dict | None = Field(default=None, sa_column=Column(JSONB))
+
+    # References
+    service_id: int | None = Field(default=None, foreign_key="service_dim.id")
 
     # OTEL structures
     attributes: dict | None = Field(default=None, sa_column=Column(JSONB))
@@ -161,12 +164,12 @@ class MetricsFact(SQLModel, table=True):
         Index("idx_metrics_attributes", "attributes", postgresql_using="gin"),
     )
 
-    id: int | None = Field(default=None, sa_column=Column(BigInteger, primary_key=True))
+    id: int | None = Field(default=None, sa_column=Column(BigInteger))
     tenant_id: str = Field(default="default", max_length=255, nullable=False)
     connection_id: str | None = Field(default=None, max_length=255)
 
     # Timing
-    time_unix_nano: int = Field(sa_column=Column(BigInteger, nullable=False, primary_key=True))
+    time_unix_nano: int = Field(sa_column=Column(BigInteger, nullable=False))
     start_time_unix_nano: int | None = Field(default=None, sa_column=Column(BigInteger))
 
     # Metric identity
@@ -174,6 +177,9 @@ class MetricsFact(SQLModel, table=True):
     metric_type: str = Field(max_length=32, nullable=False)
     unit: str | None = Field(default=None, max_length=64)
     description: str | None = Field(default=None, sa_column=Column(Text))
+
+    # References
+    service_id: int | None = Field(default=None, foreign_key="service_dim.id")
 
     # OTEL structures (stored as JSONB in database)
     resource: dict | None = Field(default=None, sa_column=Column(JSONB))

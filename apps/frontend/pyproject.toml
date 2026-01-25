@@ -9,7 +9,7 @@ license = {text = "AGPL-3.0"}
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "fastapi>=0.115.0",
+    "fastapi>=0.128.0",
     "uvicorn[standard]>=0.32.0",
     "pydantic>=2.10.0",
     "pydantic-settings>=2.6.0",
@@ -19,6 +19,13 @@ dependencies = [
     "alembic>=1.14.0",
     "grpcio>=1.76.0",
     "opentelemetry-proto>=1.39.1",
+    "opentelemetry-api>=1.28.0",
+    "opentelemetry-sdk>=1.28.0",
+    "opentelemetry-instrumentation>=0.49b0",
+    "opentelemetry-instrumentation-logging>=0.49b0",
+    "opentelemetry-instrumentation-fastapi>=0.49b0",
+    "opentelemetry-instrumentation-sqlalchemy>=0.49b0",
+    "opentelemetry-exporter-otlp-proto-grpc>=1.28.0",
     "protobuf>=6.33.4",
 ]
 

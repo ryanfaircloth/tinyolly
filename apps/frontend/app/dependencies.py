@@ -26,7 +26,15 @@ async def get_storage() -> StorageBackend:
             msg = "DATABASE_HOST environment variable must be set. PostgresStorage is required."
             raise RuntimeError(msg)
 
-        _storage = PostgresStorage()
+        # Build connection string from environment variables
+        db_host = os.getenv("DATABASE_HOST", "localhost")
+        db_port = os.getenv("DATABASE_PORT", "5432")
+        db_name = os.getenv("DATABASE_NAME", "ollyscale")
+        db_user = os.getenv("DATABASE_USER", "postgres")
+        db_password = os.getenv("DATABASE_PASSWORD", "postgres")
+        connection_string = f"postgresql+asyncpg://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
+
+        _storage = PostgresStorage(connection_string)
 
         # Connect to storage
         await _storage.connect()

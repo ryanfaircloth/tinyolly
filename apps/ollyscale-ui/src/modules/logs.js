@@ -101,9 +101,9 @@ function renderLogList(container, logsToShow, totalLogs) {
     ]);
 
     const logsHtml = logsToShow.map((log, index) => {
-        const timestamp = formatTimestamp(log.timestamp);
+        const timestamp = formatTimestamp(log.time_unix_nano);
 
-        const severity = log.severity || 'INFO';
+        const severity = log.severity_text || log.severity || 'INFO';
         const severityColor = getSeverityColor(severity);
         const traceId = log.traceId || log.trace_id;
         const spanId = log.spanId || log.span_id;
@@ -238,7 +238,7 @@ function showLogJson(index) {
     const title = `
         Log Details
         <span style="font-weight: normal; color: var(--text-muted); font-size: 0.9em; margin-left: 8px; font-family: 'JetBrains Mono', monospace;">
-            ${new Date(log.timestamp * 1000).toLocaleString()}
+            ${new Date(log.time_unix_nano / 1_000_000).toLocaleString()}
         </span>
     `;
 
@@ -263,7 +263,7 @@ function showLogJson(index) {
 
     document.getElementById(`download-log-json-btn-${index}`).onclick = (e) => {
         e.stopPropagation();
-        downloadTelemetryJson(log, 'log', log.timestamp);
+        downloadTelemetryJson(log, 'log', log.time_unix_nano);
     };
 
     document.getElementById(`close-log-json-btn-${index}`).onclick = (e) => {

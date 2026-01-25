@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ include "ollyscale.fullname" . }}-migration-{{ .Release.Revision }}
+  name: {{ include "ollyscale.fullname" . }}-migration-{{ printf "%s:%s" .Values.frontend.image.repository .Values.frontend.image.tag | sha256sum | trunc 8 }}
   namespace: {{ .Values.global.namespace }}
   labels:
     {{- include "ollyscale.labels" . | nindent 4 }}

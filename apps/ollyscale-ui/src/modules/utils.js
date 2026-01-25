@@ -130,9 +130,11 @@ export function loadChartJs() {
     return chartJsPromise;
 }
 
-/** Converts Unix seconds timestamp to HH:mm:ss.SSS format */
-export function formatTimestamp(seconds) {
-    return new Date(seconds * 1000).toLocaleTimeString([], {
+/** Converts Unix nanoseconds timestamp to HH:mm:ss.SSS format */
+export function formatTimestamp(nanoseconds) {
+    // Convert nanoseconds to milliseconds (preserve precision)
+    const milliseconds = nanoseconds / 1_000_000;
+    return new Date(milliseconds).toLocaleTimeString([], {
         hour12: false,
         hour: '2-digit',
         minute: '2-digit',

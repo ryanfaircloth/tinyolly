@@ -226,6 +226,46 @@ def make_gauge_metric(name: str = "test.gauge", datapoints: list[dict] | None = 
     }
 
 
+def make_metric(
+    name: str = "test.metric",
+    unit: str = "1",
+    value: float | int = 100.0,
+    attributes: dict[str, Any] | None = None,
+    timestamp_ns: int | None = None,
+) -> dict:
+    """Create OTLP Metric (gauge type) with flexible parameters.
+
+    Args:
+        name: Metric name
+        unit: Unit of measurement
+        value: Metric value
+        attributes: Metric attributes (labels)
+        timestamp_ns: Timestamp in nanoseconds (defaults to current time)
+
+    Returns:
+        OTLP Metric dict with gauge
+    """
+    if timestamp_ns is None:
+        timestamp_ns = int(time.time() * 1e9)
+
+    attrs = []
+    if attributes:
+        attrs = [make_attribute(k, v) for k, v in attributes.items()]
+
+    datapoint = make_gauge_datapoint(
+        value=value,
+        attributes=attrs,
+        time_unix_nano=timestamp_ns,
+    )
+
+    return {
+        "name": name,
+        "description": f"Test metric {name}",
+        "unit": unit,
+        "gauge": {"dataPoints": [datapoint]},
+    }
+
+
 def make_resource_metrics(service_name: str = "test-service", metrics: list[dict] | None = None) -> dict:
     """Create OTLP ResourceMetrics.
 

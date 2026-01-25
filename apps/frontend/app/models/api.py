@@ -115,10 +115,11 @@ class TraceSearchResponse(BaseModel):
 
 
 class LogRecord(BaseModel):
-    """OTEL log record."""
+    """OTEL log record with full nanosecond precision timestamps."""
 
-    time_unix_nano: int
-    observed_time_unix_nano: int | None = None
+    log_id: str | None = Field(None, description="Unique log ID")
+    time_unix_nano: int = Field(..., description="Timestamp in Unix nanoseconds (preserves precision)")
+    observed_time_unix_nano: int | None = Field(None, description="Observed timestamp in Unix nanoseconds")
     severity_number: int | None = Field(None, ge=0, le=24)
     severity_text: str | None = None
     body: Any = Field(..., description="Log body (string or structured)")
@@ -126,6 +127,7 @@ class LogRecord(BaseModel):
     trace_id: str | None = Field(None, min_length=32, max_length=32)
     span_id: str | None = Field(None, min_length=16, max_length=16)
     flags: int | None = None
+    service_name: str | None = None
     resource: dict[str, Any] | None = None
     scope: dict[str, Any] | None = None
 
@@ -165,11 +167,18 @@ class MetricDataPoint(BaseModel):
 class Metric(BaseModel):
     """OTEL metric."""
 
+    metric_id: str | None = Field(None, description="Unique metric ID")
     name: str
     description: str | None = None
     unit: str | None = None
     metric_type: str = Field(..., description="gauge, sum, histogram, summary, exponential_histogram")
-    data_points: list[MetricDataPoint]
+    aggregation_temporality: int | None = None
+    timestamp_ns: int | None = None
+    value: Any | None = None
+    attributes: dict[str, Any] | None = None
+    exemplars: list[dict[str, Any]] | None = None
+    service_name: str | None = None
+    data_points: list[MetricDataPoint] | None = None
     resource: dict[str, Any] | None = None
     scope: dict[str, Any] | None = None
 

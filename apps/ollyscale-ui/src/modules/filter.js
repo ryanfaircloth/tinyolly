@@ -106,10 +106,8 @@ export function shouldHideOllyScale() {
  */
 function isOllyScaleService(serviceName) {
     if (!serviceName) return false;
-    // Only filter the core OllyScale services, not infrastructure like Redis
-    return serviceName === 'ollyscale-ui' ||
-           serviceName === 'ollyscale-otlp-receiver' ||
-           serviceName === 'ollyscale-opamp-server';
+    // Only filter the UI's own telemetry - keep receiver/frontend/opamp logs visible for observability
+    return serviceName === 'ollyscale-ui';
 }
 
 /**
