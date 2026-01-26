@@ -32,10 +32,11 @@ function buildTimeRange(minutes = 30) {
 function buildSearchRequest(additionalFilters = [], limit = 100, cursor = null) {
     // Get namespace filters (will be OR'd together)
     const namespaceFilters = getNamespaceFilters();
+    console.log('[DEBUG buildSearchRequest] namespaceFilters:', namespaceFilters, 'type:', typeof namespaceFilters);
 
     // Combine filters: namespace group AND additional filters
     let allFilters = [];
-    if (namespaceFilters.length > 0) {
+    if (namespaceFilters && namespaceFilters.length > 0) {
         allFilters.push(...namespaceFilters);
     }
     if (additionalFilters.length > 0) {

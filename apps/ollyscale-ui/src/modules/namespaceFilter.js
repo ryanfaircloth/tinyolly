@@ -208,8 +208,11 @@ function handleClickOutside(e) {
  * Returns array of Filter objects with OR logic
  */
 export function getNamespaceFilters() {
+    console.log('[DEBUG getNamespaceFilters] allNamespaces:', allNamespaces, 'selectedNamespaces:', Array.from(selectedNamespaces));
+
     // If no namespaces fetched yet, default to showing only empty namespace (exclude ollyscale)
     if (allNamespaces.length === 0) {
+        console.log('[DEBUG getNamespaceFilters] No namespaces loaded, returning empty namespace filter');
         return [{
             field: 'service_namespace',
             operator: 'equals',
@@ -218,16 +221,19 @@ export function getNamespaceFilters() {
     }
 
     if (selectedNamespaces.size === 0 || selectedNamespaces.size === allNamespaces.length) {
+        console.log('[DEBUG getNamespaceFilters] All/none selected, returning null');
         return null; // No filter needed - either none selected or all selected
     }
 
     // Build filters for selected namespaces
     // These will be OR'd together as a group
-    return Array.from(selectedNamespaces).map(ns => ({
+    const filters = Array.from(selectedNamespaces).map(ns => ({
         field: 'service_namespace',
         operator: 'equals',
         value: ns
     }));
+    console.log('[DEBUG getNamespaceFilters] Returning filters:', filters);
+    return filters;
 }
 
 /**
