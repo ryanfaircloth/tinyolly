@@ -14,14 +14,14 @@ import { loadOpampStatus, initCollector } from './collector.js';
 // ==================== API Helper Functions ====================
 
 /**
- * Build a TimeRange for the last N minutes (in nanoseconds)
+ * Build a TimeRange for the last N minutes (ISO 8601 format)
  */
 function buildTimeRange(minutes = 30) {
-    const now = Date.now() * 1000000; // Convert milliseconds to nanoseconds
-    const start = now - (minutes * 60 * 1000000000);
+    const now = new Date();
+    const start = new Date(now.getTime() - (minutes * 60 * 1000));
     return {
-        start_time: start,
-        end_time: now
+        start_time: start.toISOString(),
+        end_time: now.toISOString()
     };
 }
 
