@@ -132,7 +132,7 @@ function renderAISessions() {
         const sessionId = traceId.substring(0, 8);
 
         // Parse time
-        const startNano = parseInt(rootSpan.startTimeUnixNano || rootSpan.start_time);
+        const startNano = parseInt(rootSpan.start_time);
         const startTime = formatTime(startNano);
 
         const model = modelSpan ? getAttr(modelSpan.attributes, 'gen_ai.request.model') : 'Unknown';
@@ -159,7 +159,7 @@ function renderAISessions() {
         });
 
         // Latency
-        const endNano = parseInt(rootSpan.endTimeUnixNano || rootSpan.end_time);
+        const endNano = parseInt(rootSpan.end_time);
         const latency = (endNano - startNano) / 1000000000;
 
         return `
@@ -283,8 +283,8 @@ function updateAIMetrics() {
             totalTokens += parseInt(getAttr(span.attributes, 'gen_ai.usage.output_tokens') || 0);
         });
         const root = s.spans.find(sp => !sp.parentSpanId) || s.spans[0];
-        const startNano = parseInt(root.startTimeUnixNano || root.start_time);
-        const endNano = parseInt(root.endTimeUnixNano || root.end_time);
+        const startNano = parseInt(root.start_time);
+        const endNano = parseInt(root.end_time);
         totalLatency += (endNano - startNano) / 1000000000;
     });
 
@@ -334,10 +334,10 @@ export function showAISessionDetail(traceId) {
     container.innerHTML = '';
 
     const spans = session.spans.sort((a, b) => {
-        return parseInt(a.startTimeUnixNano || a.start_time) - parseInt(b.startTimeUnixNano || b.start_time);
+        return parseInt(a.start_time) - parseInt(b.start_time);
     });
     const rootSpan = spans.find(s => !s.parentSpanId) || spans[0];
-    const startTimeOffset = parseInt(rootSpan.startTimeUnixNano || rootSpan.start_time);
+    const startTimeOffset = parseInt(rootSpan.start_time);
 
     document.getElementById('ai-session-title').textContent = `Session: ${traceId.substring(0, 12)}`;
 
@@ -345,8 +345,8 @@ export function showAISessionDetail(traceId) {
         const isAI = getAttr(span.attributes, 'gen_ai.system') || getAttr(span.attributes, 'gen_ai.request.model');
         const isTool = span.name.includes('tool') || getAttr(span.attributes, 'agent.tool.name');
 
-        const spanStart = parseInt(span.startTimeUnixNano || span.start_time);
-        const spanEnd = parseInt(span.endTimeUnixNano || span.end_time);
+        const spanStart = parseInt(span.start_time);
+        const spanEnd = parseInt(span.end_time);
         const relativeStart = (spanStart - startTimeOffset) / 1000000000;
         const duration = (spanEnd - spanStart) / 1000000000;
 

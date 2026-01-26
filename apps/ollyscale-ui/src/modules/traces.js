@@ -279,8 +279,8 @@ async function renderWaterfall(trace) {
     const spans = isLargeTrace ? allSpans.slice(0, MAX_INITIAL_SPANS) : allSpans;
 
     // Find trace bounds (use all spans for accurate timeline)
-    const startTimes = spans.map(s => s.startTimeUnixNano || s.start_time || 0);
-    const endTimes = spans.map(s => s.endTimeUnixNano || s.end_time || 0);
+    const startTimes = spans.map(s => s.start_time || 0);
+    const endTimes = spans.map(s => s.end_time || 0);
     const traceStart = Math.min(...startTimes);
     const traceEnd = Math.max(...endTimes);
     const traceDuration = traceEnd - traceStart;
@@ -364,7 +364,7 @@ async function renderWaterfall(trace) {
                         <div style="padding: 6px; border-bottom: 1px solid var(--border-color); font-size: 11px; display: flex; gap: 12px; align-items: start;">
                             <span style="font-family: monospace; color: var(--text-muted); white-space: nowrap;">${timestamp}</span>
                             <span style="font-weight: 600; color: ${color}; min-width: 50px;">${severity}</span>
-                            <span style="flex: 1; color: var(--text-main);">${log.message || ''}</span>
+                            <span style="flex: 1; color: var(--text-main);">${log.body || ''}</span>
                         </div>
                     `;
     }).join('')}
@@ -377,8 +377,8 @@ async function renderWaterfall(trace) {
         ${logsHtml}
         <div class="waterfall">
             ${spans.map((span, idx) => {
-        const startTime = span.startTimeUnixNano || span.start_time || 0;
-        const endTime = span.endTimeUnixNano || span.end_time || 0;
+        const startTime = span.start_time || 0;
+        const endTime = span.end_time || 0;
         const duration = endTime - startTime;
         const offset = startTime - traceStart;
 
@@ -445,7 +445,7 @@ function showSpanJson(spanIndex) {
     const title = `
         Span: ${span.name}
         <span style="font-weight: normal; color: var(--text-muted); font-size: 0.9em; margin-left: 8px; font-family: 'JetBrains Mono', monospace;">
-            (spanId: ${span.spanId || span.span_id})
+            (spanId: ${span.span_id})
         </span>
     `;
 
@@ -457,8 +457,7 @@ function showSpanJson(spanIndex) {
     };
 
     document.getElementById('download-span-json-btn').onclick = () => {
-        const spanId = span.spanId || span.span_id;
-        downloadTelemetryJson(span, 'span', spanId);
+        downloadTelemetryJson(span, 'span', span.span_id);
     };
 
     document.getElementById('close-span-json-btn').onclick = () => {
@@ -479,7 +478,7 @@ function viewMetricsForTrace(trace) {
     let serviceName = extractServiceName(rootSpan);
 
     // Calculate time range (±5 minutes around trace)
-    const traceStartNano = rootSpan.startTimeUnixNano || rootSpan.start_time || 0;
+    const traceStartNano = rootSpan.start_time || 0;
     const traceStartSec = traceStartNano / 1_000_000_000;
     const fiveMinutes = 5 * 60;
 
