@@ -81,6 +81,26 @@ class StorageBackend(ABC):
         """
         pass
 
+    @abstractmethod
+    async def search_spans(
+        self,
+        time_range: TimeRange,
+        filters: list[Filter] | None = None,
+        pagination: PaginationRequest | None = None,
+    ) -> tuple[list, bool, str | None]:
+        """
+        Search spans with filters and pagination.
+
+        Args:
+            time_range: Time range for query
+            filters: Optional list of filters
+            pagination: Optional pagination parameters
+
+        Returns:
+            Tuple of (spans, has_more, next_cursor)
+        """
+        pass
+
     # ==================== Log Storage ====================
 
     @abstractmethod
@@ -178,5 +198,15 @@ class StorageBackend(ABC):
 
         Returns:
             Tuple of (nodes, edges)
+        """
+        pass
+
+    @abstractmethod
+    async def get_namespaces(self) -> list[str]:
+        """
+        Get list of all namespaces for filtering.
+
+        Returns:
+            List of namespace strings (empty string for NULL namespace)
         """
         pass

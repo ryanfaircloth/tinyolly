@@ -11,6 +11,8 @@ from app.models.api import (
     PaginationResponse,
     ServiceListResponse,
     ServiceMapResponse,
+    SpanSearchRequest,
+    SpanSearchResponse,
     TimeRange,
     TraceSearchRequest,
     TraceSearchResponse,
@@ -66,6 +68,36 @@ async def get_trace(trace_id: str, storage: StorageBackend = Depends(get_storage
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get trace: {e!s}",
+        ) from e
+
+
+@router.post("/spans/search", response_model=SpanSearchResponse)
+async def search_spans(request: SpanSearchRequest, storage: StorageBackend = Depends(get_storage)):
+    """Search spans with filters and pagination."""
+    try:
+        result = await storage.search_spans(
+            time_range=request.time_range, filters=request.filters, pagination=request.pagination
+        )
+
+        # Handle case where storage returns unexpected format
+        if not isinstance(result, tuple) or len(result) != 3:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Storage returned invalid result format",
+            )
+
+        spans, has_more, next_cursor = result
+
+        return SpanSearchResponse(
+            spans=spans,
+            pagination=PaginationResponse(has_more=has_more, next_cursor=next_cursor, total_count=len(spans)),
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to search spans: {e!s}",
         ) from e
 
 
@@ -172,4 +204,17 @@ async def get_service_map(time_range: TimeRange, storage: StorageBackend = Depen
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get service map: {e!s}",
+        ) from e
+
+
+@router.get("/namespaces")
+async def get_namespaces(storage: StorageBackend = Depends(get_storage)):
+    """Get list of all namespaces for filtering."""
+    try:
+        namespaces = await storage.get_namespaces()
+        return {"namespaces": namespaces}
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get namespaces: {e!s}",
         ) from e

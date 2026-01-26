@@ -76,3 +76,8 @@ python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
 addopts = "-v --tb=short"
+
+[dependency-groups]
+dev = [
+    "eralchemy (>=1.6.0,<2.0.0)"
+]

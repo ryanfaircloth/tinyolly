@@ -1,27 +1,27 @@
 # Auto-generated local development values
-# Generated: Sun Jan 25 08:56:51 CST 2026
-# Version: 0.0.1769352942
+# Generated: Sun Jan 25 19:45:22 CST 2026
+# Version: 0.0.1769391860
 # Uses INTERNAL registry for cluster access
 
 frontend:
   image:
     repository: docker-registry.registry.svc.cluster.local:5000/ollyscale/frontend
-    tag: 0.0.1769352942
+    tag: 0.0.1769391860
 
 webui:
   image:
     repository: docker-registry.registry.svc.cluster.local:5000/ollyscale/ollyscale-ui
-    tag: 0.0.1769352942
+    tag: 0.0.1769391860
 
 opampServer:
   image:
     repository: docker-registry.registry.svc.cluster.local:5000/ollyscale/opamp-server
-    tag: 0.0.1769352942
+    tag: 0.0.1769391860
 
 otlpReceiver:
   image:
     repository: docker-registry.registry.svc.cluster.local:5000/ollyscale/frontend
-    tag: 0.0.1769352942
+    tag: 0.0.1769391860
   env:
     - name: MODE
       value: "receiver"

@@ -7,19 +7,67 @@ eliminating manual SQL construction and field mapping errors.
 from datetime import datetime
 
 from sqlalchemy import BigInteger, Column, Index, Integer, SmallInteger, Text
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import JSONB, TIMESTAMP
 from sqlmodel import Field, SQLModel
 
 
-class ServiceDim(SQLModel, table=True):
-    """Service catalog (dimension table)."""
+class TenantDim(SQLModel, table=True):
+    """Tenant catalog (dimension table).
 
-    __tablename__ = "service_dim"
+    Multi-tenancy support. Seeded with id=1, name='unknown'.
+    """
+
+    __tablename__ = "tenant_dim"
 
     id: int | None = Field(default=None, primary_key=True)
-    tenant_id: str = Field(default="default", max_length=255, nullable=False)
+    name: str = Field(max_length=255, nullable=False, unique=True)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class ConnectionDim(SQLModel, table=True):
+    """Connection catalog (dimension table).
+
+    Tracks data sources. Seeded with id=1, tenant_id=1, name='unknown'.
+    """
+
+    __tablename__ = "connection_dim"
+
+    id: int | None = Field(default=None, primary_key=True)
+    tenant_id: int = Field(default=1, foreign_key="tenant_dim.id", nullable=False)
     name: str = Field(max_length=255, nullable=False)
-    namespace: str = Field(default="", max_length=255, nullable=False)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class NamespaceDim(SQLModel, table=True):
+    """Namespace catalog (dimension table).
+
+    Namespaces contain services. A NULL namespace represents services without a namespace.
+    Seeded with id=1, namespace=NULL.
+    """
+
+    __tablename__ = "namespace_dim"
+
+    id: int | None = Field(default=None, primary_key=True)
+    tenant_id: int = Field(default=1, foreign_key="tenant_dim.id", nullable=False)
+    namespace: str | None = Field(default=None, max_length=255, unique=True)
+    first_seen: datetime = Field(default_factory=datetime.utcnow)
+    last_seen: datetime = Field(default_factory=datetime.utcnow)
+
+
+class ServiceDim(SQLModel, table=True):
+    """Service catalog (dimension table).
+
+    Service name is unique within a namespace (UNIQUE(name, namespace_id)).
+    All fact tables reference this via service_id FK.
+    """
+
+    __tablename__ = "service_dim"
+    __table_args__ = (Index("idx_service_name_namespace", "name", "namespace_id", unique=True),)
+
+    id: int | None = Field(default=None, primary_key=True)
+    tenant_id: int = Field(default=1, foreign_key="tenant_dim.id", nullable=False)
+    name: str = Field(max_length=255, nullable=False)
+    namespace_id: int | None = Field(default=None, foreign_key="namespace_dim.id")
     version: str | None = Field(default=None, max_length=255)
     attributes: dict | None = Field(default=None, sa_column=Column(JSONB))
     first_seen: datetime = Field(default_factory=datetime.utcnow)
@@ -32,7 +80,7 @@ class OperationDim(SQLModel, table=True):
     __tablename__ = "operation_dim"
 
     id: int | None = Field(default=None, primary_key=True)
-    tenant_id: str = Field(default="default", max_length=255, nullable=False)
+    tenant_id: int = Field(default=1, foreign_key="tenant_dim.id", nullable=False)
     service_id: int | None = Field(default=None, foreign_key="service_dim.id")
     name: str = Field(max_length=1024, nullable=False)
     span_kind: int | None = Field(default=None, sa_column=Column(SmallInteger))
@@ -46,7 +94,7 @@ class ResourceDim(SQLModel, table=True):
     __tablename__ = "resource_dim"
 
     id: int | None = Field(default=None, primary_key=True)
-    tenant_id: str = Field(default="default", max_length=255, nullable=False)
+    tenant_id: int = Field(default=1, foreign_key="tenant_dim.id", nullable=False)
     resource_hash: str = Field(max_length=64, nullable=False)
     attributes: dict = Field(sa_column=Column(JSONB, nullable=False))
     first_seen: datetime = Field(default_factory=datetime.utcnow)
@@ -60,14 +108,14 @@ class SpansFact(SQLModel, table=True):
     __table_args__ = (
         Index("idx_spans_trace_id", "trace_id"),
         Index("idx_spans_service", "service_id"),
-        Index("idx_spans_time", "start_time_unix_nano"),
+        Index("idx_spans_time", "start_timestamp", "start_nanos_fraction", "id"),
         Index("idx_spans_span_id", "span_id"),
         Index("idx_spans_attributes", "attributes", postgresql_using="gin"),
     )
 
     id: int | None = Field(default=None, sa_column=Column(BigInteger, primary_key=True))
-    tenant_id: str = Field(default="default", max_length=255, nullable=False)
-    connection_id: str | None = Field(default=None, max_length=255)
+    tenant_id: int = Field(default=1, foreign_key="tenant_dim.id", nullable=False)
+    connection_id: int = Field(default=1, foreign_key="connection_dim.id", nullable=False)
     trace_id: str = Field(max_length=32, nullable=False)
     span_id: str = Field(max_length=16, nullable=False)
     parent_span_id: str | None = Field(default=None, max_length=16)
@@ -78,9 +126,11 @@ class SpansFact(SQLModel, table=True):
     status_code: int | None = Field(default=None, sa_column=Column(SmallInteger))
     status_message: str | None = Field(default=None, sa_column=Column(Text))
 
-    # Timing
-    start_time_unix_nano: int = Field(sa_column=Column(BigInteger, nullable=False, primary_key=True))
-    end_time_unix_nano: int = Field(sa_column=Column(BigInteger, nullable=False))
+    # Timing - TIMESTAMP (microsecond precision) + nanos_fraction (0-999) for full nanosecond precision
+    start_timestamp: datetime = Field(sa_column=Column(TIMESTAMP(timezone=True), nullable=False))
+    start_nanos_fraction: int = Field(default=0, sa_column=Column(SmallInteger, nullable=False))
+    end_timestamp: datetime = Field(sa_column=Column(TIMESTAMP(timezone=True), nullable=False))
+    end_nanos_fraction: int = Field(default=0, sa_column=Column(SmallInteger, nullable=False))
     # duration is GENERATED column, not included in model
 
     # References
@@ -111,22 +161,24 @@ class LogsFact(SQLModel, table=True):
     __tablename__ = "logs_fact"
     __table_args__ = (
         Index("idx_logs_trace_id", "trace_id"),
-        Index("idx_logs_time", "time_unix_nano"),
+        Index("idx_logs_time", "timestamp", "nanos_fraction", "id"),
         Index("idx_logs_severity", "severity_number"),
         Index("idx_logs_attributes", "attributes", postgresql_using="gin"),
     )
 
-    id: int | None = Field(default=None, sa_column=Column(BigInteger))
-    tenant_id: str = Field(default="default", max_length=255, nullable=False)
-    connection_id: str | None = Field(default=None, max_length=255)
+    id: int | None = Field(default=None, sa_column=Column(BigInteger, primary_key=True))
+    tenant_id: int = Field(default=1, foreign_key="tenant_dim.id", nullable=False)
+    connection_id: int = Field(default=1, foreign_key="connection_dim.id", nullable=False)
 
     # OTEL correlation
     trace_id: str | None = Field(default=None, max_length=32)
     span_id: str | None = Field(default=None, max_length=16)
 
-    # Timing
-    time_unix_nano: int = Field(sa_column=Column(BigInteger, nullable=False))
-    observed_time_unix_nano: int | None = Field(default=None, sa_column=Column(BigInteger))
+    # Timing - TIMESTAMP (microsecond precision) + nanos_fraction (0-999) for full nanosecond precision
+    timestamp: datetime = Field(sa_column=Column(TIMESTAMP(timezone=True), nullable=False))
+    nanos_fraction: int = Field(default=0, sa_column=Column(SmallInteger, nullable=False))
+    observed_timestamp: datetime | None = Field(default=None, sa_column=Column(TIMESTAMP(timezone=True)))
+    observed_nanos_fraction: int = Field(default=0, sa_column=Column(SmallInteger, nullable=False))
 
     # Severity
     severity_number: int | None = Field(default=None, sa_column=Column(SmallInteger))
@@ -159,18 +211,20 @@ class MetricsFact(SQLModel, table=True):
 
     __tablename__ = "metrics_fact"
     __table_args__ = (
-        Index("idx_metrics_time", "time_unix_nano"),
+        Index("idx_metrics_time", "timestamp", "nanos_fraction", "id"),
         Index("idx_metrics_name", "metric_name"),
         Index("idx_metrics_attributes", "attributes", postgresql_using="gin"),
     )
 
-    id: int | None = Field(default=None, sa_column=Column(BigInteger))
-    tenant_id: str = Field(default="default", max_length=255, nullable=False)
-    connection_id: str | None = Field(default=None, max_length=255)
+    id: int | None = Field(default=None, sa_column=Column(BigInteger, primary_key=True))
+    tenant_id: int = Field(default=1, foreign_key="tenant_dim.id", nullable=False)
+    connection_id: int = Field(default=1, foreign_key="connection_dim.id", nullable=False)
 
-    # Timing
-    time_unix_nano: int = Field(sa_column=Column(BigInteger, nullable=False))
-    start_time_unix_nano: int | None = Field(default=None, sa_column=Column(BigInteger))
+    # Timing - TIMESTAMP (microsecond precision) + nanos_fraction (0-999) for full nanosecond precision
+    timestamp: datetime = Field(sa_column=Column(TIMESTAMP(timezone=True), nullable=False))
+    nanos_fraction: int = Field(default=0, sa_column=Column(SmallInteger, nullable=False))
+    start_timestamp: datetime | None = Field(default=None, sa_column=Column(TIMESTAMP(timezone=True)))
+    start_nanos_fraction: int = Field(default=0, sa_column=Column(SmallInteger, nullable=False))
 
     # Metric identity
     metric_name: str = Field(max_length=1024, nullable=False)

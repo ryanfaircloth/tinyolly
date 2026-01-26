@@ -8,7 +8,7 @@
 import { renderSpans, renderTraces, renderLogs, renderMetrics, renderServiceMap } from './render.js';
 import { renderServiceCatalog } from './serviceCatalog.js';
 import { renderErrorState, renderLoadingState } from './utils.js';
-import { filterOllyScaleData, filterOllyScaleTrace, filterOllyScaleMetric, shouldHideOllyScale } from './filter.js';
+import { getNamespaceFilters } from './namespaceFilter.js';
 import { loadOpampStatus, initCollector } from './collector.js';
 
 // ==================== API Helper Functions ====================
@@ -27,11 +27,24 @@ function buildTimeRange(minutes = 30) {
 
 /**
  * Build a search request with time range, filters, and pagination
+ * Automatically includes namespace filters from the namespace dropdown
  */
-function buildSearchRequest(filters = [], limit = 100, cursor = null) {
+function buildSearchRequest(additionalFilters = [], limit = 100, cursor = null) {
+    // Get namespace filters (will be OR'd together)
+    const namespaceFilters = getNamespaceFilters();
+
+    // Combine filters: namespace group AND additional filters
+    let allFilters = [];
+    if (namespaceFilters.length > 0) {
+        allFilters.push(...namespaceFilters);
+    }
+    if (additionalFilters.length > 0) {
+        allFilters.push(...additionalFilters);
+    }
+
     return {
         time_range: buildTimeRange(),
-        filters: filters.length > 0 ? filters : null,
+        filters: allFilters.length > 0 ? allFilters : null,
         pagination: {
             limit: limit,
             cursor: cursor
@@ -69,8 +82,7 @@ export async function loadTraces() {
         const result = await postJSON('/api/traces/search', requestBody);
 
         // V2 returns {traces: [...], pagination: {...}}
-        let traces = result.traces || [];
-        traces = traces.filter(filterOllyScaleTrace);
+        const traces = result.traces || [];
 
         renderTraces(traces);
     } catch (error) {
@@ -106,16 +118,23 @@ export async function loadSpans(serviceName = null) {
         const requestBody = buildSearchRequest(filters, 100);
         const result = await postJSON('/api/traces/search', requestBody);
 
+        // Check if result is valid before accessing traces
+        if (!result || !result.traces) {
+            console.warn('No traces returned from search');
+            renderSpans([]);
+            return;
+        }
+
         // Extract spans from traces
         const allSpans = [];
-        for (const trace of (result.traces || [])) {
+        for (const trace of result.traces) {
             if (trace.spans && Array.isArray(trace.spans)) {
                 allSpans.push(...trace.spans);
             }
         }
 
-        // Filter and limit
-        const spans = allSpans.filter(filterOllyScaleData).slice(0, 50);
+        // Limit spans
+        const spans = allSpans.slice(0, 50);
         renderSpans(spans);
     } catch (error) {
         console.error('Error loading spans:', error);
@@ -151,8 +170,7 @@ export async function loadLogs(filterTraceId = null) {
         const result = await postJSON('/api/logs/search', requestBody);
 
         // V2 returns {logs: [...], pagination: {...}}
-        let logs = result.logs || [];
-        logs = logs.filter(filterOllyScaleData);
+        const logs = result.logs || [];
 
         renderLogs(logs, 'logs-container');
     } catch (error) {
@@ -175,8 +193,7 @@ export async function loadMetrics() {
         const result = await postJSON('/api/metrics/search', requestBody);
 
         // V2 returns {metrics: [...], pagination: {...}}
-        let metrics = result.metrics || [];
-        metrics = metrics.filter(filterOllyScaleMetric);
+        const metrics = result.metrics || [];
 
         renderMetrics(metrics);
     } catch (error) {
@@ -196,34 +213,10 @@ export async function loadServiceMap() {
         const result = await postJSON('/api/service-map', timeRange);
 
         // V2 returns {nodes: [...], edges: [...], time_range: {...}}
-        let graph = {
+        const graph = {
             nodes: result.nodes || [],
             edges: result.edges || []
         };
-
-        // Filter ollyScale services if toggle is active
-        if (shouldHideOllyScale()) {
-            const ollyscaleServices = ['ollyscale-ui', 'ollyscale-otlp-receiver', 'ollyscale-opamp-server', 'ollyscale-frontend'];
-
-            // Filter edges
-            graph.edges = graph.edges.filter(edge =>
-                !ollyscaleServices.includes(edge.source) &&
-                !ollyscaleServices.includes(edge.target)
-            );
-
-            // Build set of connected nodes
-            const connectedNodes = new Set();
-            graph.edges.forEach(edge => {
-                connectedNodes.add(edge.source);
-                connectedNodes.add(edge.target);
-            });
-
-            // Filter nodes
-            graph.nodes = graph.nodes.filter(node =>
-                !ollyscaleServices.includes(node.id) &&
-                connectedNodes.has(node.id)
-            );
-        }
 
         renderServiceMap(graph);
     } catch (error) {
@@ -249,8 +242,7 @@ export async function loadServiceCatalog() {
         const result = await response.json();
 
         // V2 returns {services: [...], total_count: N}
-        let services = result.services || [];
-        services = services.filter(filterOllyScaleData);
+        const services = result.services || [];
 
         renderServiceCatalog(services);
     } catch (error) {

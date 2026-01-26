@@ -10,8 +10,8 @@ from pydantic import BaseModel, Field
 class TimeRange(BaseModel):
     """Time range for queries."""
 
-    start_time: int = Field(..., description="Start time in Unix nanoseconds")
-    end_time: int = Field(..., description="End time in Unix nanoseconds")
+    start_time: str = Field(..., description="Start time in RFC3339 format (e.g., '2026-01-26T00:00:00Z')")
+    end_time: str = Field(..., description="End time in RFC3339 format (e.g., '2026-01-26T23:59:59Z')")
 
 
 class Filter(BaseModel):
@@ -48,10 +48,10 @@ class SpanAttribute(BaseModel):
 
 
 class SpanEvent(BaseModel):
-    """OTEL span event."""
+    """OTEL span event with RFC3339 timestamp."""
 
     name: str
-    time_unix_nano: int
+    timestamp: str = Field(..., description="RFC3339 timestamp, e.g. '2026-01-25T17:30:45.123456789Z'")
     attributes: list[SpanAttribute] | None = None
 
 
@@ -71,7 +71,7 @@ class SpanStatus(BaseModel):
 
 
 class Span(BaseModel):
-    """OTEL span representation."""
+    """OTEL span representation with RFC3339 timestamps."""
 
     trace_id: str = Field(..., min_length=32, max_length=32)
     span_id: str = Field(..., min_length=16, max_length=16)
@@ -80,8 +80,9 @@ class Span(BaseModel):
     kind: int = Field(
         ..., description="SpanKind: 0=UNSPECIFIED, 1=INTERNAL, 2=SERVER, 3=CLIENT, 4=PRODUCER, 5=CONSUMER"
     )
-    start_time_unix_nano: int
-    end_time_unix_nano: int
+    start_time: str = Field(..., description="RFC3339 timestamp, e.g. '2026-01-25T17:30:45.123456789Z'")
+    end_time: str = Field(..., description="RFC3339 timestamp, e.g. '2026-01-25T17:30:45.123456789Z'")
+    duration_seconds: float = Field(..., description="Duration in seconds with fractional precision")
     attributes: list[SpanAttribute] | None = None
     events: list[SpanEvent] | None = None
     links: list[SpanLink] | None = None
@@ -111,15 +112,30 @@ class TraceSearchResponse(BaseModel):
     pagination: PaginationResponse
 
 
+class SpanSearchRequest(BaseModel):
+    """Request body for span search."""
+
+    time_range: TimeRange
+    filters: list[Filter] | None = None
+    pagination: PaginationRequest = Field(default_factory=PaginationRequest)
+
+
+class SpanSearchResponse(BaseModel):
+    """Response for span search."""
+
+    spans: list[Span] = Field(..., description="Array of spans")
+    pagination: PaginationResponse
+
+
 # ==================== Log Models ====================
 
 
 class LogRecord(BaseModel):
-    """OTEL log record with full nanosecond precision timestamps."""
+    """OTEL log record with RFC3339 timestamps."""
 
     log_id: str | None = Field(None, description="Unique log ID")
-    time_unix_nano: int = Field(..., description="Timestamp in Unix nanoseconds (preserves precision)")
-    observed_time_unix_nano: int | None = Field(None, description="Observed timestamp in Unix nanoseconds")
+    timestamp: str = Field(..., description="RFC3339 timestamp, e.g. '2026-01-25T17:30:45.123456789Z'")
+    observed_timestamp: str | None = Field(None, description="RFC3339 observed timestamp")
     severity_number: int | None = Field(None, ge=0, le=24)
     severity_text: str | None = None
     body: Any = Field(..., description="Log body (string or structured)")
@@ -128,6 +144,7 @@ class LogRecord(BaseModel):
     span_id: str | None = Field(None, min_length=16, max_length=16)
     flags: int | None = None
     service_name: str | None = None
+    service_namespace: str | None = None
     resource: dict[str, Any] | None = None
     scope: dict[str, Any] | None = None
 
@@ -178,6 +195,7 @@ class Metric(BaseModel):
     attributes: dict[str, Any] | None = None
     exemplars: list[dict[str, Any]] | None = None
     service_name: str | None = None
+    service_namespace: str | None = None
     data_points: list[MetricDataPoint] | None = None
     resource: dict[str, Any] | None = None
     scope: dict[str, Any] | None = None
