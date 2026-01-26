@@ -130,10 +130,20 @@ export function loadChartJs() {
     return chartJsPromise;
 }
 
-/** Converts Unix nanoseconds timestamp to HH:mm:ss.SSS format */
-export function formatTimestamp(nanoseconds) {
-    // Convert nanoseconds to milliseconds (preserve precision)
-    const milliseconds = nanoseconds / 1_000_000;
+/** Converts timestamp (ISO 8601 string or Unix nanoseconds) to HH:mm:ss.SSS format */
+export function formatTimestamp(timestamp) {
+    // Handle ISO 8601 string from API (e.g., "2026-01-26T14:02:04.604222720Z")
+    if (typeof timestamp === 'string') {
+        return new Date(timestamp).toLocaleTimeString([], {
+            hour12: false,
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            fractionalSecondDigits: 3
+        });
+    }
+    // Handle nanoseconds (legacy format)
+    const milliseconds = timestamp / 1_000_000;
     return new Date(milliseconds).toLocaleTimeString([], {
         hour12: false,
         hour: '2-digit',
