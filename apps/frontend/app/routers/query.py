@@ -162,6 +162,32 @@ async def search_metrics(request: MetricSearchRequest, storage: StorageBackend =
         ) from e
 
 
+@router.post("/metrics/{metric_name}/detail")
+async def get_metric_detail(
+    metric_name: str,
+    request: MetricSearchRequest,
+    storage: StorageBackend = Depends(get_storage),
+):
+    """Get detailed time-series data for a specific metric."""
+    try:
+        # Get metric detail from storage
+        result = await storage.get_metric_detail(
+            metric_name=metric_name, time_range=request.time_range, filters=request.filters
+        )
+
+        if result is None:
+            raise HTTPException(status_code=404, detail=f"Metric {metric_name} not found")
+
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get metric detail: {e!s}",
+        ) from e
+
+
 @router.get("/services", response_model=ServiceListResponse)
 async def list_services(
     start_time: int | None = None, end_time: int | None = None, storage: StorageBackend = Depends(get_storage)

@@ -189,15 +189,19 @@ class Metric(BaseModel):
     description: str | None = None
     unit: str | None = None
     metric_type: str = Field(..., description="gauge, sum, histogram, summary, exponential_histogram")
-    aggregation_temporality: int | None = None
+    aggregation_temporality: int | str | None = None  # Accept both int (OTLP) and string (database storage)
     timestamp_ns: int | None = None
     value: Any | None = None
     attributes: dict[str, Any] | None = None
     exemplars: list[dict[str, Any]] | None = None
     service_name: str | None = None
     service_namespace: str | None = None
-    data_points: list[MetricDataPoint] | None = None
+    data_points: list[MetricDataPoint] | list[dict] | None = None  # Accept both typed and raw dict
     resource: dict[str, Any] | None = None
+    # Aggregated stats for catalog view
+    resource_count: int | None = None
+    label_count: int | None = None
+    attribute_combinations: int | None = None
     scope: dict[str, Any] | None = None
 
 

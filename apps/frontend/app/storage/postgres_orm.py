@@ -4,6 +4,7 @@ This replaces raw SQL construction with type-safe ORM operations.
 No more field name mismatches or manual SQL string building.
 """
 
+# ruff: noqa: PLC0415
 import hashlib
 import json
 import logging
@@ -15,7 +16,7 @@ from sqlalchemy import func, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
 
-from app.models.database import LogsFact, MetricsFact, OperationDim, ResourceDim, ServiceDim, SpansFact
+from app.models.database import LogsFact, MetricsFact, NamespaceDim, OperationDim, ResourceDim, ServiceDim, SpansFact
 
 
 def _timestamp_to_rfc3339(ts: datetime, nanos_fraction: int = 0) -> str:
@@ -1433,29 +1434,208 @@ class PostgresStorage:
 
             from app.models.api import Metric
 
-            metrics = []
+            # Aggregate metrics by name for catalog view
+            metrics_by_name = {}
             for m, service_name, service_namespace in rows:
-                # Convert timestamp back to nanoseconds for API
-                timestamp_ns = _timestamp_nanos_to_nanoseconds(m.timestamp, m.nanos_fraction)
-                metric = Metric(
-                    metric_id=str(m.id),
-                    name=m.metric_name,
-                    description=m.description,
-                    unit=m.unit,
-                    metric_type=m.metric_type,
-                    aggregation_temporality=m.temporality,
-                    timestamp_ns=timestamp_ns,
-                    data_points=m.data_points if m.data_points else [],
-                    attributes=m.attributes if m.attributes else {},
-                    service_name=service_name,
-                    service_namespace=service_namespace,
-                    resource=m.resource if m.resource else {},
-                    value=0.0,
-                    exemplars=[],
-                )
-                metrics.append(metric)
+                metric_name = m.metric_name
+
+                if metric_name not in metrics_by_name:
+                    # Convert timestamp back to nanoseconds for API
+                    timestamp_ns = _timestamp_nanos_to_nanoseconds(m.timestamp, m.nanos_fraction)
+
+                    # Wrap data_points in list if it's a dict (single data point)
+                    data_points = m.data_points if m.data_points else []
+                    if isinstance(data_points, dict):
+                        data_points = [data_points]
+
+                    metrics_by_name[metric_name] = {
+                        "metric": Metric(
+                            metric_id=str(m.id),
+                            name=m.metric_name,
+                            description=m.description,
+                            unit=m.unit,
+                            metric_type=m.metric_type,
+                            aggregation_temporality=m.temporality,
+                            timestamp_ns=timestamp_ns,
+                            data_points=data_points,
+                            attributes=m.attributes if m.attributes else {},
+                            service_name=service_name,
+                            service_namespace=service_namespace,
+                            resource=m.resource if m.resource else {},
+                            value=0.0,
+                            exemplars=[],
+                        ),
+                        "resources": set(),
+                        "attribute_keys": set(),
+                        "attribute_combos": set(),
+                    }
+
+                # Track unique resources
+                if m.resource:
+                    resource_hash = hashlib.md5(json.dumps(m.resource, sort_keys=True).encode()).hexdigest()
+                    metrics_by_name[metric_name]["resources"].add(resource_hash)
+
+                # Track unique attribute combinations
+                if m.attributes:
+                    attr_hash = hashlib.md5(json.dumps(m.attributes, sort_keys=True).encode()).hexdigest()
+                    metrics_by_name[metric_name]["attribute_combos"].add(attr_hash)
+                    # Track attribute keys
+                    for key in m.attributes:
+                        metrics_by_name[metric_name]["attribute_keys"].add(key)
+
+            # Build final metrics list with aggregated stats
+            metrics = []
+            for _metric_name, data in metrics_by_name.items():
+                metric = data["metric"]
+                # Add aggregation stats as dict fields (Pydantic allows extra fields)
+                metric_dict = metric.model_dump()
+                metric_dict["resource_count"] = len(data["resources"])
+                metric_dict["label_count"] = len(data["attribute_keys"])
+                metric_dict["attribute_combinations"] = len(data["attribute_combos"])
+                metrics.append(Metric(**metric_dict))
 
             return metrics, has_more, None
+
+    async def get_metric_detail(self, metric_name: str, time_range: Any, filters: list | None = None) -> dict | None:
+        """Get detailed time-series data for a specific metric.
+
+        Returns data in format expected by UI:
+        {
+            "name": "metric_name",
+            "type": "gauge|sum|histogram",
+            "unit": "unit",
+            "description": "description",
+            "series": [
+                {
+                    "label": "series_label",
+                    "attributes": {...},
+                    "datapoints": [
+                        {"timestamp": "2026-01-26T...", "value": 123.45},
+                        ...
+                    ]
+                },
+                ...
+            ]
+        }
+        """
+        if not self.engine:
+            return None
+
+        async with AsyncSession(self.engine) as session:
+            # Get the unknown tenant_id
+            tenant_id = await self._get_unknown_tenant_id(session)
+
+            # Parse time range
+            start_ts, _start_nanos = _rfc3339_to_timestamp_nanos(time_range.start_time)
+            end_ts, _end_nanos = _rfc3339_to_timestamp_nanos(time_range.end_time)
+
+            # Build base query
+            stmt = (
+                select(
+                    MetricsFact,
+                    ServiceDim.name.label("service_name"),
+                    NamespaceDim.namespace.label("service_namespace"),
+                )
+                .join(ServiceDim, MetricsFact.service_id == ServiceDim.id)
+                .outerjoin(NamespaceDim, ServiceDim.namespace_id == NamespaceDim.id)
+                .where(
+                    MetricsFact.tenant_id == tenant_id,
+                    MetricsFact.metric_name == metric_name,
+                    MetricsFact.timestamp >= start_ts,
+                    MetricsFact.timestamp <= end_ts,
+                )
+            )
+
+            # Apply namespace filters if provided
+            if filters:
+                namespace_filter_values = []
+                for f in filters:
+                    if f.field == "namespace" and f.operator == "equals":
+                        namespace_filter_values.append(f.value)
+
+                if namespace_filter_values:
+                    namespace_ids = []
+                    for ns_name in namespace_filter_values:
+                        ns_stmt = select(NamespaceDim.id).where(
+                            NamespaceDim.tenant_id == tenant_id, NamespaceDim.namespace == ns_name
+                        )
+                        ns_result = await session.execute(ns_stmt)
+                        ns_row = ns_result.first()
+                        if ns_row:
+                            namespace_ids.append(ns_row[0])
+
+                    if namespace_ids:
+                        stmt = stmt.where(ServiceDim.namespace_id.in_(namespace_ids))
+
+            stmt = stmt.order_by(MetricsFact.timestamp.asc())
+
+            result = await session.execute(stmt)
+            rows = result.all()
+
+            if not rows:
+                return None
+
+            # Get first row for metadata
+            first_metric = rows[0][0]
+
+            # Group data points by attribute combination
+            series_map = {}
+            for m, service_name, _service_namespace in rows:
+                # Create series key from attributes
+                attr_hash = hashlib.md5(json.dumps(m.attributes or {}, sort_keys=True).encode()).hexdigest()
+
+                if attr_hash not in series_map:
+                    # Create label from attributes
+                    if m.attributes:
+                        label_parts = [f"{k}={v}" for k, v in sorted(m.attributes.items())]
+                        label = ", ".join(label_parts)
+                    else:
+                        label = service_name or "default"
+
+                    series_map[attr_hash] = {
+                        "label": label,
+                        "attributes": m.attributes or {},
+                        "datapoints": [],
+                    }
+
+                # Add datapoint
+                timestamp_rfc = _timestamp_to_rfc3339(m.timestamp, m.nanos_fraction)
+
+                # Extract value from data_points (OTLP format)
+                value = 0.0
+                if m.data_points:
+                    dp_to_check = None
+                    if isinstance(m.data_points, dict):
+                        dp_to_check = m.data_points
+                    elif isinstance(m.data_points, list) and len(m.data_points) > 0:
+                        dp_to_check = m.data_points[0]
+
+                    if dp_to_check and isinstance(dp_to_check, dict):
+                        # OTLP data point value fields
+                        if "as_double" in dp_to_check:
+                            value = float(dp_to_check["as_double"])
+                        elif "as_int" in dp_to_check:
+                            value = float(dp_to_check["as_int"])
+                        # Fallback to simple fields
+                        elif "value" in dp_to_check:
+                            value = float(dp_to_check["value"])
+                        elif "sum" in dp_to_check:
+                            value = float(dp_to_check["sum"])
+                        elif "count" in dp_to_check:
+                            value = float(dp_to_check["count"])
+
+                series_map[attr_hash]["datapoints"].append({"timestamp": timestamp_rfc, "value": value})
+
+            # Convert series map to list
+            series = list(series_map.values())
+
+            return {
+                "name": metric_name,
+                "type": first_metric.metric_type or "gauge",
+                "unit": first_metric.unit or "",
+                "description": first_metric.description or "",
+                "series": series,
+            }
 
     async def get_services(self, time_range: Any | None = None) -> list:
         """Get service catalog with RED metrics using ORM."""

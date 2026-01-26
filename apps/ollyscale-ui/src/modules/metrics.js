@@ -35,6 +35,7 @@
  */
 console.log("Metrics Module Loaded - Version 2 (Redesigned Table)");
 import { loadChartJs, renderActionButton, copyToClipboard, downloadJson, renderEmptyState, getColorForIndex, createModal, closeModal, formatCount } from './utils.js';
+import { buildSearchRequest } from './api.js';
 
 // State management
 const MAX_METRICS_IN_MEMORY = 1000; // Prevent unbounded memory growth
@@ -427,7 +428,11 @@ async function renderMetricDetail(metric, container) {
         //     params.append(`attribute.${key}`, value);
         // }
 
-        const response = await fetch(`/api/metrics/${encodeURIComponent(metric.name)}?${params.toString()}`);
+        const response = await fetch(`/api/metrics/${encodeURIComponent(metric.name)}/detail`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(buildSearchRequest())
+        });
         const data = await response.json();
 
         // Build action buttons
@@ -470,7 +475,7 @@ async function renderMetricDetail(metric, container) {
 
         // Adjust container height for gauge charts
         const chartContainer = document.getElementById(`chart-container-${chartId}`);
-        if (metric.type.toLowerCase() === 'gauge' && chartContainer) {
+        if (metric.metric_type && metric.metric_type.toLowerCase() === 'gauge' && chartContainer) {
             chartContainer.style.height = '120px';
         }
 
@@ -567,7 +572,7 @@ function renderMetricChart(metric, data, canvas, chartId) {
         return;
     }
 
-    const type = metric.type.toLowerCase();
+    const type = (data.type || metric.metric_type || 'gauge').toLowerCase();
 
     if (type === 'gauge') {
         renderGaugeChart(metric, data, canvas, chartId);
@@ -779,13 +784,16 @@ function renderSumChart(metric, data, canvas, chartId) {
                     continue;
                 }
 
-                const timeDelta = curr.timestamp - prev.timestamp;
+                // Parse timestamps to milliseconds for arithmetic
+                const prevTime = new Date(prev.timestamp).getTime();
+                const currTime = new Date(curr.timestamp).getTime();
+                const timeDelta = (currTime - prevTime) / 1000; // Convert to seconds
                 const valueDelta = curr.value - prev.value;
 
                 if (timeDelta > 0) {
                     const rate = valueDelta / timeDelta;
                     rates.push({
-                        timestamp: curr.timestamp * 1000,
+                        timestamp: currTime,
                         rate: Math.max(0, rate)
                     });
                 }
@@ -1031,7 +1039,7 @@ function renderSummaryChart(metric, data, canvas, chartId) {
                         datasets.push(dataset);
                     }
 
-                    dataset.data.push({ x: dp.timestamp * 1000, y: qv.value });
+                    dataset.data.push({ x: new Date(dp.timestamp).getTime(), y: qv.value });
                 });
             }
         });
@@ -1066,7 +1074,7 @@ function addExemplarPoints(series, datasets, baseColor) {
     if (!series.exemplars || series.exemplars.length === 0) return;
 
     const exemplarPoints = series.exemplars.map(ex => ({
-        x: ex.timestamp * 1000,
+        x: new Date(ex.timestamp).getTime(),
         y: ex.value,
         traceId: ex.traceId,
         spanId: ex.spanId

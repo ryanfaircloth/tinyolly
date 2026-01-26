@@ -173,6 +173,23 @@ class StorageBackend(ABC):
         """
         pass
 
+    @abstractmethod
+    async def get_metric_detail(
+        self, metric_name: str, time_range: TimeRange, filters: list[Filter] | None = None
+    ) -> dict[str, Any] | None:
+        """
+        Get detailed time-series data for a specific metric.
+
+        Args:
+            metric_name: Name of metric to retrieve
+            time_range: Time range for data
+            filters: Optional filters for namespace, service, etc.
+
+        Returns:
+            Dict with metric metadata and series data, or None if not found
+        """
+        pass
+
     # ==================== Service Catalog ====================
 
     @abstractmethod

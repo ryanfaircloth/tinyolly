@@ -29,7 +29,7 @@ function buildTimeRange(minutes = 30) {
  * Build a search request with time range, filters, and pagination
  * Automatically includes namespace filters from the namespace dropdown
  */
-function buildSearchRequest(additionalFilters = [], limit = 100, cursor = null) {
+export function buildSearchRequest(additionalFilters = [], limit = 100, cursor = null) {
     // Get namespace filters (will be OR'd together)
     const namespaceFilters = getNamespaceFilters();
     console.log('[DEBUG buildSearchRequest] namespaceFilters:', namespaceFilters, 'type:', typeof namespaceFilters);
