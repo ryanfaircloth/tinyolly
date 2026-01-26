@@ -249,6 +249,13 @@ class Service(BaseModel):
     attributes: dict[str, Any] | None = None
 
 
+class ServiceSearchRequest(BaseModel):
+    """Request body for service search."""
+
+    time_range: TimeRange | None = None
+    filters: list[Filter] | None = None
+
+
 class ServiceListResponse(BaseModel):
     """Response for service list."""
 

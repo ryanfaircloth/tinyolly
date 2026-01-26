@@ -11,6 +11,7 @@ from app.models.api import (
     PaginationResponse,
     ServiceListResponse,
     ServiceMapResponse,
+    ServiceSearchRequest,
     SpanSearchRequest,
     SpanSearchResponse,
     TimeRange,
@@ -188,20 +189,17 @@ async def get_metric_detail(
         ) from e
 
 
-@router.get("/services", response_model=ServiceListResponse)
+@router.post("/services", response_model=ServiceListResponse)
 async def list_services(
-    start_time: int | None = None, end_time: int | None = None, storage: StorageBackend = Depends(get_storage)
+    request: ServiceSearchRequest = ServiceSearchRequest(), storage: StorageBackend = Depends(get_storage)
 ):
-    """List services with RED metrics for optional time range."""
+    """List services with RED metrics for optional time range and namespace filters."""
     try:
-        # Build time range if provided
-        time_range = None
-        if start_time and end_time:
-            time_range = TimeRange(start_time=start_time, end_time=end_time)
-
-        services = await storage.get_services(time_range=time_range)
+        services = await storage.get_services(time_range=request.time_range, filters=request.filters)
 
         return ServiceListResponse(services=services, total_count=len(services))
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

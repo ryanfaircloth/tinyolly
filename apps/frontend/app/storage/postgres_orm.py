@@ -1774,7 +1774,7 @@ class PostgresStorage:
                 "series": series,
             }
 
-    async def get_services(self, time_range: Any | None = None) -> list:
+    async def get_services(self, time_range: Any | None = None, filters: list | None = None) -> list:
         """Get service catalog with RED metrics using ORM."""
         if not self.engine:
             return []
@@ -1783,10 +1783,13 @@ class PostgresStorage:
             # Get the unknown tenant_id
             tenant_id = await self._get_unknown_tenant_id(session)
 
+            from app.models.database import NamespaceDim
+
             # ORM query with aggregations
             stmt = (
                 select(
                     ServiceDim.name,
+                    NamespaceDim.namespace,
                     func.count().label("request_count"),
                     func.count().filter(SpansFact.status_code == 2).label("error_count"),
                     # Duration in microseconds: EXTRACT(EPOCH FROM end_timestamp - start_timestamp) * 1000000 + (end_nanos_fraction - start_nanos_fraction) / 1000
@@ -1807,8 +1810,32 @@ class PostgresStorage:
                 )
                 .select_from(SpansFact)
                 .join(ServiceDim, SpansFact.service_id == ServiceDim.id)
+                .outerjoin(NamespaceDim, ServiceDim.namespace_id == NamespaceDim.id)
                 .where(SpansFact.tenant_id == tenant_id)
             )
+
+            # Apply namespace filtering - if namespace filters exist, only show those namespaces
+            if filters:
+                namespace_filters = [f for f in filters if f.field == "service_namespace"]
+                if namespace_filters:
+                    from sqlalchemy import or_
+
+                    namespace_values = []
+                    has_empty_namespace = False
+                    for f in namespace_filters:
+                        if f.value == "":
+                            has_empty_namespace = True
+                        else:
+                            namespace_values.append(f.value)
+
+                    namespace_conditions = []
+                    if namespace_values:
+                        namespace_conditions.append(NamespaceDim.namespace.in_(namespace_values))
+                    if has_empty_namespace:
+                        namespace_conditions.append(ServiceDim.namespace_id.is_(None))
+
+                    if namespace_conditions:
+                        stmt = stmt.where(or_(*namespace_conditions))
 
             if time_range:
                 from datetime import datetime
@@ -1820,7 +1847,7 @@ class PostgresStorage:
                     SpansFact.start_timestamp < end_timestamp,
                 )
 
-            stmt = stmt.group_by(ServiceDim.name).order_by(func.count().desc())
+            stmt = stmt.group_by(ServiceDim.name, NamespaceDim.namespace).order_by(func.count().desc())
 
             result = await session.execute(stmt)
             rows = result.fetchall()
@@ -1833,6 +1860,7 @@ class PostgresStorage:
 
                 service = Service(
                     name=row.name,
+                    namespace=row.namespace,
                     request_count=row.request_count,
                     error_count=row.error_count,
                     error_rate=round(error_rate, 2),
