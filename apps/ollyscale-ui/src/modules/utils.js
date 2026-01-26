@@ -32,9 +32,16 @@
 
 /** Utils Module - Shared formatting and data manipulation functions across all UI modules */
 
-/** Converts nanosecond timestamp to HH:mm:ss.SSS format */
-export function formatTime(ns) {
-    const d = new Date(ns / 1000000);
+/** Converts nanosecond timestamp or RFC3339 string to HH:mm:ss.SSS format */
+export function formatTime(timeValue) {
+    let d;
+    if (typeof timeValue === 'string') {
+        // RFC3339 string (e.g., '2026-01-25T17:30:45.123456789Z')
+        d = new Date(timeValue);
+    } else {
+        // Nanoseconds
+        d = new Date(timeValue / 1000000);
+    }
     return d.toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit', fractionalSecondDigits: 3 });
 }
 
@@ -43,8 +50,12 @@ export function formatTraceId(id) {
     return id.replace(/^0+(?=.)/, '');
 }
 
-/** Formats duration in ms to appropriate unit (µs/ms/s) */
-export function formatDuration(ms) {
+/** Formats duration in ms or seconds to appropriate unit (µs/ms/s) */
+export function formatDuration(value, unit = 'ms') {
+    // Convert to milliseconds if needed
+    let ms = unit === 'seconds' || unit === 's' ? value * 1000 : value;
+
+    if (isNaN(ms) || ms == null) return '-';
     if (ms < 1) return `${(ms * 1000).toFixed(0)}µs`;
     if (ms < 1000) return `${ms.toFixed(0)}ms`;
     return `${(ms / 1000).toFixed(2)}s`;
@@ -166,23 +177,47 @@ export function getStatusCodeColor(status) {
 /** Formats span route/URL with styled protocol/host prefix and pathname */
 export function formatRoute(span) {
     // Handle trace root span object structure which might have different keys
+    // Priority: url > route > name
     const urlStr = span.url || span.root_span_url;
+    const route = span.route || span.root_span_route;
+    const name = span.name || span.root_span_name;
     const serverName = span.server_name || span.host || span.root_span_server_name || span.root_span_host;
     const scheme = span.scheme || span.root_span_scheme;
-    const target = span.target || span.route || span.root_span_target || span.root_span_route;
+    const target = span.target || span.root_span_target;
 
+    // Priority 1: Full URL
     if (urlStr) {
         try {
             const url = new URL(urlStr);
             return `<span style="color: var(--text-muted); font-weight: normal;">${url.protocol}//${url.host}</span>${url.pathname}${url.search}`;
         } catch (e) {
+            // If URL parsing fails, return as-is
             return urlStr;
         }
-    } else if (serverName) {
-        const schemeStr = scheme ? scheme + '://' : '';
-        return `<span style="color: var(--text-muted); font-weight: normal;">${schemeStr}${serverName}</span>${target || ''}`;
     }
-    return span.route || span.name || span.root_span_route || span.root_span_name || '';
+
+    // Priority 2: Route with server name
+    if (route) {
+        if (serverName) {
+            const schemeStr = scheme ? scheme + '://' : '';
+            return `<span style="color: var(--text-muted); font-weight: normal;">${schemeStr}${serverName}</span>${route}`;
+        }
+        return route;
+    }
+
+    // Priority 3: Target/path with server name
+    if (target && serverName) {
+        const schemeStr = scheme ? scheme + '://' : '';
+        return `<span style="color: var(--text-muted); font-weight: normal;">${schemeStr}${serverName}</span>${target}`;
+    }
+
+    // Priority 4: Just target/path
+    if (target) {
+        return target;
+    }
+
+    // Final fallback: span name
+    return name || '';
 }
 
 /** Renders JSON data in styled detail view with title and action buttons */

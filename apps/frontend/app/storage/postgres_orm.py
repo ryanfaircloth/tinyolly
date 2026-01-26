@@ -1033,12 +1033,34 @@ class PostgresStorage:
             limit = pagination.limit if pagination else 100
 
             # ORM query for distinct trace IDs with min start time for ordering
-            # Use GROUP BY to get earliest span per trace for ordering
-            stmt = select(SpansFact.trace_id, func.min(SpansFact.start_timestamp).label("earliest_span")).where(
-                SpansFact.start_timestamp >= start_ts,
-                SpansFact.start_timestamp < end_ts,
-                SpansFact.tenant_id == tenant_id,
+            # Join with ServiceDim and NamespaceDim for namespace filtering
+            from app.models.database import NamespaceDim
+
+            stmt = (
+                select(SpansFact.trace_id, func.min(SpansFact.start_timestamp).label("earliest_span"))
+                .outerjoin(ServiceDim, SpansFact.service_id == ServiceDim.id)
+                .outerjoin(NamespaceDim, ServiceDim.namespace_id == NamespaceDim.id)
+                .where(
+                    SpansFact.start_timestamp >= start_ts,
+                    SpansFact.start_timestamp < end_ts,
+                    SpansFact.tenant_id == tenant_id,
+                )
             )
+
+            # Apply namespace filtering
+            if filters:
+                namespace_filters = [f for f in filters if f.field == "service_namespace"]
+                if namespace_filters:
+                    from sqlalchemy import or_
+
+                    namespace_conditions = []
+                    for f in namespace_filters:
+                        if f.value == "":
+                            namespace_conditions.append(ServiceDim.namespace_id.is_(None))
+                        else:
+                            namespace_conditions.append(NamespaceDim.namespace == f.value)
+                    if namespace_conditions:
+                        stmt = stmt.where(or_(*namespace_conditions))
 
             # Apply trace_id filtering (never NULL for spans)
             stmt, _ = self._apply_traceid_filter(SpansFact, stmt, filters)
@@ -1064,6 +1086,8 @@ class PostgresStorage:
             for trace_id in trace_ids:
                 trace = await self.get_trace_by_id(trace_id)
                 if trace:
+                    # Compute summary fields for trace list view
+                    trace = self._compute_trace_summary(trace)
                     traces.append(trace)
 
             return traces, has_more, None
@@ -1124,6 +1148,106 @@ class PostgresStorage:
                 spans.append(span_dict)
 
             return {"trace_id": trace_id, "spans": spans}
+
+    def _compute_trace_summary(self, trace: dict[str, Any]) -> dict[str, Any]:
+        """Compute summary fields for a trace from its spans."""
+        if not trace or not trace.get("spans"):
+            return trace
+
+        spans = trace["spans"]
+        if not spans:
+            return trace
+
+        # Find root span (no parent_span_id or first span)
+        root_span = next((s for s in spans if not s.get("parent_span_id") or s["parent_span_id"] == "0" * 16), spans[0])
+
+        # Helper to safely extract string value from attribute (handle nested objects)
+        def get_attr_str(attrs: dict, *keys: str) -> str:
+            for key in keys:
+                value = attrs.get(key)
+                if value is not None:
+                    # Handle case where value is a dict with nested structure
+                    if isinstance(value, dict):
+                        # Try common nested keys (OpenTelemetry format with underscores)
+                        if "string_value" in value:
+                            return str(value["string_value"])
+                        if "int_value" in value:
+                            return str(value["int_value"])
+                        if "bool_value" in value:
+                            return str(value["bool_value"])
+                        if "double_value" in value:
+                            return str(value["double_value"])
+                        # Try camelCase variants (legacy/alternative format)
+                        if "stringValue" in value:
+                            return str(value["stringValue"])
+                        if "intValue" in value:
+                            return str(value["intValue"])
+                        if "value" in value:
+                            return str(value["value"])
+                        # If still a dict, skip it
+                        continue
+                    return str(value)
+            return ""
+
+        # Extract root span metadata
+        root_attrs = root_span.get("attributes", {})
+        trace["service_name"] = root_span.get("service_name")
+        trace["root_span_name"] = root_span.get("name")
+        trace["root_span_method"] = get_attr_str(root_attrs, "http.method", "http.request.method")
+
+        # Prioritize http.url first, then http.route, then fall back to name
+        http_url = get_attr_str(root_attrs, "http.url", "url.full")
+        http_route = get_attr_str(root_attrs, "http.route")
+        trace["root_span_url"] = http_url
+        trace["root_span_route"] = http_route
+
+        # Set target based on priority: url > route > target attribute
+        if http_url:
+            # Extract path from full URL
+            try:
+                from urllib.parse import urlparse
+
+                parsed = urlparse(http_url)
+                trace["root_span_target"] = parsed.path or "/"
+            except Exception:
+                trace["root_span_target"] = http_url
+        elif http_route:
+            trace["root_span_target"] = http_route
+        else:
+            trace["root_span_target"] = get_attr_str(root_attrs, "http.target", "url.path")
+
+        trace["root_span_host"] = get_attr_str(root_attrs, "http.host", "net.host.name", "server.address")
+        trace["root_span_scheme"] = get_attr_str(root_attrs, "http.scheme", "url.scheme")
+        trace["root_span_server_name"] = get_attr_str(root_attrs, "server.address", "net.host.name")
+
+        # Extract status code from root span attributes (not from status object)
+        status_code_str = get_attr_str(root_attrs, "http.status_code", "http.response.status_code")
+        if status_code_str:
+            try:
+                trace["root_span_status_code"] = int(status_code_str)
+            except (ValueError, TypeError):
+                trace["root_span_status_code"] = None
+        else:
+            trace["root_span_status_code"] = None
+
+        # Keep status object for error detection
+        root_status = root_span.get("status")
+        if root_status:
+            trace["root_span_status"] = root_status
+
+        # Compute trace-level aggregates
+        trace["start_time"] = min(s["start_time"] for s in spans)
+        trace["end_time"] = max(s["end_time"] for s in spans)
+        trace["span_count"] = len(spans)
+
+        # Calculate total duration from earliest start to latest end
+        from datetime import datetime
+
+        start_dt = datetime.fromisoformat(trace["start_time"].replace("Z", "+00:00"))
+        end_dt = datetime.fromisoformat(trace["end_time"].replace("Z", "+00:00"))
+        trace["duration_seconds"] = (end_dt - start_dt).total_seconds()
+
+        return trace
 
     async def search_spans(
         self,
@@ -1210,7 +1334,7 @@ class PostgresStorage:
             from app.models.api import Span, SpanAttribute
 
             spans = []
-            for span, _service_name, _service_namespace in rows:
+            for span, service_name, service_namespace in rows:
                 # Convert attributes dict to list of {key, value} pairs for API model
                 attributes_dict = span.attributes if span.attributes else {}
                 attributes_list = []
@@ -1240,6 +1364,8 @@ class PostgresStorage:
                     if span.status_code is not None
                     else None,
                     resource=span.resource if span.resource else {},
+                    service_name=service_name,
+                    service_namespace=service_namespace,
                 )
                 spans.append(span_obj)
 

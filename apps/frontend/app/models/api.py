@@ -89,6 +89,8 @@ class Span(BaseModel):
     status: SpanStatus | None = None
     resource: dict[str, Any] | None = None
     scope: dict[str, Any] | None = None
+    service_name: str | None = Field(None, description="Service name from service dimension")
+    service_namespace: str | None = Field(None, description="Service namespace from namespace dimension")
 
 
 class TraceIngestRequest(BaseModel):

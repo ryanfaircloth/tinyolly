@@ -93,7 +93,7 @@ export async function loadTraces() {
 }
 
 /**
- * Load recent spans using POST-based trace search and extract spans
+ * Load recent spans using POST-based spans search endpoint
  */
 export async function loadSpans(serviceName = null) {
     const container = document.getElementById('spans-container');
@@ -109,33 +109,19 @@ export async function loadSpans(serviceName = null) {
         const filters = [];
         if (serviceName) {
             filters.push({
-                field: 'service.name',
-                operator: 'eq',
+                field: 'service_name',
+                operator: 'equals',
                 value: serviceName
             });
         }
 
-        // Search traces (get more to extract enough spans)
-        const requestBody = buildSearchRequest(filters, 100);
-        const result = await postJSON('/api/traces/search', requestBody);
+        // Use dedicated spans search endpoint (respects namespace filters)
+        const requestBody = buildSearchRequest(filters, 50);
+        const result = await postJSON('/api/spans/search', requestBody);
 
-        // Check if result is valid before accessing traces
-        if (!result || !result.traces) {
-            console.warn('No traces returned from search');
-            renderSpans([]);
-            return;
-        }
+        // V2 returns {spans: [...], pagination: {...}}
+        const spans = result.spans || [];
 
-        // Extract spans from traces
-        const allSpans = [];
-        for (const trace of result.traces) {
-            if (trace.spans && Array.isArray(trace.spans)) {
-                allSpans.push(...trace.spans);
-            }
-        }
-
-        // Limit spans
-        const spans = allSpans.slice(0, 50);
         renderSpans(spans);
     } catch (error) {
         console.error('Error loading spans:', error);

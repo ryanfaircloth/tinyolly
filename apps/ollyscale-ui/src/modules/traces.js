@@ -89,7 +89,7 @@ export function renderTraces(traces) {
                 <div class="trace-service text-truncate" style="flex: 0 0 120px;" title="${serviceName}">${serviceName}</div>
                 <div class="trace-id text-mono text-muted" style="flex: 0 0 260px; font-size: 0.9em;">${displayTraceId}</div>
                 <div class="trace-spans text-muted" style="flex: 0 0 60px; text-align: right;">${trace.span_count}</div>
-                <div class="trace-duration text-muted" style="flex: 0 0 80px; text-align: right;">${formatDuration(trace.duration_ms)}</div>
+                <div class="trace-duration text-muted" style="flex: 0 0 80px; text-align: right;">${formatDuration(trace.duration_seconds, 'seconds')}</div>
                 <div class="trace-method text-primary font-bold text-truncate" style="flex: 0 0 70px;">${method}</div>
                 <div class="trace-name font-medium text-truncate" style="flex: 1;">${route}</div>
                 <div class="trace-status font-medium" style="flex: 0 0 60px; text-align: right; color: ${statusColor};">${status || '-'}</div>
@@ -279,12 +279,13 @@ async function renderWaterfall(trace) {
     const spans = isLargeTrace ? allSpans.slice(0, MAX_INITIAL_SPANS) : allSpans;
 
     // Find trace bounds (use all spans for accurate timeline)
-    const startTimes = spans.map(s => s.start_time || 0);
-    const endTimes = spans.map(s => s.end_time || 0);
+    // Convert RFC3339 strings to milliseconds since epoch for calculations
+    const startTimes = spans.map(s => new Date(s.start_time).getTime());
+    const endTimes = spans.map(s => new Date(s.end_time).getTime());
     const traceStart = Math.min(...startTimes);
     const traceEnd = Math.max(...endTimes);
-    const traceDuration = traceEnd - traceStart;
-    const traceDurationMs = traceDuration / 1_000_000;
+    const traceDuration = traceEnd - traceStart; // milliseconds
+    const traceDurationMs = traceDuration;
 
     const container = document.getElementById('trace-detail-container');
     const displayTraceId = formatTraceId(trace.trace_id);
@@ -377,9 +378,10 @@ async function renderWaterfall(trace) {
         ${logsHtml}
         <div class="waterfall">
             ${spans.map((span, idx) => {
-        const startTime = span.start_time || 0;
-        const endTime = span.end_time || 0;
-        const duration = endTime - startTime;
+        // Convert RFC3339 to milliseconds for calculations
+        const startTime = new Date(span.start_time).getTime();
+        const endTime = new Date(span.end_time).getTime();
+        const duration = endTime - startTime; // milliseconds
         const offset = startTime - traceStart;
 
         const leftPercent = (offset / traceDuration) * 100;
@@ -391,10 +393,10 @@ async function renderWaterfall(trace) {
                             <div class="span-name" title="${span.name}">${span.name}</div>
                             <div class="span-timeline">
                                 <div class="span-bar" data-span-index="${idx}" style="left: ${leftPercent}%; width: ${widthPercent}%;">
-                                    ${duration > traceDuration * 0.1 ? (duration / 1_000_000).toFixed(2) + 'ms' : ''}
+                                    ${duration > traceDuration * 0.1 ? duration.toFixed(2) + 'ms' : ''}
                                 </div>
                             </div>
-                            <div class="span-duration">${(duration / 1_000_000).toFixed(2)}ms</div>
+                            <div class="span-duration">${duration.toFixed(2)}ms</div>
                         </div>
                     </div>
                 `;
