@@ -36,6 +36,7 @@
 console.log("Metrics Module Loaded - Version 2 (Redesigned Table)");
 import { loadChartJs, renderActionButton, copyToClipboard, downloadJson, renderEmptyState, getColorForIndex, createModal, closeModal, formatCount } from './utils.js';
 import { buildSearchRequest } from './api.js';
+import { getNamespaceFilters } from './namespaceFilter.js';
 
 // State management
 const MAX_METRICS_IN_MEMORY = 1000; // Prevent unbounded memory growth
@@ -1594,7 +1595,11 @@ window.closeAllMetrics = () => {
 
 window.showMetricResources = async (metricName, resourceCount) => {
     try {
-        const response = await fetch(`/api/metrics/${metricName}`);
+        const response = await fetch(`/api/metrics/${encodeURIComponent(metricName)}/detail`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(buildSearchRequest())
+        });
         const data = await response.json();
 
         if (!data.series || data.series.length === 0) {
@@ -1618,6 +1623,17 @@ window.showMetricResources = async (metricName, resourceCount) => {
         let contentHtml = `<div style="max-height: 400px; overflow-y: auto;">`;
         contentHtml += `<p style="margin-bottom: 10px;"><strong>Found ${resourcesMap.size} unique resource(s):</strong></p>`;
 
+        // Helper to extract actual value from OTLP AnyValue structure
+        const extractOtlpValue = (value) => {
+            if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+                return value;
+            }
+            if (value && typeof value === 'object') {
+                return value.string_value || value.int_value || value.double_value || value.bool_value || JSON.stringify(value);
+            }
+            return value;
+        };
+
         let index = 1;
         resourcesMap.forEach((resource) => {
             contentHtml += `<div style="margin-bottom: 15px; padding: 10px; background: var(--bg-hover); border-radius: 4px;">`;
@@ -1625,7 +1641,8 @@ window.showMetricResources = async (metricName, resourceCount) => {
             contentHtml += `<table style="width: 100%; font-size: 12px;">`;
 
             Object.entries(resource).forEach(([key, value]) => {
-                contentHtml += `<tr><td style="padding: 2px 5px; color: var(--text-muted);">${key}:</td><td style="padding: 2px 5px;">${value}</td></tr>`;
+                const displayValue = extractOtlpValue(value);
+                contentHtml += `<tr><td style="padding: 2px 5px; color: var(--text-muted);">${key}:</td><td style="padding: 2px 5px;">${displayValue}</td></tr>`;
             });
 
             contentHtml += `</table></div>`;
@@ -1648,13 +1665,32 @@ window.showMetricResources = async (metricName, resourceCount) => {
 window.showMetricAttributes = async (metricName, totalSeriesCount) => {
     try {
         // Fetch last 1 hour of data to get a good sample of active series
-        const endTime = Date.now() / 1000;
-        const startTime = endTime - 3600;
-        const response = await fetch(`/api/metrics/${metricName}?start=${startTime}&end=${endTime}`);
+        const endTime = new Date().toISOString();
+        const startTime = new Date(Date.now() - 3600000).toISOString();
+        const response = await fetch(`/api/metrics/${encodeURIComponent(metricName)}/detail`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                time_range: { start_time: startTime, end_time: endTime },
+                filters: getNamespaceFilters(),
+                pagination: { limit: 1000, cursor: null }
+            })
+        });
         const data = await response.json();
 
         const activeSeries = data.series || [];
         const activeSeriesCount = activeSeries.length;
+
+        // Helper to extract actual value from OTLP AnyValue structure
+        const extractOtlpValue = (value) => {
+            if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+                return value;
+            }
+            if (value && typeof value === 'object') {
+                return value.string_value || value.int_value || value.double_value || value.bool_value || JSON.stringify(value);
+            }
+            return value;
+        };
 
         // Analyze labels
         const labelStats = {}; // key -> Set(values)
@@ -1665,8 +1701,9 @@ window.showMetricAttributes = async (metricName, totalSeriesCount) => {
                     if (!labelStats[key]) {
                         labelStats[key] = new Set();
                     }
-                    // Handle non-string values
-                    const displayValue = value === null ? 'null' : String(value);
+                    // Extract actual value from OTLP structure
+                    const extractedValue = extractOtlpValue(value);
+                    const displayValue = extractedValue === null ? 'null' : String(extractedValue);
                     labelStats[key].add(displayValue);
                 });
             }
@@ -1778,7 +1815,12 @@ window.showMetricAttributes = async (metricName, totalSeriesCount) => {
                 if (!series.attributes) return '{}';
                 const props = Object.entries(series.attributes)
                     .sort((a, b) => a[0].localeCompare(b[0]))
-                    .map(([k, v]) => `${k}="${v}"`)
+                    .map(([k, v]) => {
+                        // Extract actual value from OTLP structure
+                        const extractedValue = extractOtlpValue(v);
+                        const displayValue = extractedValue === null ? 'null' : String(extractedValue);
+                        return `${k}="${displayValue}"`;
+                    })
                     .join(', ');
                 return `{${props}}`;
             }).join('\n');

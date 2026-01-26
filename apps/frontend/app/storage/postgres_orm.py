@@ -1580,7 +1580,7 @@ class PostgresStorage:
 
             # Group data points by attribute combination
             series_map = {}
-            for m, service_name, _service_namespace in rows:
+            for m, service_name, service_namespace in rows:
                 # Create series key from attributes
                 attr_hash = hashlib.md5(json.dumps(m.attributes or {}, sort_keys=True).encode()).hexdigest()
 
@@ -1592,9 +1592,20 @@ class PostgresStorage:
                     else:
                         label = service_name or "default"
 
+                    # Build resource attributes from service metadata and OTLP resource
+                    resource = {}
+                    if service_name:
+                        resource["service.name"] = service_name
+                    if service_namespace:
+                        resource["service.namespace"] = service_namespace
+                    # Add OTLP resource if present
+                    if m.resource:
+                        resource.update(m.resource)
+
                     series_map[attr_hash] = {
                         "label": label,
                         "attributes": m.attributes or {},
+                        "resource": resource,
                         "datapoints": [],
                     }
 
