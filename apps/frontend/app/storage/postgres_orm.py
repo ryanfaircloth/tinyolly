@@ -646,7 +646,15 @@ class PostgresStorage:
         return resource_id
 
     async def store_traces(self, resource_spans: list[dict]) -> int:
-        """Store OTLP traces using SQLModel ORM."""
+        """Store OTLP traces using SQLModel ORM.
+
+        OTLP structure (with preserving_proto_field_name=True):
+        resource_spans: []
+          ├─ resource: { attributes: [] }
+          └─ scope_spans: []  # snake_case
+              ├─ scope: {}
+              └─ spans: []
+        """
         if not resource_spans:
             return 0
 
@@ -677,12 +685,14 @@ class PostgresStorage:
                 service_id = await self._upsert_service(session, service_name, service_namespace)
                 resource_id = await self._upsert_resource(session, resource_dict)
 
+                # Use snake_case (preserving_proto_field_name=True)
                 for scope_span in resource_span.get("scope_spans", []):
                     scope = scope_span.get("scope", {})
 
                     for span in scope_span.get("spans", []):
-                        trace_id_raw = span.get("traceId", "")
-                        span_id_raw = span.get("spanId", "")
+                        # IDs - convert base64 to hex
+                        trace_id_raw = span.get("trace_id", "")
+                        span_id_raw = span.get("span_id", "")
 
                         # OTLP spec: trace_id is 16 bytes (32 hex), span_id is 8 bytes (16 hex)
                         # If already hex (32 or 16 chars), use as-is. If base64, convert.
@@ -696,7 +706,7 @@ class PostgresStorage:
                         else:
                             span_id = self._base64_to_hex(span_id_raw) if span_id_raw else ""
 
-                        parent_span_id_raw = span.get("parentSpanId")
+                        parent_span_id_raw = span.get("parent_span_id")
                         if parent_span_id_raw:
                             if len(parent_span_id_raw) == 16:
                                 parent_span_id = parent_span_id_raw
@@ -711,6 +721,7 @@ class PostgresStorage:
                         kind_raw = span.get("kind", 0)
                         kind = self._normalize_span_kind(kind_raw)
 
+                        # Timestamps - use snake_case
                         start_time_raw = span.get("start_time_unix_nano", "0")
                         end_time_raw = span.get("end_time_unix_nano", "0")
                         start_time_ns = int(start_time_raw) if start_time_raw else 0
@@ -752,9 +763,9 @@ class PostgresStorage:
                             resource=resource_dict,
                             scope=scope,
                             flags=span.get("flags", 0),
-                            dropped_attributes_count=span.get("droppedAttributesCount", 0),
-                            dropped_events_count=span.get("droppedEventsCount", 0),
-                            dropped_links_count=span.get("droppedLinksCount", 0),
+                            dropped_attributes_count=span.get("dropped_attributes_count", 0),
+                            dropped_events_count=span.get("dropped_events_count", 0),
+                            dropped_links_count=span.get("dropped_links_count", 0),
                         )
                         spans_to_insert.append(span_obj)
 
@@ -765,7 +776,15 @@ class PostgresStorage:
         return len(spans_to_insert)
 
     async def store_logs(self, resource_logs: list[dict]) -> int:
-        """Store OTLP logs using SQLModel ORM."""
+        """Store OTLP logs using SQLModel ORM.
+
+        OTLP structure (with preserving_proto_field_name=True):
+        resource_logs: []
+          ├─ resource: { attributes: [] }
+          └─ scope_logs: []  # snake_case
+              ├─ scope: {}
+              └─ log_records: []  # snake_case
+        """
         if not resource_logs:
             return 0
 
@@ -793,20 +812,22 @@ class PostgresStorage:
                         service_namespace = self._extract_string_value(value)
                 service_id = await self._upsert_service(session, service_name, service_namespace)
 
+                # Use snake_case (preserving_proto_field_name=True)
                 for scope_log in resource_log.get("scope_logs", []):
                     scope = scope_log.get("scope", {})
 
-                    for log_record in scope_log.get("logRecords", scope_log.get("log_records", [])):
-                        trace_id = log_record.get("traceId")
-                        span_id = log_record.get("spanId")
+                    for log_record in scope_log.get("log_records", []):
+                        # IDs - convert base64 to hex
+                        trace_id = log_record.get("trace_id")
+                        span_id = log_record.get("span_id")
                         if trace_id:
                             trace_id = self._base64_to_hex(trace_id)
                         if span_id:
                             span_id = self._base64_to_hex(span_id)
 
-                        # OTLP spec uses camelCase: timeUnixNano, observedTimeUnixNano
-                        time_unix_nano_raw = log_record.get("timeUnixNano", "0")
-                        observed_time_unix_nano_raw = log_record.get("observedTimeUnixNano")
+                        # Timestamps - use snake_case
+                        time_unix_nano_raw = log_record.get("time_unix_nano", "0")
+                        observed_time_unix_nano_raw = log_record.get("observed_time_unix_nano")
                         time_unix_nano = int(time_unix_nano_raw) if time_unix_nano_raw else 0
                         observed_time_unix_nano = (
                             int(observed_time_unix_nano_raw) if observed_time_unix_nano_raw else None
@@ -831,9 +852,9 @@ class PostgresStorage:
                             observed_timestamp = None
                             observed_nanos_fraction = 0
 
-                        # OTLP spec uses camelCase: severityNumber, severityText
-                        severity_number = self._normalize_severity_number(log_record.get("severityNumber"))
-                        severity_text = log_record.get("severityText")
+                        # Severity - use snake_case
+                        severity_number = self._normalize_severity_number(log_record.get("severity_number"))
+                        severity_text = log_record.get("severity_text")
 
                         body = log_record.get("body", {})
 
@@ -857,7 +878,7 @@ class PostgresStorage:
                             scope=scope,
                             service_id=service_id,
                             flags=log_record.get("flags", 0),
-                            dropped_attributes_count=log_record.get("droppedAttributesCount", 0),
+                            dropped_attributes_count=log_record.get("dropped_attributes_count", 0),
                         )
                         logs_to_insert.append(log_obj)
 
@@ -868,7 +889,16 @@ class PostgresStorage:
         return len(logs_to_insert)
 
     async def store_metrics(self, resource_metrics: list[dict]) -> int:
-        """Store OTLP metrics using SQLModel ORM."""
+        """Store OTLP metrics using SQLModel ORM.
+
+        OTLP structure (with preserving_proto_field_name=True):
+        resource_metrics: []
+          ├─ resource: { attributes: [] }
+          └─ scope_metrics: []  # snake_case
+              ├─ scope: {}
+              └─ metrics: []
+                  └─ [gauge|sum|histogram|summary]: { data_points: [] }  # snake_case
+        """
         if not resource_metrics:
             return 0
 
@@ -894,6 +924,8 @@ class PostgresStorage:
                         value = attr.get("value", {})
                         service_namespace = self._extract_string_value(value)
                 service_id = await self._upsert_service(session, service_name, service_namespace)
+
+                # Use snake_case (preserving_proto_field_name=True)
                 for scope_metric in resource_metric.get("scope_metrics", []):
                     scope = scope_metric.get("scope", {})
 
@@ -907,6 +939,7 @@ class PostgresStorage:
                         temporality = None
                         is_monotonic = None
 
+                        # Use snake_case for data_points
                         if "gauge" in metric:
                             metric_type = "gauge"
                             data_points_list = metric["gauge"].get("data_points", [])
@@ -929,6 +962,7 @@ class PostgresStorage:
                             )
 
                         for dp in data_points_list:
+                            # Timestamps - use snake_case
                             time_unix_nano_str = dp.get("time_unix_nano", "0")
                             time_unix_nano = int(time_unix_nano_str) if time_unix_nano_str else 0
 
@@ -985,11 +1019,16 @@ class PostgresStorage:
         if not self.engine:
             return [], False, None
 
-        # Convert time_range to timestamps
-        start_ts, _ = _nanoseconds_to_timestamp_nanos(time_range.start_time)
-        end_ts, _ = _nanoseconds_to_timestamp_nanos(time_range.end_time)
+        # Convert RFC3339 to timestamps
+        from datetime import datetime
+
+        start_ts = datetime.fromisoformat(time_range.start_time.replace("Z", "+00:00"))
+        end_ts = datetime.fromisoformat(time_range.end_time.replace("Z", "+00:00"))
 
         async with AsyncSession(self.engine) as session:
+            # Get the unknown tenant_id
+            tenant_id = await self._get_unknown_tenant_id(session)
+
             limit = pagination.limit if pagination else 100
 
             # ORM query for distinct trace IDs with min start time for ordering
@@ -997,7 +1036,7 @@ class PostgresStorage:
             stmt = select(SpansFact.trace_id, func.min(SpansFact.start_timestamp).label("earliest_span")).where(
                 SpansFact.start_timestamp >= start_ts,
                 SpansFact.start_timestamp < end_ts,
-                SpansFact.tenant_id == "default",
+                SpansFact.tenant_id == tenant_id,
             )
 
             # Apply trace_id filtering (never NULL for spans)
@@ -1034,13 +1073,16 @@ class PostgresStorage:
             return None
 
         async with AsyncSession(self.engine) as session:
+            # Get the unknown tenant_id
+            tenant_id = await self._get_unknown_tenant_id(session)
+
             # ORM query with outer join to ServiceDim
             stmt = (
                 select(SpansFact, ServiceDim.name)
                 .outerjoin(ServiceDim, SpansFact.service_id == ServiceDim.id)
                 .where(
                     SpansFact.trace_id == trace_id,
-                    SpansFact.tenant_id == "default",
+                    SpansFact.tenant_id == tenant_id,
                 )
                 .order_by(SpansFact.start_timestamp.asc())
             )
@@ -1093,17 +1135,34 @@ class PostgresStorage:
             return [], False, None
 
         async with AsyncSession(self.engine) as session:
+            # Get the unknown tenant_id
+            tenant_id = await self._get_unknown_tenant_id(session)
+
             from app.models.database import NamespaceDim
 
             limit = pagination.limit if pagination else 100
 
-            # ORM query with JOIN to ServiceDim
-            stmt = select(SpansFact, ServiceDim.name, NamespaceDim.namespace).outerjoin(
-                ServiceDim, SpansFact.service_id == ServiceDim.id
+            # ORM query with JOIN to ServiceDim and NamespaceDim
+            stmt = (
+                select(SpansFact, ServiceDim.name, NamespaceDim.namespace)
+                .outerjoin(ServiceDim, SpansFact.service_id == ServiceDim.id)
+                .outerjoin(NamespaceDim, ServiceDim.namespace_id == NamespaceDim.id)
             )
 
-            # Apply namespace filtering with proper JOIN strategy
-            stmt, _ = self._apply_namespace_filtering(stmt, filters)
+            # Apply namespace filtering
+            if filters:
+                namespace_filters = [f for f in filters if f.field == "service_namespace"]
+                if namespace_filters:
+                    from sqlalchemy import or_
+
+                    namespace_conditions = []
+                    for f in namespace_filters:
+                        if f.value == "":
+                            namespace_conditions.append(ServiceDim.namespace_id.is_(None))
+                        else:
+                            namespace_conditions.append(NamespaceDim.namespace == f.value)
+                    if namespace_conditions:
+                        stmt = stmt.where(or_(*namespace_conditions))
 
             # Apply trace_id filtering (never NULL for spans)
             stmt, _ = self._apply_traceid_filter(SpansFact, stmt, filters)
@@ -1114,14 +1173,16 @@ class PostgresStorage:
             # Apply HTTP status filtering
             stmt, _ = self._apply_http_status_filter(stmt, filters)
 
-            # Convert time_range nanoseconds to timestamps for query
-            start_timestamp, _ = _nanoseconds_to_timestamp_nanos(time_range.start_time)
-            end_timestamp, _ = _nanoseconds_to_timestamp_nanos(time_range.end_time)
+            # Convert RFC3339 to timestamps
+            from datetime import datetime
+
+            start_timestamp = datetime.fromisoformat(time_range.start_time.replace("Z", "+00:00"))
+            end_timestamp = datetime.fromisoformat(time_range.end_time.replace("Z", "+00:00"))
 
             stmt = stmt.where(
                 SpansFact.start_timestamp >= start_timestamp,
                 SpansFact.start_timestamp < end_timestamp,
-                SpansFact.tenant_id == "default",
+                SpansFact.tenant_id == tenant_id,
             )
 
             # Apply other filters (non-namespace, non-traceid, non-spanid, non-http_status)
@@ -1194,16 +1255,19 @@ class PostgresStorage:
             return [], False, None
 
         async with AsyncSession(self.engine) as session:
+            # Get the unknown tenant_id
+            tenant_id = await self._get_unknown_tenant_id(session)
+
             from app.models.database import NamespaceDim
 
             limit = pagination.limit if pagination else 100
 
-            # ORM query with JOIN to ServiceDim
+            # ORM query with JOIN to ServiceDim (NamespaceDim JOIN handled by _apply_namespace_filtering)
             stmt = select(LogsFact, ServiceDim.name, NamespaceDim.namespace).outerjoin(
                 ServiceDim, LogsFact.service_id == ServiceDim.id
             )
 
-            # Apply namespace filtering with proper JOIN strategy
+            # Apply namespace filtering with proper JOIN strategy (adds NamespaceDim JOIN)
             stmt, _ = self._apply_namespace_filtering(stmt, filters)
 
             # Apply trace_id filtering (NULL is valid for logs)
@@ -1215,14 +1279,16 @@ class PostgresStorage:
             # Apply log level filtering using severity_number ranges
             stmt, _ = self._apply_log_level_filter(stmt, filters)
 
-            # Convert time_range nanoseconds to timestamps for query
-            start_timestamp, _ = _nanoseconds_to_timestamp_nanos(time_range.start_time)
-            end_timestamp, _ = _nanoseconds_to_timestamp_nanos(time_range.end_time)
+            # Convert RFC3339 strings to timestamps for query
+            from datetime import datetime
+
+            start_timestamp = datetime.fromisoformat(time_range.start_time.replace("Z", "+00:00"))
+            end_timestamp = datetime.fromisoformat(time_range.end_time.replace("Z", "+00:00"))
 
             stmt = stmt.where(
                 LogsFact.timestamp >= start_timestamp,
                 LogsFact.timestamp < end_timestamp,
-                LogsFact.tenant_id == "default",
+                LogsFact.tenant_id == tenant_id,
             )
 
             # Apply other filters (non-namespace, non-traceid, non-spanid, non-log_level)
@@ -1301,26 +1367,45 @@ class PostgresStorage:
             return [], False, None
 
         async with AsyncSession(self.engine) as session:
+            # Get the unknown tenant_id
+            tenant_id = await self._get_unknown_tenant_id(session)
+
             from app.models.database import NamespaceDim
 
             limit = pagination.limit if pagination else 100
 
-            # ORM query with JOIN to ServiceDim
-            stmt = select(MetricsFact, ServiceDim.name, NamespaceDim.namespace).outerjoin(
-                ServiceDim, MetricsFact.service_id == ServiceDim.id
+            # ORM query with JOIN to ServiceDim and NamespaceDim
+            stmt = (
+                select(MetricsFact, ServiceDim.name, NamespaceDim.namespace)
+                .outerjoin(ServiceDim, MetricsFact.service_id == ServiceDim.id)
+                .outerjoin(NamespaceDim, ServiceDim.namespace_id == NamespaceDim.id)
             )
 
-            # Apply namespace filtering with proper JOIN strategy
-            stmt, _ = self._apply_namespace_filtering(stmt, filters)
+            # Apply namespace filtering
+            if filters:
+                namespace_filters = [f for f in filters if f.field == "service_namespace"]
+                if namespace_filters:
+                    from sqlalchemy import or_
 
-            # Convert time_range nanoseconds to timestamps for query
-            start_timestamp, _ = _nanoseconds_to_timestamp_nanos(time_range.start_time)
-            end_timestamp, _ = _nanoseconds_to_timestamp_nanos(time_range.end_time)
+                    namespace_conditions = []
+                    for f in namespace_filters:
+                        if f.value == "":
+                            namespace_conditions.append(ServiceDim.namespace_id.is_(None))
+                        else:
+                            namespace_conditions.append(NamespaceDim.namespace == f.value)
+                    if namespace_conditions:
+                        stmt = stmt.where(or_(*namespace_conditions))
+
+            # Convert RFC3339 to timestamps
+            from datetime import datetime
+
+            start_timestamp = datetime.fromisoformat(time_range.start_time.replace("Z", "+00:00"))
+            end_timestamp = datetime.fromisoformat(time_range.end_time.replace("Z", "+00:00"))
 
             stmt = stmt.where(
                 MetricsFact.timestamp >= start_timestamp,
                 MetricsFact.timestamp < end_timestamp,
-                MetricsFact.tenant_id == "default",
+                MetricsFact.tenant_id == tenant_id,
             )
 
             if metric_names:
@@ -1378,6 +1463,9 @@ class PostgresStorage:
             return []
 
         async with AsyncSession(self.engine) as session:
+            # Get the unknown tenant_id
+            tenant_id = await self._get_unknown_tenant_id(session)
+
             # ORM query with aggregations
             stmt = (
                 select(
@@ -1402,12 +1490,14 @@ class PostgresStorage:
                 )
                 .select_from(SpansFact)
                 .join(ServiceDim, SpansFact.service_id == ServiceDim.id)
-                .where(SpansFact.tenant_id == "default")
+                .where(SpansFact.tenant_id == tenant_id)
             )
 
             if time_range:
-                start_timestamp, _ = _nanoseconds_to_timestamp_nanos(time_range.start_time)
-                end_timestamp, _ = _nanoseconds_to_timestamp_nanos(time_range.end_time)
+                from datetime import datetime
+
+                start_timestamp = datetime.fromisoformat(time_range.start_time.replace("Z", "+00:00"))
+                end_timestamp = datetime.fromisoformat(time_range.end_time.replace("Z", "+00:00"))
                 stmt = stmt.where(
                     SpansFact.start_timestamp >= start_timestamp,
                     SpansFact.start_timestamp < end_timestamp,
@@ -1445,13 +1535,18 @@ class PostgresStorage:
         if not self.engine:
             return [], []
 
-        # Convert time_range to timestamps
-        start_ts, _ = _nanoseconds_to_timestamp_nanos(time_range.start_time)
-        end_ts, _ = _nanoseconds_to_timestamp_nanos(time_range.end_time)
+        # Convert RFC3339 to timestamps
+        from datetime import datetime
+
+        start_ts = datetime.fromisoformat(time_range.start_time.replace("Z", "+00:00"))
+        end_ts = datetime.fromisoformat(time_range.end_time.replace("Z", "+00:00"))
 
         from sqlalchemy import alias
 
         async with AsyncSession(self.engine) as session:
+            # Get the unknown tenant_id
+            tenant_id = await self._get_unknown_tenant_id(session)
+
             # Create aliases for self-join
             s_child = alias(SpansFact, name="s_child")
             s_parent = alias(SpansFact, name="s_parent")
@@ -1471,14 +1566,14 @@ class PostgresStorage:
                     s_parent,
                     (s_child.c.trace_id == s_parent.c.trace_id)
                     & (s_child.c.parent_span_id == s_parent.c.span_id)
-                    & (s_parent.c.tenant_id == "default"),
+                    & (s_parent.c.tenant_id == tenant_id),
                 )
                 .outerjoin(srv_parent, s_parent.c.service_id == srv_parent.c.id)
                 .join(srv_child, s_child.c.service_id == srv_child.c.id)
                 .where(
                     s_child.c.start_timestamp >= start_ts,
                     s_child.c.start_timestamp < end_ts,
-                    s_child.c.tenant_id == "default",
+                    s_child.c.tenant_id == tenant_id,
                     srv_parent.c.name.isnot(None),
                     srv_parent.c.name != srv_child.c.name,
                 )
