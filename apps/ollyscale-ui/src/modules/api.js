@@ -16,7 +16,7 @@ import { loadOpampStatus, initCollector } from './collector.js';
 /**
  * Build a TimeRange for the last N minutes (ISO 8601 format)
  */
-function buildTimeRange(minutes = 30) {
+function buildTimeRange(minutes = 180) {
     const now = new Date();
     const start = new Date(now.getTime() - (minutes * 60 * 1000));
     return {
