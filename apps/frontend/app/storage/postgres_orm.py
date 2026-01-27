@@ -12,7 +12,7 @@ from base64 import b64decode
 from datetime import UTC, datetime
 from typing import Any
 
-from sqlalchemy import func, or_, select
+from sqlalchemy import distinct, func, or_, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
 
@@ -1622,7 +1622,9 @@ class PostgresStorage:
 
             return metrics, has_more, None
 
-    async def get_metric_detail(self, metric_name: str, time_range: Any, filters: list | None = None) -> dict | None:
+    async def get_metric_detail(
+        self, metric_name: str, time_range: Any, filters: list | None = None, include_attributes: bool = False
+    ) -> dict | None:
         """Get detailed time-series data for a specific metric.
 
         Returns data in format expected by UI:
@@ -1631,17 +1633,8 @@ class PostgresStorage:
             "type": "gauge|sum|histogram",
             "unit": "unit",
             "description": "description",
-            "series": [
-                {
-                    "label": "series_label",
-                    "attributes": {...},
-                    "datapoints": [
-                        {"timestamp": "2026-01-26T...", "value": 123.45},
-                        ...
-                    ]
-                },
-                ...
-            ]
+            "series": [...],
+            "attributes": [...]  # Only when include_attributes=True
         }
         """
         if not self.engine:
@@ -1766,13 +1759,28 @@ class PostgresStorage:
             # Convert series map to list
             series = list(series_map.values())
 
-            return {
+            result_dict = {
                 "name": metric_name,
                 "type": first_metric.metric_type or "gauge",
                 "unit": first_metric.unit or "",
                 "description": first_metric.description or "",
                 "series": series,
             }
+
+            # Include unique attributes if requested (for cardinality explorer)
+            if include_attributes:
+                # Query for distinct attribute combinations
+                attr_stmt = (
+                    select(distinct(MetricsFact.attributes))
+                    .where(MetricsFact.tenant_id == tenant_id, MetricsFact.metric_name == metric_name)
+                    .order_by(MetricsFact.attributes)
+                )
+                attr_result = await session.execute(attr_stmt)
+                attr_rows = attr_result.scalars().all()
+                # Filter out None and return list of attribute dicts
+                result_dict["attributes"] = [attrs for attrs in attr_rows if attrs is not None]
+
+            return result_dict
 
     async def get_services(self, time_range: Any | None = None, filters: list | None = None) -> list:
         """Get service catalog with RED metrics using ORM."""

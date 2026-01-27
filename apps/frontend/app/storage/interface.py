@@ -175,7 +175,11 @@ class StorageBackend(ABC):
 
     @abstractmethod
     async def get_metric_detail(
-        self, metric_name: str, time_range: TimeRange, filters: list[Filter] | None = None
+        self,
+        metric_name: str,
+        time_range: TimeRange,
+        filters: list[Filter] | None = None,
+        include_attributes: bool = False,
     ) -> dict[str, Any] | None:
         """
         Get detailed time-series data for a specific metric.
@@ -184,9 +188,11 @@ class StorageBackend(ABC):
             metric_name: Name of metric to retrieve
             time_range: Time range for data
             filters: Optional filters for namespace, service, etc.
+            include_attributes: If True, include unique attribute combinations for cardinality analysis
 
         Returns:
-            Dict with metric metadata and series data, or None if not found
+            Dict with metric metadata and series data, or None if not found.
+            When include_attributes=True, response includes "attributes" key with list of unique label combinations.
         """
         pass
 

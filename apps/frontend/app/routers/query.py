@@ -168,11 +168,18 @@ async def get_metric_detail(
     request: MetricSearchRequest,
     storage: StorageBackend = Depends(get_storage),
 ):
-    """Get detailed time-series data for a specific metric."""
+    """Get detailed time-series data for a specific metric.
+
+    Set include_attributes=true in request body to include unique attribute combinations
+    for cardinality analysis.
+    """
     try:
         # Get metric detail from storage
         result = await storage.get_metric_detail(
-            metric_name=metric_name, time_range=request.time_range, filters=request.filters
+            metric_name=metric_name,
+            time_range=request.time_range,
+            filters=request.filters,
+            include_attributes=request.include_attributes,
         )
 
         if result is None:

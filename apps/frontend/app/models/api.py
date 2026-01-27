@@ -220,6 +220,9 @@ class MetricSearchRequest(BaseModel):
     metric_names: list[str] | None = None
     filters: list[Filter] | None = None
     pagination: PaginationRequest = Field(default_factory=PaginationRequest)
+    include_attributes: bool = Field(
+        default=False, description="Include unique attribute combinations for cardinality analysis"
+    )
 
 
 class MetricSearchResponse(BaseModel):
