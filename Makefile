@@ -90,9 +90,13 @@ deploy:
 	echo ""; \
 	echo "🔄 Creating terraform auto vars file..."; \
 	BASE_CHART_VERSION=$$(grep "^version:" $(CURDIR)/charts/ollyscale/Chart.yaml | awk '{print $$2}' | cut -d'-' -f1); \
+	AGENT_BASE_CHART_VERSION=$$(grep "^version:" $(CURDIR)/charts/ollyscale-otel-agent/Chart.yaml | awk '{print $$2}' | cut -d'-' -f1); \
 	echo "ollyscale_chart_tag = \"$$BASE_CHART_VERSION-$$VERSION\"" > $(CURDIR)/.kind/terraform.auto.tfvars; \
 	echo "ollyscale_tag = \"$$VERSION\"" >> $(CURDIR)/.kind/terraform.auto.tfvars; \
 	echo "opamp_tag = \"$$VERSION\"" >> $(CURDIR)/.kind/terraform.auto.tfvars; \
+	echo "ai_agent_chart_tag = \"$$AGENT_BASE_CHART_VERSION-$$VERSION\"" >> $(CURDIR)/.kind/terraform.auto.tfvars; \
+	echo "ai_agent_image = \"docker-registry.registry.svc.cluster.local:5000/ollyscale/demo-otel-agent\"" >> $(CURDIR)/.kind/terraform.auto.tfvars; \
+	echo "ai_agent_tag = \"$$VERSION\"" >> $(CURDIR)/.kind/terraform.auto.tfvars; \
 	echo "🔄 Updating ArgoCD application..."; \
 	cd $(CURDIR)/.kind; \
 	terraform apply -auto-approve; \

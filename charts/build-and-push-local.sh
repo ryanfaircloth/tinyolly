@@ -118,7 +118,7 @@ $CONTAINER_CMD build \
 echo "✓ Frontend API image built"
 echo ""
 
-echo "Step 5/5: Building Unified Demo Image"
+echo "Step 5/6: Building Unified Demo Image"
 echo "-----------------------------------------------------------"
 $CONTAINER_CMD build \
   -f apps/demo/Dockerfile \
@@ -128,6 +128,18 @@ $CONTAINER_CMD build \
   -t $EXTERNAL_REGISTRY/$IMAGE_ORG/demo:$VERSION \
   apps/demo/
 echo "✓ Unified Demo image built"
+echo ""
+
+echo "Step 6/6: Building AI Agent Demo Image"
+echo "-----------------------------------------------------------"
+$CONTAINER_CMD build \
+  -f apps/demo-otel-agent/Dockerfile \
+  -t $IMAGE_ORG/demo-otel-agent:latest \
+  -t $IMAGE_ORG/demo-otel-agent:$VERSION \
+  -t $EXTERNAL_REGISTRY/$IMAGE_ORG/demo-otel-agent:latest \
+  -t $EXTERNAL_REGISTRY/$IMAGE_ORG/demo-otel-agent:$VERSION \
+  apps/demo-otel-agent/
+echo "✓ AI Agent Demo image built"
 echo ""
 
 echo "📤 Pushing Container Images to Registry"
@@ -164,8 +176,14 @@ $CONTAINER_CMD push $PUSH_FLAGS $EXTERNAL_REGISTRY/$IMAGE_ORG/demo:$VERSION
 echo "✓ Unified Demo pushed"
 echo ""
 
+echo "Pushing AI Agent Demo..."
+$CONTAINER_CMD push $PUSH_FLAGS $EXTERNAL_REGISTRY/$IMAGE_ORG/demo-otel-agent:latest
+$CONTAINER_CMD push $PUSH_FLAGS $EXTERNAL_REGISTRY/$IMAGE_ORG/demo-otel-agent:$VERSION
+echo "✓ AI Agent Demo pushed"
+echo ""
+
 # ==========================================
-# PART 2: Package and Push Helm Chart
+# PART 2: Package and Push Helm Charts
 # ==========================================
 
 echo "📦 PART 2: Packaging Helm Chart"
@@ -279,6 +297,64 @@ else
     exit 1
 fi
 echo ""
+
+# Package and push ollyscale-otel-agent chart
+echo "📦 Packaging ollyscale-otel-agent chart..."
+echo "-----------------------------------------------------------"
+AGENT_CHART_DIR="$SCRIPT_DIR/ollyscale-otel-agent"
+AGENT_CHART_YAML="$AGENT_CHART_DIR/Chart.yaml"
+
+if [ -d "$AGENT_CHART_DIR" ]; then
+    # Extract current chart version
+    CURRENT_AGENT_VERSION=$(grep "^version:" "$AGENT_CHART_YAML" | awk '{print $2}')
+    echo "Current ollyscale-otel-agent chart version: $CURRENT_AGENT_VERSION"
+
+    # Auto-increment chart version with timestamp for local builds
+    BASE_AGENT_VERSION=$(echo "$CURRENT_AGENT_VERSION" | cut -d'-' -f1)
+    NEW_AGENT_VERSION="${BASE_AGENT_VERSION}-${VERSION}"
+    echo "New ollyscale-otel-agent chart version: $NEW_AGENT_VERSION"
+    echo ""
+
+    # Update Chart.yaml with new version
+    echo "📝 Updating Chart.yaml version..."
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        sed -i '' "s/^version: .*/version: $NEW_AGENT_VERSION/" "$AGENT_CHART_DIR/Chart.yaml"
+    else
+        sed -i "s/^version: .*/version: $NEW_AGENT_VERSION/" "$AGENT_CHART_DIR/Chart.yaml"
+    fi
+    echo "✓ Updated Chart.yaml to version $NEW_AGENT_VERSION"
+    echo ""
+
+    # Lint the chart
+    echo "🔍 Linting Helm chart..."
+    helm lint "$AGENT_CHART_DIR"
+    echo "✓ Chart linted successfully"
+    echo ""
+
+    # Package the chart
+    echo "📦 Packaging chart..."
+    helm package "$AGENT_CHART_DIR" -d "$SCRIPT_DIR"
+    AGENT_CHART_PACKAGE="$SCRIPT_DIR/ollyscale-otel-agent-${NEW_AGENT_VERSION}.tgz"
+    echo "✓ Chart packaged: $(basename "$AGENT_CHART_PACKAGE")"
+    echo ""
+
+    # Push to OCI registry
+    echo "📤 Pushing Helm chart to OCI registry..."
+    echo "   Registry: oci://$CHART_REGISTRY"
+    echo ""
+
+    # Push the chart
+    echo "Pushing chart with: helm push $AGENT_CHART_PACKAGE oci://$CHART_REGISTRY"
+    if helm push "$AGENT_CHART_PACKAGE" "oci://$CHART_REGISTRY" --insecure-skip-tls-verify; then
+        echo "✓ AI Agent chart pushed successfully"
+    else
+        echo "⚠️  Warning: AI Agent chart push failed (non-fatal)"
+    fi
+    echo ""
+else
+    echo "ℹ️  Skipping ollyscale-otel-agent chart (directory not found)"
+    echo ""
+fi
 
 # ==========================================
 # Summary

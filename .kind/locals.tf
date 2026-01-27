@@ -18,5 +18,6 @@ locals {
   ollyscale_tag  = var.ollyscale_tag
   opamp_tag      = var.opamp_tag
   demo_tag       = var.demo_tag
-  demo_agent_tag = var.demo_agent_tag
+  demo_agent_tag        = var.demo_agent_tag
+  ai_agent_chart_tag    = var.ai_agent_chart_tag
 }
