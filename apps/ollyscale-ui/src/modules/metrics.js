@@ -214,9 +214,23 @@ async function renderMetricLabelsFilters() {
     // Fetch attributes for each metric
     for (const metric of allMetrics) {
         try {
-            const response = await fetch(`/ api / metrics / ${ metric.name }/attributes`);
+            const requestBody = {
+                time_range: {
+                    start_time: new Date(Date.now() - 3600000).toISOString(),
+                    end_time: new Date().toISOString()
+                },
+                filters: null,
+                pagination: null,
+                include_attributes: true
+            };
+            const response = await fetch(`/api/metrics/${metric.name}/detail`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(requestBody)
+            });
     if (response.ok) {
-        const attributes = await response.json();
+        const result = await response.json();
+        const attributes = result.attributes || [];
         attributes.forEach(attrObj => {
             Object.keys(attrObj).forEach(key => {
                 allAttributeKeys.add(key);

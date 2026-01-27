@@ -68,13 +68,21 @@ function truncate(text, maxLen = 100) {
     return text.substring(0, maxLen) + '...';
 }
 
+import { buildSearchRequest } from './api.js';
+
 export async function loadAISessions() {
     const container = document.getElementById('ai-sessions-container');
     if (!container) return;
 
     try {
-        const listResponse = await fetch('/api/traces?limit=50');
-        const traceList = await listResponse.json();
+        const requestBody = buildSearchRequest([], 50);
+        const listResponse = await fetch('/api/traces/search', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(requestBody)
+        });
+        const result = await listResponse.json();
+        const traceList = result.traces || [];
 
         // Fetch full details (limit to 20 for perf)
         const traceDetails = await Promise.all(

@@ -312,7 +312,19 @@ async function renderServiceMetricChart(canvas, metricName, serviceName, service
         const endTime = Date.now() / 1000;
         const startTime = endTime - 600; // Last 10 minutes
 
-        const response = await fetch(`/api/metrics/${metricName}?start=${startTime}&end=${endTime}`);
+        const response = await fetch(`/api/metrics/${metricName}/detail`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                time_range: {
+                    start_time: new Date(startTime * 1000).toISOString(),
+                    end_time: new Date(endTime * 1000).toISOString()
+                },
+                filters: null,
+                pagination: null,
+                include_attributes: false
+            })
+        });
         const data = await response.json();
 
         if (!data.series || data.series.length === 0) {

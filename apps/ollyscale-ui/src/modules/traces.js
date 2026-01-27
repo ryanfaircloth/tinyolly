@@ -293,9 +293,24 @@ async function renderWaterfall(trace) {
     // Fetch logs for this trace
     let traceLogs = [];
     try {
-        const response = await fetch(`/api/logs?trace_id=${trace.trace_id}`);
+        const requestBody = {
+            time_range: {
+                start_time: new Date(0).toISOString(),
+                end_time: new Date(Date.now() + 86400000).toISOString()
+            },
+            filters: [
+                { field: 'trace_id', operator: 'eq', value: trace.trace_id }
+            ],
+            pagination: { limit: 100, cursor: null }
+        };
+        const response = await fetch('/api/logs/search', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(requestBody)
+        });
         if (response.ok) {
-            traceLogs = await response.json();
+            const result = await response.json();
+            traceLogs = result.logs || [];
         }
     } catch (e) {
         console.error('Error fetching trace logs:', e);
