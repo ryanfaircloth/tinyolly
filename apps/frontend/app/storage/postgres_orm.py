@@ -12,7 +12,7 @@ from base64 import b64decode
 from datetime import UTC, datetime
 from typing import Any
 
-from sqlalchemy import func, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
 
@@ -1875,79 +1875,195 @@ class PostgresStorage:
 
             return services
 
-    async def get_service_map(self, time_range: Any) -> tuple[list, list]:
-        """Get service dependency map from spans using ORM."""
+    async def get_service_map(self, time_range: Any | None = None, filters: list | None = None) -> tuple[list, list]:
+        """Get service dependency map from spans using ORM.
+
+        Determines node types from span attributes:
+        - database: spans with db.system attribute
+        - messaging: spans with messaging.system attribute
+        - service: default for services
+        """
         if not self.engine:
             return [], []
 
         # Convert RFC3339 to timestamps
         from datetime import datetime
 
-        start_ts = datetime.fromisoformat(time_range.start_time.replace("Z", "+00:00"))
-        end_ts = datetime.fromisoformat(time_range.end_time.replace("Z", "+00:00"))
+        if not time_range:
+            # Default to last 30 minutes if no time range provided
+            from datetime import timedelta
 
-        from sqlalchemy import alias
+            end_ts = datetime.now(UTC)
+            start_ts = end_ts - timedelta(minutes=30)
+        else:
+            start_ts = datetime.fromisoformat(time_range.start_time.replace("Z", "+00:00"))
+            end_ts = datetime.fromisoformat(time_range.end_time.replace("Z", "+00:00"))
 
         async with AsyncSession(self.engine) as session:
             # Get the unknown tenant_id
             tenant_id = await self._get_unknown_tenant_id(session)
 
-            # Create aliases for self-join
-            s_child = alias(SpansFact, name="s_child")
-            s_parent = alias(SpansFact, name="s_parent")
-            srv_child = alias(ServiceDim, name="srv_child")
-            srv_parent = alias(ServiceDim, name="srv_parent")
-
-            # ORM query with self-join for parent-child relationships
+            # Query all spans in time range with their attributes to determine node types
             stmt = (
                 select(
-                    srv_parent.c.name.label("source"),
-                    srv_child.c.name.label("target"),
-                    func.count().label("call_count"),
-                    s_child.c.kind.label("span_kind"),
+                    SpansFact.span_id,
+                    SpansFact.parent_span_id,
+                    SpansFact.trace_id,
+                    SpansFact.kind,
+                    SpansFact.attributes,
+                    SpansFact.start_timestamp,
+                    SpansFact.end_timestamp,
+                    ServiceDim.name.label("service_name"),
                 )
-                .select_from(s_child)
-                .outerjoin(
-                    s_parent,
-                    (s_child.c.trace_id == s_parent.c.trace_id)
-                    & (s_child.c.parent_span_id == s_parent.c.span_id)
-                    & (s_parent.c.tenant_id == tenant_id),
-                )
-                .outerjoin(srv_parent, s_parent.c.service_id == srv_parent.c.id)
-                .join(srv_child, s_child.c.service_id == srv_child.c.id)
+                .join(ServiceDim, SpansFact.service_id == ServiceDim.id)
                 .where(
-                    s_child.c.start_timestamp >= start_ts,
-                    s_child.c.start_timestamp < end_ts,
-                    s_child.c.tenant_id == tenant_id,
-                    srv_parent.c.name.isnot(None),
-                    srv_parent.c.name != srv_child.c.name,
+                    SpansFact.start_timestamp >= start_ts,
+                    SpansFact.start_timestamp < end_ts,
+                    SpansFact.tenant_id == tenant_id,
                 )
-                .group_by(srv_parent.c.name, srv_child.c.name, s_child.c.kind)
             )
 
+            # Apply namespace filtering
+            if filters:
+                namespace_filters = [f for f in filters if f.field == "service_namespace"]
+                if namespace_filters:
+                    stmt = stmt.outerjoin(NamespaceDim, ServiceDim.namespace_id == NamespaceDim.id)
+
+                    namespace_values = []
+                    has_empty_namespace = False
+                    for f in namespace_filters:
+                        if f.value == "":
+                            has_empty_namespace = True
+                        else:
+                            namespace_values.append(f.value)
+
+                    conditions = []
+                    if namespace_values:
+                        conditions.append(NamespaceDim.namespace.in_(namespace_values))
+                    if has_empty_namespace:
+                        conditions.append(ServiceDim.namespace_id.is_(None))
+
+                    if conditions:
+                        stmt = stmt.where(or_(*conditions))
+
             result = await session.execute(stmt)
-            rows = result.fetchall()
+            spans = result.fetchall()
+
+            # Build span lookup map
+            span_map = {}
+            for span_row in spans:
+                span_map[span_row.span_id] = {
+                    "span_id": span_row.span_id,
+                    "parent_span_id": span_row.parent_span_id,
+                    "trace_id": span_row.trace_id,
+                    "kind": span_row.kind,
+                    "attributes": span_row.attributes or {},
+                    "start_timestamp": span_row.start_timestamp,
+                    "end_timestamp": span_row.end_timestamp,
+                    "service_name": span_row.service_name,
+                }
 
             from app.models.api import ServiceMapEdge, ServiceMapNode
 
             nodes_dict = {}
-            edges = []
+            edges_dict = {}  # Stores {edge_key: {"count": N, "durations": []}}
 
-            for row in rows:
-                source, target, call_count, span_kind = row
+            # Helper function to extract value from OTel attribute dict
+            def extract_attr_value(attr_value):
+                """Extract actual value from OpenTelemetry attribute value dict."""
+                if attr_value is None:
+                    return None
+                if isinstance(attr_value, dict):
+                    # OTel attribute values are like {"string_value": "actual_value"}
+                    return attr_value.get("string_value") or attr_value.get("int_value") or attr_value.get("bool_value")
+                return attr_value
 
-                if source not in nodes_dict:
-                    nodes_dict[source] = ServiceMapNode(id=source, name=source, type="service")
-                if target not in nodes_dict:
-                    nodes_dict[target] = ServiceMapNode(id=target, name=target, type="service")
+            # Process each span to build nodes and edges
+            for span_data in span_map.values():
+                service = str(span_data["service_name"])  # Ensure string
+                attributes = span_data["attributes"]
 
-                # Reverse edge direction for CONSUMER spans
-                if span_kind == 5:
-                    edges.append(ServiceMapEdge(source=target, target=source, call_count=call_count))
-                else:
-                    edges.append(ServiceMapEdge(source=source, target=target, call_count=call_count))
+                # Calculate span duration in milliseconds
+                duration_ms = None
+                if span_data.get("end_timestamp") and span_data.get("start_timestamp"):
+                    duration_ns = (
+                        span_data["end_timestamp"] - span_data["start_timestamp"]
+                    ).total_seconds() * 1_000_000_000
+                    duration_ms = duration_ns / 1_000_000
 
-            return list(nodes_dict.values()), edges
+                # Ensure service node exists
+                if service not in nodes_dict:
+                    nodes_dict[service] = {"type": "service"}
+
+                # Check for database targets
+                db_system = extract_attr_value(attributes.get("db.system"))
+                if db_system:
+                    db_name = extract_attr_value(attributes.get("db.name"))
+                    # Only create database node if we have an explicit db.name
+                    # This filters out internal cache operations (redis without db.name)
+                    if db_name:
+                        db_name = str(db_name)  # Ensure string
+                        if db_name not in nodes_dict:
+                            nodes_dict[db_name] = {"type": "database"}
+                        edge_key = (service, db_name)
+                        if edge_key not in edges_dict:
+                            edges_dict[edge_key] = {"count": 0, "durations": []}
+                        edges_dict[edge_key]["count"] += 1
+                        if duration_ms:
+                            edges_dict[edge_key]["durations"].append(duration_ms)
+
+                # Check for messaging targets
+                messaging_system = extract_attr_value(attributes.get("messaging.system"))
+                if messaging_system:
+                    dest = extract_attr_value(attributes.get("messaging.destination")) or messaging_system
+                    dest = str(dest)  # Ensure string
+                    if dest not in nodes_dict:
+                        nodes_dict[dest] = {"type": "messaging"}
+                    edge_key = (service, dest)
+                    if edge_key not in edges_dict:
+                        edges_dict[edge_key] = {"count": 0, "durations": []}
+                    edges_dict[edge_key]["count"] += 1
+                    if duration_ms:
+                        edges_dict[edge_key]["durations"].append(duration_ms)
+
+                # Check for service-to-service edges (parent-child relationships)
+                parent_span_id = span_data["parent_span_id"]
+                if parent_span_id and parent_span_id in span_map:
+                    parent = span_map[parent_span_id]
+                    parent_service = str(parent["service_name"])  # Ensure string
+                    # Only create edge if different services
+                    if parent_service != service:
+                        edge_key = (parent_service, service)
+                        if edge_key not in edges_dict:
+                            edges_dict[edge_key] = {"count": 0, "durations": []}
+                        edges_dict[edge_key]["count"] += 1
+                        if duration_ms:
+                            edges_dict[edge_key]["durations"].append(duration_ms)
+
+            # Convert to API models
+            nodes = [ServiceMapNode(id=name, name=name, type=data["type"]) for name, data in nodes_dict.items()]
+
+            edges = [
+                ServiceMapEdge(
+                    source=source,
+                    target=target,
+                    call_count=data["count"],
+                    avg_duration_ms=round(sum(data["durations"]) / len(data["durations"]), 2)
+                    if data["durations"]
+                    else None,
+                )
+                for (source, target), data in edges_dict.items()
+            ]
+
+            return nodes, edges
+            nodes = [ServiceMapNode(id=name, name=name, type=data["type"]) for name, data in nodes_dict.items()]
+
+            edges = [
+                ServiceMapEdge(source=source, target=target, call_count=count)
+                for (source, target), count in edges_dict.items()
+            ]
+
+            return nodes, edges
 
     async def get_namespaces(self) -> list[str]:
         """Get list of all namespaces from namespace_dim table."""

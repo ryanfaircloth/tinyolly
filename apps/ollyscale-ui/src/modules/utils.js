@@ -45,6 +45,27 @@ export function formatTime(timeValue) {
     return d.toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit', fractionalSecondDigits: 3 });
 }
 
+/** Converts nanosecond timestamp or RFC3339 string to full date+time format */
+export function formatDateTime(timeValue) {
+    let d;
+    if (typeof timeValue === 'string') {
+        // RFC3339 string
+        d = new Date(timeValue);
+    } else {
+        // Nanoseconds
+        d = new Date(timeValue / 1000000);
+    }
+    return d.toLocaleString([], {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+    });
+}
+
 /** Strips leading zeros from trace/span IDs for cleaner display */
 export function formatTraceId(id) {
     return id.replace(/^0+(?=.)/, '');

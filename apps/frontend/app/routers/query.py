@@ -14,7 +14,6 @@ from app.models.api import (
     ServiceSearchRequest,
     SpanSearchRequest,
     SpanSearchResponse,
-    TimeRange,
     TraceSearchRequest,
     TraceSearchResponse,
 )
@@ -208,10 +207,12 @@ async def list_services(
 
 
 @router.post("/service-map", response_model=ServiceMapResponse)
-async def get_service_map(time_range: TimeRange, storage: StorageBackend = Depends(get_storage)):
-    """Get service dependency map for time range."""
+async def get_service_map(
+    request: ServiceSearchRequest = ServiceSearchRequest(), storage: StorageBackend = Depends(get_storage)
+):
+    """Get service dependency map for time range with optional namespace filters."""
     try:
-        result = await storage.get_service_map(time_range=time_range)
+        result = await storage.get_service_map(time_range=request.time_range, filters=request.filters)
 
         if not isinstance(result, tuple) or len(result) != 2:
             raise HTTPException(
@@ -221,7 +222,7 @@ async def get_service_map(time_range: TimeRange, storage: StorageBackend = Depen
 
         nodes, edges = result
 
-        return ServiceMapResponse(nodes=nodes, edges=edges, time_range=time_range)
+        return ServiceMapResponse(nodes=nodes, edges=edges, time_range=request.time_range)
     except HTTPException:
         raise
     except Exception as e:

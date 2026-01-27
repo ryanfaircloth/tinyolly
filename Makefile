@@ -99,7 +99,7 @@ deploy:
 	echo ""; \
 	echo "⏳ Waiting for ollyscale to sync..."; \
 	echo "   This may take a few minutes on first deployment or major upgrades."; \
-	for i in 1 2 3 4 5 6 7 8 9 10 11 12; do \
+	for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15; do \
 		SYNC_STATUS=$$(kubectl get application ollyscale -n argocd -o jsonpath='{.status.sync.status}' 2>/dev/null || echo "NotFound"); \
 		HEALTH_STATUS=$$(kubectl get application ollyscale -n argocd -o jsonpath='{.status.health.status}' 2>/dev/null || echo "Unknown"); \
 		if [ "$$SYNC_STATUS" = "Synced" ] && [ "$$HEALTH_STATUS" = "Healthy" ]; then \
@@ -112,7 +112,7 @@ deploy:
 			echo "     kubectl get application ollyscale -n argocd"; \
 			break; \
 		fi; \
-		sleep 10; \
+		sleep 15; \
 	done; \
 	echo ""; \
 	echo "✅ Deployment complete!"; \

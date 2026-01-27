@@ -189,19 +189,24 @@ export async function loadMetrics() {
 }
 
 /**
- * Load service dependency map using POST-based endpoint
+ * Load service dependency map using POST-based endpoint with namespace filters
  */
 export async function loadServiceMap() {
     const loadingEl = document.getElementById('map-loading');
     if (loadingEl) loadingEl.style.display = 'flex';
 
     try {
-        const timeRange = buildTimeRange(30);
-        const result = await postJSON('/api/service-map', timeRange);
+        const requestBody = buildSearchRequest([], 1000); // Include namespace filters
+        const result = await postJSON('/api/service-map', requestBody);
 
         // V2 returns {nodes: [...], edges: [...], time_range: {...}}
+        // Transform nodes: add 'id' and 'label' properties from 'name' for dagre-d3
         const graph = {
-            nodes: result.nodes || [],
+            nodes: (result.nodes || []).map(node => ({
+                ...node,
+                id: node.name,      // dagre-d3 needs 'id'
+                label: node.name    // dagre-d3 needs 'label' for display
+            })),
             edges: result.edges || []
         };
 
@@ -225,8 +230,8 @@ export async function fetchTraceDetail(traceId) {
  */
 export async function loadServiceCatalog() {
     try {
-        const response = await fetch('/api/services');
-        const result = await response.json();
+        const requestBody = buildSearchRequest([], 1000); // Get all services with namespace filters
+        const result = await postJSON('/api/services', requestBody);
 
         // V2 returns {services: [...], total_count: N}
         const services = result.services || [];
