@@ -30,7 +30,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import { fetchTraceDetail } from './api.js';
+import { fetchTraceDetail, buildSearchRequest } from './api.js';
 import { renderTableHeader, renderJsonDetailView, renderActionButton, copyJsonWithFeedback, downloadTelemetryJson, renderEmptyState, formatTime, escapeHtml as escapeHtmlUtil } from './utils.js';
 
 let aiSessions = [];
@@ -46,7 +46,11 @@ function getAttr(attrs, key) {
         const v = attr.value;
         return v.stringValue ?? v.intValue ?? v.boolValue ?? v.doubleValue ?? null;
     }
-    return attrs[key] ?? null;
+    // When attrs is an object, extract the actual value from OTLP structure
+    const attrValue = attrs[key];
+    if (!attrValue) return null;
+    // Handle OTLP value object format: {string_value: "...", int_value: 123, etc}
+    return attrValue.string_value ?? attrValue.int_value ?? attrValue.bool_value ?? attrValue.double_value ?? null;
 }
 
 // Check if span has gen_ai attributes
@@ -67,8 +71,6 @@ function truncate(text, maxLen = 100) {
     if (!text || text.length <= maxLen) return text || '';
     return text.substring(0, maxLen) + '...';
 }
-
-import { buildSearchRequest } from './api.js';
 
 export async function loadAISessions() {
     const container = document.getElementById('ai-sessions-container');

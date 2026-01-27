@@ -210,14 +210,10 @@ function handleClickOutside(e) {
 export function getNamespaceFilters() {
     console.log('[DEBUG getNamespaceFilters] allNamespaces:', allNamespaces, 'selectedNamespaces:', Array.from(selectedNamespaces));
 
-    // If no namespaces fetched yet, default to showing only empty namespace (exclude ollyscale)
+    // If no namespaces fetched yet, don't filter - show everything
     if (allNamespaces.length === 0) {
-        console.log('[DEBUG getNamespaceFilters] No namespaces loaded, returning empty namespace filter');
-        return [{
-            field: 'service_namespace',
-            operator: 'equals',
-            value: ''
-        }];
+        console.log('[DEBUG getNamespaceFilters] No namespaces loaded yet, returning null (no filter)');
+        return null;
     }
 
     if (selectedNamespaces.size === 0 || selectedNamespaces.size === allNamespaces.length) {
